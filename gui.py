@@ -7,7 +7,8 @@ import numpy as np
 import cv2
 
 from keras.models import load_model
-model = load_model(r'/\archive\Output\model_03_12_2021_01_42.hdf5')
+model_path = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\archive\Output\model_03_12_2021_01_42.hdf5'
+model = load_model(model_path)
 
 classes = {1: 'Speed limit (20km/h)',
            2: 'Speed limit (30km/h)',
