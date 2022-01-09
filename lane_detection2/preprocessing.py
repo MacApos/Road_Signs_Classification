@@ -48,14 +48,14 @@ def warp(image, draw_lines=False):
 
 
 def threshold(image):
-    ret, image = cv2.threshold(image, 220, 225, cv2.THRESH_BINARY)
+    ret, image = cv2.threshold(image, 150, 225, cv2.THRESH_BINARY)
     if not ret:
         print('Error in threshold value')
     else:
         return image
 
 
-image = cv2.imread('straight_lines2.jpg')
+image = cv2.imread('test2.jpg')
 output_top, output_front = warp(image)
 threshold = threshold(output_top)
 # display = np.hstack((output_top, output_front))
