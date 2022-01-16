@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 
 from keras.models import load_model
-model_path = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\archive\Output\model_03_12_2021_01_42.hdf5'
+model_path = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\traffic_sign_detection\archive\Output\model_03_12_2021_01_42.hdf5'
 model = load_model(model_path)
 
 classes = {1: 'Speed limit (20km/h)',
@@ -70,9 +70,12 @@ def classify(file_path):
     image = np.expand_dims(image, axis=0)
     image = np.array(image)
     pred = model.predict_classes([image])[0]
+    proba = model.predict(image)[0]
+    idx = np.argmax(proba, axis=-1)
+    proba = round(proba[idx] * 100, 2)
     sign = classes[pred+1]
-    print(sign)
-    label.configure(foreground='#011638', text=sign)
+    print(sign, proba, image.shape)
+    label.configure(foreground='#011638', text=f'Label: {sign}\nProbability: {proba}%')
 
 
 def show_classify_button(file_path):
