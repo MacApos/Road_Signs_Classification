@@ -7,11 +7,11 @@ from moviepy.editor import VideoFileClip
 
 def calibrate():
     fname = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection2\camera_cal\*.jpg'
-    objpoints, imgpoints = camerCalibration.poinEctractor(fname)
+    objpoints, imgpoints = camerCalibration.pointExtractor(fname)
     return objpoints, imgpoints
 
 
-def pipline(frame):
+def pipeline(frame):
     image = frame
 
     objpoints, imgpoints = calibrate()
@@ -39,10 +39,9 @@ def pipline(frame):
     return frame
 
 
-frame = cv2.imread('test/test3.jpg')
-image = pipline(frame)
+frame = cv2.imread('test/straight_lines2.jpg')
+image = pipeline(frame)
 cv2.imshow('image', image)
-cv2.imwrite('test/Example.png', image)
 cv2.waitKey(0)
 
 

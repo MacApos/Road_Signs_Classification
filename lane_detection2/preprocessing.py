@@ -27,7 +27,6 @@ def warp(image, draw_lines=False):
     if draw_lines:
         copy = np.copy(image)
         for i in range(src.shape[0]):
-            print(src[i])
             x = src[i][0]
             y = src[i][1]
             if not i == src.shape[0]-1:
@@ -61,13 +60,12 @@ def threshold(image):
 
 
 # image = cv2.imread('test/test3.jpg')
-# frame, inv_M = warp(image, True)
+# frame, inv_M = warp(image)
 # cv2.imshow('frame', frame)
-# cv2.imshow('inv_M', inv_M)
-# threshold = threshold(frame)
-# display = np.hstack((output_top, output_front))
-# cv2.imwrite('threshold.png', threshold)
-# cv2.imshow('output', threshold)
+# gray = gray(frame)
+# threshold = threshold(gray)
+# cv2.imshow('threshold', threshold)
+# cv2.imwrite('test/threshold.png', threshold)
 # with open('test/threshold.npy', 'wb') as file:
 #     np.save(file, threshold)
 # cv2.waitKey(0)

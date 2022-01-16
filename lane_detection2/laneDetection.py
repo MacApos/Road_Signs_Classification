@@ -31,7 +31,7 @@ def find_lane_pixels(image):
     nwindows = 9
     # Margines
     margin = 100
-    # ???
+
     minpix = 50
 
     window_height = int(image.shape[0] // nwindows)
@@ -179,9 +179,11 @@ def search_around_poly(image):
     return out_img, left_curverad, right_curverad
 
 
-# with open('threshold.npy', 'rb') as file:
-#     image = np.load(file)
+# with open(r'test/threshold.npy', 'rb') as file:
+#     image = np.load(file, allow_pickle=True)
 #
-# out_img, _, _ = search_around_poly(image)
-# cv2.imshow('image', image)
+# _, _, _, _, lanes = find_lane_pixels(image)
+# poly, _, _ = search_around_poly(image)
+# cv2.imshow('lanes', lanes)
+# cv2.imshow('poly', poly)
 # cv2.waitKey(0)

@@ -1,5 +1,7 @@
+import os
 import cv2
 import glob
+import random
 import numpy as np
 
 # nx = 7
@@ -17,7 +19,7 @@ import numpy as np
 #     cv2.drawChessboardCorners(img, patternSize=(nx, ny), corners=corners, patternWasFound=ret)
 
 
-def poinEctractor(fname):
+def pointExtractor(fname):
     objp = np.zeros((9*6, 3), np.float32)
     objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
 
@@ -47,11 +49,11 @@ def camerCalibration(objpoints, imgpoints, image):
     return undistorted
 
 
+# images = [os.path.join('camera_cal', img) for img in os.listdir('camera_cal')]
 # fname = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection2\camera_cal\*.jpg'
-# objpoints, imgpoints = poinEctractor(fname)
-# image = cv2.imread(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection2\camera_cal'
-#                    r'\calibration1.jpg')
+# objpoints, imgpoints = pointExtractor(fname)
+# image = cv2.imread('camera_cal/calibration1.jpg')
 # output = camerCalibration(objpoints, imgpoints, image)
-# display = np.hstack((image, output))
-# cv2.imshow('display', display)
+# cv2.imshow('image', image)
+# cv2.imshow('output', output)
 # cv2.waitKey(0)
