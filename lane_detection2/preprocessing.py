@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 
+
 def gray(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -59,13 +60,13 @@ def threshold(image):
         return image
 
 
-# image = cv2.imread('test/test3.jpg')
-# frame, inv_M = warp(image)
-# cv2.imshow('frame', frame)
-# gray = gray(frame)
-# threshold = threshold(gray)
-# cv2.imshow('threshold', threshold)
-# cv2.imwrite('test/threshold.png', threshold)
-# with open('test/threshold.npy', 'wb') as file:
-#     np.save(file, threshold)
-# cv2.waitKey(0)
+image = cv2.imread('test/test3.jpg')
+frame, inv_M = warp(image)
+cv2.imshow('frame', frame)
+gray = gray(frame)
+threshold = threshold(image)
+cv2.imshow('threshold', threshold)
+cv2.imwrite('test/threshold.png', threshold)
+with open('test/threshold.npy', 'wb') as file:
+    np.save(file, threshold)
+cv2.waitKey(0)
