@@ -1,5 +1,7 @@
 import cv2
+import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 image = cv2.imread('test/test3.jpg')
@@ -61,9 +63,22 @@ gray = gray(warp)
 image = threshold(gray)
 
 
+def to_csv(arr, name):
+    df = pd.DataFrame(arr)
+    path = os.path.join('Arrays', name)
+    df.to_csv(path, sep='\t', index=False, header=False)
+
+
+# h = int(image.shape[0] * 0.1)
+# w = int(image.shape[1] * 0.1)
+# img = cv2.resize(image, (w, h))
+# to_csv(img, 'img')
+
+
 def find_lanes(image):
     histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
     out_img = np.dstack((image, image, image))*255
+
 
     midpoint = int(histogram.shape[0]//2)
     left = np.argmax(histogram[:midpoint])
@@ -78,12 +93,15 @@ def find_lanes(image):
     # Windows
     number = 9
     minpix = 50
-    margin = 50
+    margin = 75
     height = int(image.shape[0]//number)
 
     nonzero = np.nonzero(image)
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
+
+    to_csv(nonzerox, 'nonzerox')
+    to_csv(nonzeroy, 'nonzeroy')
 
     for i in range(number):
         low = image.shape[0] - height*(i+1)
@@ -109,11 +127,20 @@ def find_lanes(image):
         if len(right_nonzero) > minpix:
             right_current = int(np.mean(nonzerox[right_nonzero]))
 
+        to_csv(left_nonzero, 'left_nonzero')
+        to_csv(right_nonzero, 'right_nonzero')
+        to_csv(left_idx, 'left_idx')
+        to_csv(right_idx, 'right_idx')
+
     try:
         left_idx = np.concatenate(left_idx)
         right_idx = np.concatenate(right_idx)
+        print(right_idx.shape)
     except AttributeError:
         pass
+
+    to_csv(left_idx, 'left_idx2')
+    to_csv(right_idx, 'right_idx2')
 
     leftx = nonzerox[left_idx]
     lefty = nonzeroy[left_idx]
@@ -123,22 +150,64 @@ def find_lanes(image):
     return leftx, lefty, rightx, righty, out_img
 
 
+# leftx, lefty, rightx, righty, out_img = find_lanes(image)
+
+
+def fit_poly(shape, leftx, lefty, rightx, righty):
+    left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
+    right_a,  right_b, right_c = np.polyfit(righty, rightx, 2)
+    y = np.linspace(0, shape[0]-1, shape[0])
+    left_x = left_a * y**2 + left_b * y + left_c
+    right_x = right_a * y**2 + right_b * y + right_c
+    return left_x, right_x, y
+
+
+margin = 100
+nonzero = image.nonzero()
+nonzeroy = np.array(nonzero[0])
+nonzerox = np.array(nonzero[1])
+
 leftx, lefty, rightx, righty, out_img = find_lanes(image)
 
-print(leftx.shape)
+# if (len(leftx)==0 or len(rightx)==0) or (len(rightx)==0 or len(righty==0)):
+#     left_rad = 0
+#     right_rad = 0
+#     print('0')
+#
+# else:
+left_fit = np.polyfit(lefty, leftx, 2)
+right_fit = np.polyfit(righty, rightx, 2)
 
-left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
-right_a,  right_b, right_c = np.polyfit(righty, rightx, 2)
+left_idx = ((nonzerox > (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0] - margin)) &
+            (nonzerox < (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0] + margin)))
+print(nonzerox[left_idx])
+right_idx = ((nonzerox > (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0] - margin)) &
+             (nonzerox < (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0] + margin)))
 
-x = np.linspace(0, image.shape[0]-1, image.shape[0])
-left_y = left_a * x**2 + left_b * x + left_c
-right_y = right_a * x**2 + right_b * x + right_c
+# leftx = nonzerox[left_idx]
+# lefty = nonzeroy[left_idx]
+# rightx = nonzerox[right_idx]
+# righty = nonzeroy[right_idx]
+
+left_x, right_x, y = fit_poly(image.shape, leftx, lefty, rightx, righty)
+print(nonzeroy)
+to_csv(nonzeroy, 'nonzeroy')
+left_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0]
+right_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0]
+
+left_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0]
+right_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0]
 
 fig = plt.figure()
 ax = plt.subplot()
-ax.scatter(leftx, lefty, c='g')
-ax.plot(x, left_y, c='y')
-ax.scatter(rightx, righty, c='r')
+ax.scatter(leftx, -lefty, c='g')
+ax.scatter(rightx, -righty, c='r')
+ax.plot(left_x, -y, c='y')
+ax.plot(right_x, -y, c='y')
+ax.plot(left_left_poly, -nonzeroy, c='b')
+ax.plot(right_left_poly, -nonzeroy, c='b')
+ax.plot(left_right_poly, -nonzeroy, c='m')
+ax.plot(right_right_poly, -nonzeroy, c='m')
 plt.show()
 
 cv2.imshow('image', out_img)

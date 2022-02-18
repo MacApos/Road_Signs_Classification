@@ -112,71 +112,89 @@ def fit_poly(img_shape, leftx, lefty, rightx, righty):
 
     return left_fitx, right_fitx, ploty
 
-# def search_around_poly(image):
-#     # Te wartości trzeba zdefiniować jeszcze raz bo są w innej funkcji
-#     margin = 100
-#
-#     nonzero = image.nonzero()
-#     nonzeroy = np.array(nonzero[0])
-#     nonzerox = np.array(nonzero[1])
-#
-#     leftx, lefty, rightx, righty, out_img = find_lane_pixels(image)
-#
-#     # Ukierunkowane wyszukiwanie
-#     if (len(leftx) == 0 or len(rightx) == 0) or (len(righty) == 0 or len(lefty) == 0):
-#         out_img = np.dstack((image, image, image))*255
-#         left_curverad = 0
-#         right_curverad = 0
-#
-#     else:
-#         left_fit = np.polyfit(lefty, leftx, 2)
-#         right_fit = np.polyfit(righty, rightx, 2)
-#
-#         left_lane_inds = ((nonzerox > (left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] - margin)) &
-#                           (nonzerox < (left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] + margin)))
-#
-#         right_lane_inds = ((nonzerox > (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin)) &
-#                            (nonzerox < (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
-#
-#         leftx = nonzerox[left_lane_inds]
-#         lefty = nonzeroy[left_lane_inds]
-#         rightx = nonzerox[right_lane_inds]
-#         righty = nonzeroy[right_lane_inds]
-#
-#         left_fitx, right_fitx, ploty = fit_poly(image.shape, leftx, lefty, rightx, righty)
-#
-#         # Konwersja wartości pikseli na dane rzeczywiste, założono długóśc równą 30m, a szerokość 3.7m
-#         ym_per_px = 30 / 720 # metry na piksel w osi y
-#         xm_per_px = 3.7 / 650  # metry na piksel w osi x
-#
-#         # Obliczanie krzywizny
-#         left_fit_cr = np.polyfit(ploty * ym_per_px, left_fitx * xm_per_px, 2)
-#         right_fit_cr = np.polyfit(ploty * ym_per_px, right_fitx * xm_per_px, 2)
-#         y_eval = np.max(ploty)
-#
-#         # Promień krzywsizny:
-#         # R = ((1 + (dy/dx) ** 2) ** 3/2) / (d2y/dx2)
-#         # y = ax ** 2 + bx + c
-#         # dy/dx = 2*ax + b
-#         # d2y/dx2 = 2*a
-#         left_curverad = ((1 + (2 * left_fit_cr[0] * y_eval * ym_per_px + left_fit_cr[1]) ** 2) ** 1.5) / \
-#                         np.absolute(2 * left_fit_cr[0])
-#         right_curverad = ((1 + (2 * right_fit_cr[0] * y_eval * ym_per_px + right_fit_cr[1]) ** 2) ** 1.5) / \
-#                          np.absolute(2 * right_fit_cr[0])
-#
-#         # Wizualizacja
-#         out_img = np.dstack((image, image, image)) * 255
-#         window_img = np.zeros_like(out_img)
-#         # Linie w kolorze
-#         out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-#         out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [255, 0, 0]
-#
-#         left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
-#         right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
-#         points = np.hstack((left, right))
-#         out_img = cv2.fillPoly(out_img, np.int_(points), (0, 255, 0))
-#
-#     return out_img, left_curverad, right_curverad
+def search_around_poly(image):
+    # Te wartości trzeba zdefiniować jeszcze raz bo są w innej funkcji
+    margin = 100
+
+    nonzero = image.nonzero()
+    nonzeroy = np.array(nonzero[0])
+    nonzerox = np.array(nonzero[1])
+
+    leftx, lefty, rightx, righty, out_img = find_lane_pixels(image)
+
+    # Ukierunkowane wyszukiwanie
+    if (len(leftx) == 0 or len(rightx) == 0) or (len(righty) == 0 or len(lefty) == 0):
+        out_img = np.dstack((image, image, image))*255
+        left_curverad = 0
+        right_curverad = 0
+
+    else:
+        left_fit = np.polyfit(lefty, leftx, 2)
+        right_fit = np.polyfit(righty, rightx, 2)
+
+        left_lane_inds = ((nonzerox > (left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] - margin)) &
+                          (nonzerox < (left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] + margin)))
+
+        right_lane_inds = ((nonzerox > (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin)) &
+                           (nonzerox < (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
+
+        left_left_poly = left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[0]
+        right_left_poly = left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[0]
+
+        left_right_poly = right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[0]
+        right_right_poly = right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[0]
+
+        fig = plt.figure()
+        ax = plt.subplot()
+        ax.scatter(leftx, -lefty, c='g')
+        ax.plot(left_left_poly, -nonzeroy, c='b')
+        ax.plot(right_left_poly, -nonzeroy, c='b')
+        ax.plot(left_right_poly, nonzeroy, c='m')
+        ax.plot(right_right_poly, nonzeroy, c='m')
+        ax.scatter(rightx, -righty, c='r')
+        plt.show()
+
+        leftx = nonzerox[left_lane_inds]
+        lefty = nonzeroy[left_lane_inds]
+        rightx = nonzerox[right_lane_inds]
+        righty = nonzeroy[right_lane_inds]
+
+        print(leftx)
+
+        left_fitx, right_fitx, ploty = fit_poly(image.shape, leftx, lefty, rightx, righty)
+
+        # Konwersja wartości pikseli na dane rzeczywiste, założono długóśc równą 30m, a szerokość 3.7m
+        ym_per_px = 30 / 720 # metry na piksel w osi y
+        xm_per_px = 3.7 / 650  # metry na piksel w osi x
+
+        # Obliczanie krzywizny
+        left_fit_cr = np.polyfit(ploty * ym_per_px, left_fitx * xm_per_px, 2)
+        right_fit_cr = np.polyfit(ploty * ym_per_px, right_fitx * xm_per_px, 2)
+        y_eval = np.max(ploty)
+
+        # Promień krzywsizny:
+        # R = ((1 + (dy/dx) ** 2) ** 3/2) / (d2y/dx2)
+        # y = ax ** 2 + bx + c
+        # dy/dx = 2*ax + b
+        # d2y/dx2 = 2*a
+        left_curverad = ((1 + (2 * left_fit_cr[0] * y_eval * ym_per_px + left_fit_cr[1]) ** 2) ** 1.5) / \
+                        np.absolute(2 * left_fit_cr[0])
+        right_curverad = ((1 + (2 * right_fit_cr[0] * y_eval * ym_per_px + right_fit_cr[1]) ** 2) ** 1.5) / \
+                         np.absolute(2 * right_fit_cr[0])
+
+        # Wizualizacja
+        out_img = np.dstack((image, image, image)) * 255
+        window_img = np.zeros_like(out_img)
+        # Linie w kolorze
+        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+        out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [255, 0, 0]
+
+        left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
+        right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
+        points = np.hstack((left, right))
+        out_img = cv2.fillPoly(out_img, np.int_(points), (0, 255, 0))
+
+    return out_img, left_curverad, right_curverad
 
 
 with open(r'test/threshold.npy', 'rb') as file:
@@ -186,15 +204,9 @@ with open(r'test/threshold.npy', 'rb') as file:
 leftx, lefty, rightx, righty, lanes = find_lane_pixels(image)
 img_shape = image.shape
 left_fitx, right_fitx, ploty = fit_poly(img_shape, leftx, lefty, rightx, righty)
-# poly, _, _ = search_around_poly(image)
+poly, _, _ = search_around_poly(image)
 # cv2.imshow('image', image)
 cv2.imshow('lanes', lanes)
-# cv2.imshow('poly', poly)
+cv2.imshow('poly', poly)
 cv2.waitKey(0)
 
-fig = plt.figure()
-ax = plt.subplot()
-ax.scatter(leftx, lefty, c='g')
-ax.plot(ploty, left_fitx, c='y')
-ax.scatter(rightx, righty, c='r')
-plt.show()
