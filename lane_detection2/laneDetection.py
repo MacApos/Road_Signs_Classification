@@ -127,6 +127,7 @@ def search_around_poly(image):
         out_img = np.dstack((image, image, image))*255
         left_curverad = 0
         right_curverad = 0
+        print('0')
 
     else:
         left_fit = np.polyfit(lefty, leftx, 2)
@@ -138,30 +139,33 @@ def search_around_poly(image):
         right_lane_inds = ((nonzerox > (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin)) &
                            (nonzerox < (right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
 
-        left_left_poly = left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[0]
-        right_left_poly = left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[0]
+        left_left_poly = left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] + margin/2
+        right_left_poly = left_fit[0] * (nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] - margin/2
 
-        left_right_poly = right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[0]
-        right_right_poly = right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[0]
+        left_right_poly = right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin/2
+        right_right_poly = right_fit[0] * (nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin/2
 
-        fig = plt.figure()
-        ax = plt.subplot()
-        ax.scatter(leftx, -lefty, c='g')
-        ax.plot(left_left_poly, -nonzeroy, c='b')
-        ax.plot(right_left_poly, -nonzeroy, c='b')
-        ax.plot(left_right_poly, nonzeroy, c='m')
-        ax.plot(right_right_poly, nonzeroy, c='m')
-        ax.scatter(rightx, -righty, c='r')
-        plt.show()
 
         leftx = nonzerox[left_lane_inds]
         lefty = nonzeroy[left_lane_inds]
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds]
 
-        print(leftx)
+        print(np.array_equal(leftx, nonzeroy))
 
         left_fitx, right_fitx, ploty = fit_poly(image.shape, leftx, lefty, rightx, righty)
+
+        ax = plt.subplot()
+        ax.scatter(leftx, -lefty, c='g')
+        ax.scatter(rightx, -righty, c='r')
+        ax.plot(left_left_poly, -nonzeroy, c='b')
+        ax.plot(right_left_poly, -nonzeroy, c='b')
+        ax.plot(left_right_poly, -nonzeroy, c='m')
+        ax.plot(right_right_poly, -nonzeroy, c='m')
+        ax.plot(left_fitx, -ploty, c='c')
+        ax.plot(right_fitx, -ploty, c='c')
+
+        plt.show()
 
         # Konwersja wartości pikseli na dane rzeczywiste, założono długóśc równą 30m, a szerokość 3.7m
         ym_per_px = 30 / 720 # metry na piksel w osi y
@@ -171,6 +175,8 @@ def search_around_poly(image):
         left_fit_cr = np.polyfit(ploty * ym_per_px, left_fitx * xm_per_px, 2)
         right_fit_cr = np.polyfit(ploty * ym_per_px, right_fitx * xm_per_px, 2)
         y_eval = np.max(ploty)
+
+
 
         # Promień krzywsizny:
         # R = ((1 + (dy/dx) ** 2) ** 3/2) / (d2y/dx2)
@@ -204,9 +210,9 @@ with open(r'test/threshold.npy', 'rb') as file:
 leftx, lefty, rightx, righty, lanes = find_lane_pixels(image)
 img_shape = image.shape
 left_fitx, right_fitx, ploty = fit_poly(img_shape, leftx, lefty, rightx, righty)
-poly, _, _ = search_around_poly(image)
+out_img, left_curverad, right_curverad = search_around_poly(image)
+print(left_curverad, right_curverad)
 # cv2.imshow('image', image)
-cv2.imshow('lanes', lanes)
-cv2.imshow('poly', poly)
+# cv2.imshow('lanes', lanes)
+cv2.imshow('poly', out_img)
 cv2.waitKey(0)
-

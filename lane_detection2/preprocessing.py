@@ -53,7 +53,7 @@ def warp(image, draw_lines=False):
 
 
 def threshold(image):
-    ret, image = cv2.threshold(image, 200, 225, cv2.THRESH_BINARY)
+    ret, image = cv2.threshold(image, 170, 225, cv2.THRESH_BINARY)
     if not ret:
         print('Error in threshold value')
     else:
@@ -64,7 +64,7 @@ image = cv2.imread('test/test3.jpg')
 frame, inv_M = warp(image)
 cv2.imshow('frame', frame)
 gray = gray(frame)
-threshold = threshold(image)
+threshold = threshold(gray)
 cv2.imshow('threshold', threshold)
 cv2.imwrite('test/threshold.png', threshold)
 with open('test/threshold.npy', 'wb') as file:

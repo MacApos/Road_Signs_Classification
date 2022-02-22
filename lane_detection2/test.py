@@ -93,7 +93,7 @@ def find_lanes(image):
     # Windows
     number = 9
     minpix = 50
-    margin = 75
+    margin = 100
     height = int(image.shape[0]//number)
 
     nonzero = np.nonzero(image)
@@ -135,7 +135,6 @@ def find_lanes(image):
     try:
         left_idx = np.concatenate(left_idx)
         right_idx = np.concatenate(right_idx)
-        print(right_idx.shape)
     except AttributeError:
         pass
 
@@ -150,9 +149,6 @@ def find_lanes(image):
     return leftx, lefty, rightx, righty, out_img
 
 
-# leftx, lefty, rightx, righty, out_img = find_lanes(image)
-
-
 def fit_poly(shape, leftx, lefty, rightx, righty):
     left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
     right_a,  right_b, right_c = np.polyfit(righty, rightx, 2)
@@ -162,54 +158,62 @@ def fit_poly(shape, leftx, lefty, rightx, righty):
     return left_x, right_x, y
 
 
-margin = 100
 nonzero = image.nonzero()
 nonzeroy = np.array(nonzero[0])
 nonzerox = np.array(nonzero[1])
 
 leftx, lefty, rightx, righty, out_img = find_lanes(image)
-
-# if (len(leftx)==0 or len(rightx)==0) or (len(rightx)==0 or len(righty==0)):
-#     left_rad = 0
-#     right_rad = 0
-#     print('0')
-#
-# else:
-left_fit = np.polyfit(lefty, leftx, 2)
-right_fit = np.polyfit(righty, rightx, 2)
-
-left_idx = ((nonzerox > (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0] - margin)) &
-            (nonzerox < (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0] + margin)))
-print(nonzerox[left_idx])
-right_idx = ((nonzerox > (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0] - margin)) &
-             (nonzerox < (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0] + margin)))
-
-# leftx = nonzerox[left_idx]
-# lefty = nonzeroy[left_idx]
-# rightx = nonzerox[right_idx]
-# righty = nonzeroy[right_idx]
-
 left_x, right_x, y = fit_poly(image.shape, leftx, lefty, rightx, righty)
-print(nonzeroy)
-to_csv(nonzeroy, 'nonzeroy')
-left_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0]
-right_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0]
 
-left_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0]
-right_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0]
+if (len(leftx) == 0 or len(rightx) == 0) or (len(rightx) == 0 or len(righty) == 0):
+    left_rad = 0
+    right_rad = 0
+    print('0')
 
-fig = plt.figure()
-ax = plt.subplot()
-ax.scatter(leftx, -lefty, c='g')
-ax.scatter(rightx, -righty, c='r')
-ax.plot(left_x, -y, c='y')
-ax.plot(right_x, -y, c='y')
-ax.plot(left_left_poly, -nonzeroy, c='b')
-ax.plot(right_left_poly, -nonzeroy, c='b')
-ax.plot(left_right_poly, -nonzeroy, c='m')
-ax.plot(right_right_poly, -nonzeroy, c='m')
-plt.show()
+else:
+    left_fit = np.polyfit(lefty, leftx, 2)
+    right_fit = np.polyfit(righty, rightx, 2)
+
+    left_x, right_x, y = fit_poly(image.shape, leftx, lefty, rightx, righty)
+    margin = 100
+    left_idx = ((nonzerox > (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[2] - margin)) &
+                (nonzerox < (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[2] + margin)))
+    right_idx = ((nonzerox > (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[2] - margin)) &
+                 (nonzerox < (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
+
+    left_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[2] - margin
+    right_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[2] + margin
+
+    left_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[2] - margin
+    right_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[2] + margin
+
+    leftx = nonzerox[left_idx]
+    lefty = nonzeroy[left_idx]
+    rightx = nonzerox[right_idx]
+    righty = nonzeroy[right_idx]
+
+    left_fit_wide, right_fit_wide, ploty = fit_poly(image.shape, leftx, lefty, rightx, righty)
+
+    for arr in left_fit_wide, right_fit_wide:
+        for i, u in enumerate(arr):
+            u = int(u)
+            v = int(ploty[i])
+            cv2.circle(out_img, (u, v), 1, color=(0, 0, 255), thickness=-1)
+
+    fig = plt.figure()
+    ax = plt.subplot()
+    ax.scatter(leftx, -lefty, c='g')
+    ax.scatter(rightx, -righty, c='r')
+    ax.plot(left_x, -y, c='b')
+    ax.plot(right_x, -y, c='b')
+    ax.plot(left_left_poly, -nonzeroy, c='y')
+    ax.plot(right_left_poly, -nonzeroy, c='y')
+    ax.plot(left_right_poly, -nonzeroy, c='m')
+    ax.plot(right_right_poly, -nonzeroy, c='m')
+    ax.plot(left_fit_wide, -ploty, c='m')
+    ax.plot(right_fit_wide, -ploty, c='m')
+    plt.show()
 
 cv2.imshow('image', out_img)
-cv2.imwrite('test/threshold.png', out_img)
+# cv2.imwrite('test/threshold.png', out_img)
 cv2.waitKey(0)
