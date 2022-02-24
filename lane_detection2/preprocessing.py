@@ -53,7 +53,8 @@ def warp(image, draw_lines=False):
 
 
 def threshold(image):
-    ret, image = cv2.threshold(image, 170, 225, cv2.THRESH_BINARY)
+    # ret, image = cv2.threshold(image, 170, 225, cv2.THRESH_BINARY)
+    (ret, image) = cv2.threshold(image, 0, 225, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     if not ret:
         print('Error in threshold value')
     else:
@@ -61,7 +62,8 @@ def threshold(image):
 
 
 image = cv2.imread('test/test3.jpg')
-frame, inv_M = warp(image)
+image = cv2.flip(image, 1)
+frame, inv_M = warp(image, True)
 cv2.imshow('frame', frame)
 gray = gray(frame)
 threshold = threshold(gray)

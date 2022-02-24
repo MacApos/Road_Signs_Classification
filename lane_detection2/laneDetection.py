@@ -165,7 +165,7 @@ def search_around_poly(image):
         ax.plot(left_fitx, -ploty, c='c')
         ax.plot(right_fitx, -ploty, c='c')
 
-        plt.show()
+        # plt.show()
 
         # Konwersja wartości pikseli na dane rzeczywiste, założono długóśc równą 30m, a szerokość 3.7m
         ym_per_px = 30 / 720 # metry na piksel w osi y
@@ -206,13 +206,12 @@ def search_around_poly(image):
 with open(r'test/threshold.npy', 'rb') as file:
     image = np.load(file, allow_pickle=True)
 
-
 leftx, lefty, rightx, righty, lanes = find_lane_pixels(image)
 img_shape = image.shape
 left_fitx, right_fitx, ploty = fit_poly(img_shape, leftx, lefty, rightx, righty)
 out_img, left_curverad, right_curverad = search_around_poly(image)
 print(left_curverad, right_curverad)
-# cv2.imshow('image', image)
-# cv2.imshow('lanes', lanes)
+cv2.imshow('image', image)
+cv2.imshow('lanes', lanes)
 cv2.imshow('poly', out_img)
 cv2.waitKey(0)
