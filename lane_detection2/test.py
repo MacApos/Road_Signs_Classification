@@ -1,25 +1,40 @@
-import cv2
 import os
+import cv2
+import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-image = cv2.imread('test/test3.jpg')
+image = cv2.imread('test/test2.jpg')
+image = cv2.resize(image, (1280, 720))
+image = cv2.flip(image, 1)
+frame = image
+
+height = image.shape[0]
+width = image.shape[1]
+
+# src = np.float32([(550, 460),
+#                   (150, 720),
+#                   (1200, 720),
+#                   (770, 460)])
+#
+# dst = np.float32([(100, 0),
+#                   (100, 720),
+#                   (1100, 720),
+#                   (1100, 0)])
+
+src = np.float32([(100, 720),
+                  (500, 460),
+                  (830, 460),
+                  (1200, 720)])
+
+dst = np.float32([(src[0]),
+                  (src[0][0], 0),
+                  (src[-1][0], 0),
+                  (src[-1])])
 
 
 def warp(image, inv=False):
-    height = image.shape[0]
-    width = image.shape[1]
-
-    src = np.float32([(550, 460),
-                      (150, 720),
-                      (1200, 720),
-                      (770, 460)])
-
-    dst = np.float32([(100, 0),
-                      (100, 720),
-                      (1100, 720),
-                      (1100, 0)])
     M = cv2.getPerspectiveTransform(src, dst)
     warp = cv2.warpPerspective(image, M, (width, height), flags=cv2.INTER_LINEAR)
 
@@ -29,36 +44,34 @@ def warp(image, inv=False):
     if inv:
         return warp_inv
 
-    return warp, warp_inv
+    return warp, M_inv
 
 
 def threshold(image):
-    ret, image = cv2.threshold(image, 150, 225, cv2.THRESH_BINARY)
-    if not ret:
-        "Invalid threshold value."
-    else:
-        return image
+    (T, image) = cv2.threshold(image, 0, 225, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    # T, image = cv2.threshold(image, 170, 255, cv2.THRESH_BINARY)
+    return image
 
 
 def gray(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-def lines(arr):
+def lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
+    arr = arr.astype(int)
     copy = np.copy(image)
     for i in range(arr.shape[0]):
-        x = int(arr[i][0])
-        y = int(arr[i][1])
-        x_1 = int(arr[i - 1][0])
-        y_1 = int(arr[i - 1][1])
-        circle = cv2.circle(copy, (x, y), radius=1, color=(0, 0, 255), thickness=10)
-        line = cv2.line(circle, (x, y), (x_1, y_1), color=(0, 255, 0), thickness=3)
-        text = cv2.putText(line, f'{x}, {y}', (x - 100, y - 15), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2,
-                           cv2.LINE_AA)
-    return text
+        x, y = arr[i][0], arr[i][1]
+        x_0, y_0 = arr[i - 1][0], arr[i - 1][1]
+        cv2.circle(copy, (x, y), radius=1, color=point_color, thickness=10)
+        cv2.line(copy, (x, y), (x_0, y_0), color=line_color, thickness=3)
+        cv2.putText(copy, f'{x}, {y}', (x - 100, y - 15), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+    return copy
 
 
-warp, warp_inv = warp(image)
+box = lines(image, src)
+box = lines(box, dst, line_color=(0, 0, 255))
+warp, M_inv = warp(image)
 gray = gray(warp)
 image = threshold(gray)
 
@@ -69,16 +82,24 @@ def to_csv(arr, name):
     df.to_csv(path, sep='\t', index=False, header=False)
 
 
-# h = int(image.shape[0] * 0.1)
-# w = int(image.shape[1] * 0.1)
-# img = cv2.resize(image, (w, h))
-# to_csv(img, 'img')
+def fit_poly(shape, leftx, lefty, rightx, righty):
+    left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
+    right_a,  right_b, right_c = np.polyfit(righty, rightx, 2)
+    y = np.linspace(0, shape[0]-1, shape[0])
+    left_x = left_a * y**2 + left_b * y + left_c
+    right_x = right_a * y**2 + right_b * y + right_c
+    return left_x, right_x, y
+
+
+number = 9
+minpix = 50
+margin = 100
+win_height = int(image.shape[0]//number)
 
 
 def find_lanes(image):
     histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
     out_img = np.dstack((image, image, image))*255
-
 
     midpoint = int(histogram.shape[0]//2)
     left = np.argmax(histogram[:midpoint])
@@ -90,22 +111,13 @@ def find_lanes(image):
     left_idx = []
     right_idx = []
 
-    # Windows
-    number = 9
-    minpix = 50
-    margin = 75
-    height = int(image.shape[0]//number)
-
     nonzero = np.nonzero(image)
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
 
-    to_csv(nonzerox, 'nonzerox')
-    to_csv(nonzeroy, 'nonzeroy')
-
     for i in range(number):
-        low = image.shape[0] - height*(i+1)
-        high = image.shape[0] - height*i
+        low = image.shape[0] - win_height*(i+1)
+        high = image.shape[0] - win_height*i
         left_left = left_current - margin
         left_right = left_current + margin
         right_left = right_current - margin
@@ -127,20 +139,11 @@ def find_lanes(image):
         if len(right_nonzero) > minpix:
             right_current = int(np.mean(nonzerox[right_nonzero]))
 
-        to_csv(left_nonzero, 'left_nonzero')
-        to_csv(right_nonzero, 'right_nonzero')
-        to_csv(left_idx, 'left_idx')
-        to_csv(right_idx, 'right_idx')
-
     try:
         left_idx = np.concatenate(left_idx)
         right_idx = np.concatenate(right_idx)
-        print(right_idx.shape)
     except AttributeError:
         pass
-
-    to_csv(left_idx, 'left_idx2')
-    to_csv(right_idx, 'right_idx2')
 
     leftx = nonzerox[left_idx]
     lefty = nonzeroy[left_idx]
@@ -150,66 +153,118 @@ def find_lanes(image):
     return leftx, lefty, rightx, righty, out_img
 
 
-# leftx, lefty, rightx, righty, out_img = find_lanes(image)
-
-
-def fit_poly(shape, leftx, lefty, rightx, righty):
-    left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
-    right_a,  right_b, right_c = np.polyfit(righty, rightx, 2)
-    y = np.linspace(0, shape[0]-1, shape[0])
-    left_x = left_a * y**2 + left_b * y + left_c
-    right_x = right_a * y**2 + right_b * y + right_c
-    return left_x, right_x, y
-
-
-margin = 100
-nonzero = image.nonzero()
-nonzeroy = np.array(nonzero[0])
-nonzerox = np.array(nonzero[1])
-
 leftx, lefty, rightx, righty, out_img = find_lanes(image)
 
-# if (len(leftx)==0 or len(rightx)==0) or (len(rightx)==0 or len(righty==0)):
-#     left_rad = 0
-#     right_rad = 0
-#     print('0')
-#
-# else:
-left_fit = np.polyfit(lefty, leftx, 2)
-right_fit = np.polyfit(righty, rightx, 2)
+left_curve = np.polyfit(lefty, leftx, 2)
+right_curve = np.polyfit(righty, rightx, 2)
+y = np.linspace(0, image.shape[0] - 1, image.shape[0])
+left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
+right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
+y_eval = np.max(y)
 
-left_idx = ((nonzerox > (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0] - margin)) &
-            (nonzerox < (left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0] + margin)))
-print(nonzerox[left_idx])
-right_idx = ((nonzerox > (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0] - margin)) &
-             (nonzerox < (right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0] + margin)))
+high = np.append(np.arange(number)*win_height, height-1).reshape(-1, 1)
 
-# leftx = nonzerox[left_idx]
-# lefty = nonzeroy[left_idx]
-# rightx = nonzerox[right_idx]
-# righty = nonzeroy[right_idx]
+left_rad = abs(((1 + (2 * left_curve[0] * y_eval + left_curve[1]) ** 2) ** 1.5) / (2 * left_curve[0]))
+right_rad = abs(((1 + (2 * right_curve[0] * y_eval + right_curve[1]) ** 2) ** 1.5) / (2 * right_curve[0]))
 
-left_x, right_x, y = fit_poly(image.shape, leftx, lefty, rightx, righty)
-print(nonzeroy)
-to_csv(nonzeroy, 'nonzeroy')
-left_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0]
-right_left_poly = left_fit[0] * (nonzeroy**2) + left_fit[1] * nonzeroy + left_fit[0]
+angle = np.array([])
+for arr in left_x, right_x:
+    arr = arr.astype(int)
+    x = arr[high].reshape(-1, 1)
+    con = np.concatenate((x, high), axis=1).reshape((-1, 1, 2))
+    cv2.polylines(out_img, [con], isClosed=False, color=(0, 0, 255), thickness=4)
 
-left_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0]
-right_right_poly = right_fit[0] * (nonzeroy**2) + right_fit[1] * nonzeroy + right_fit[0]
+    for i, a in enumerate(arr):
+        cv2.circle(out_img, (a, int(y[i])), radius=1, color=(0, 255, 255), thickness=-1)
 
-fig = plt.figure()
-ax = plt.subplot()
-ax.scatter(leftx, -lefty, c='g')
-ax.scatter(rightx, -righty, c='r')
-ax.plot(left_x, -y, c='y')
-ax.plot(right_x, -y, c='y')
-ax.plot(left_left_poly, -nonzeroy, c='b')
-ax.plot(right_left_poly, -nonzeroy, c='b')
-ax.plot(left_right_poly, -nonzeroy, c='m')
-ax.plot(right_right_poly, -nonzeroy, c='m')
+    arr = np.array([])
+    for i in range(number+1):
+        x_1, y_1 = con[i][0]
+        cv2.circle(out_img, (x_1, y_1), radius=7, color=(0, 255, 255), thickness=-1)
+
+        if i is not number:
+            x_delta = x[i+1] - x[i]
+            alfa = math.atan(win_height/x_delta)
+            arr = np.append(arr, alfa)
+            cv2.line(out_img, (x_1, y_1), (x_1 + x_delta, y_1), color=(255, 0, 0), thickness=3)
+            cv2.line(out_img, (x_1 + x_delta, y_1), (x_1 + x_delta, y_1 + win_height), color=(255, 255, 0), thickness=3)
+            cv2.putText(out_img, f'{round(alfa, 2)}', (x_1 + x_delta + 50, y_1 + win_height//2),
+                        cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+    angle = np.append(angle, np.mean(arr))
+
+angle = np.max(np.absolute(angle))
+
+# left turn
+if left_rad < right_rad:
+    angle = angle
+
+# right turn
+else:
+    angle = -angle
+
+rotation_angle = round((90-abs(angle*180/math.pi)), 2)
+
+imgs = [box, warp, gray, image]
+_, axs = plt.subplots(2, 2, figsize=(12, 12))
+axs = axs.flatten()
+for img, ax in zip(imgs, axs):
+    if len(img.shape) == 3:
+        img = np.flip(img, axis=-1)
+        ax.imshow(img)
+    else:
+        ax.imshow(img, cmap='gray')
+    ax.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
+
+# fig = plt.figure()
+# ax = plt.subplot()
+# ax.scatter(leftx, -lefty, c='g')
+# ax.scatter(rightx, -righty, c='r')
+# ax.plot(left_x, -y, c='b')
+# ax.plot(right_x, -y, c='b')
 plt.show()
 
-cv2.imshow('image', out_img)
-cv2.imwrite('test/threshold.png', out_img)
+poly = np.dstack((image, image, image)) * 255
+
+left = np.array([np.transpose(np.vstack([left_x, y]))])
+right = np.array([np.flipud(np.transpose(np.vstack([right_x, y])))])
+points = np.hstack((left, right))
+poly = cv2.fillPoly(poly, np.int_(points), (0, 255, 0))
+
+poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
+frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
+
+h = 25
+
+xl = 3*width//8
+yl = 4*height//5
+
+xl_1 = xl + h/math.tan(angle)
+yl_1 = yl + h
+xl_2 = xl - h/math.tan(angle)
+yl_2 = yl - h
+
+xl_1, yl_1, xl_2, yl_2 = map(int, (xl_1, yl_1, xl_2, yl_2))
+
+xr = 5*width//8
+yr = yl
+
+xr_1 = xr + h/math.tan(angle)
+yr_1 = yr + h
+xr_2 = xr - h/math.tan(angle)
+yr_2 = yr - h
+
+xr_1, yr_1, xr_2, yr_2 = map(int, (xr_1, yr_1, xr_2, yr_2))
+
+text = f'angle = {rotation_angle} deg'
+
+cv2.line(frame, (xl, yl), (xr, yr), color=(0, 0, 0), thickness=3)
+cv2.line(frame, (xl_1, yl_1), (xl_2, yl_2), color=(0, 0, 255), thickness=3)
+cv2.line(frame, (xr_1, yr_1), (xr_2, yr_2), color=(0, 0, 255), thickness=3)
+textsize = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0][0]//2
+cv2.putText(frame, text, (frame.shape[1]//2 - textsize, 250), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2,
+                    cv2.LINE_AA)
+
+cv2.imshow('out_img', out_img)
+cv2.imshow('frame', frame)
 cv2.waitKey(0)
