@@ -1,5 +1,6 @@
 import os
 import shutil
+import pickle
 
 dst = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
 src = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\test_set\clips\0531'
@@ -16,4 +17,4 @@ for idx, val in enumerate(imglist):
     newfile = ''.join((dst, name))
     shutil.copy(imglist[idx], newfile)
 
-print(newfile)
+# pickle.dump()

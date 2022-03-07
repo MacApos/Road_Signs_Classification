@@ -1,11 +1,12 @@
 import os
 import cv2
 import glob
+import pickle
 import numpy as np
 
-path = r'C:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
+# path = r'C:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
+path = r'F:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
 images = glob.glob(path)
-print(images)
 
 # Kryteria algorytmu – wymagana zmiana parametrów między iteracjami, maks. liczba iteracji
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -37,18 +38,26 @@ for fname in images:
         # cv2.imshow('img', img)
         # cv2.waitKey(500)
 
+img = cv2.imread(images[11])
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-img = cv2.imread(images[3])
 h, w = img.shape[:2]
 newcameramatrix, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
-print(roi)
+cv2.imshow('img', img)
 
-# 1.
+# 1
 dst = cv2.undistort(img, mtx, dist, None, newcameramatrix)
-cv2.imshow('dst', dst)
 x, y, w, h = roi
-res = dst[y:y+h, x:x+w]
-print(dst.shape)
-cv2.imshow('res', res)
+dst = dst[y:y+h, x:x+w]
+cv2.imshow('dst', dst)
+
+# 2
+mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramatrix, (w, h), 5)
+dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+dst = dst[y:y+h, x:x+w]
+cv2.imshow('dst2', dst)
 cv2.waitKey(0)
+
+pickle.dump(mtx, open('mtx.p', 'wb'))
+pickle.dump(dist, open('dist.p', 'wb'))
