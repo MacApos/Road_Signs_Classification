@@ -1,7 +1,20 @@
 import re
+import glob
 import random
 
-number = str(random.randint(2000, 20000))
-print(number)
+number = random.randint(2000, 20000)
 
-re.split(r'\d+', number)
+fold = 1
+
+example = r'my_vid\%d\*.jpg' % number
+
+path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\*.jpg'
+images = glob.glob(path)
+
+
+
+print(images)
+
+print(re.split(r'\d+', example))
+
+

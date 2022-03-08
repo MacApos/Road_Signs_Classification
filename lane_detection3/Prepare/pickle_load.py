@@ -8,7 +8,6 @@ infile = open(filename, 'rb')
 new_dict = pickle.load(infile)
 infile.close()
 
-for idx, val in enumerate(new_dict):
+for idx, val in enumerate(new_dict[2]):
     dst = '\\'.join((path, f'{idx}.jpg'))
-    print(dst)
     cv2.imwrite(dst, new_dict[idx])

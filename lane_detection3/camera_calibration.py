@@ -4,8 +4,8 @@ import glob
 import pickle
 import numpy as np
 
-# path = r'C:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
-path = r'F:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
+path = r'C:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
+# path = r'F:\Nowy folder\10\Praca\Datasets\camera_calibration\*.jpg'
 images = glob.glob(path)
 
 # Kryteria algorytmu – wymagana zmiana parametrów między iteracjami, maks. liczba iteracji
