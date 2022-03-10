@@ -44,20 +44,19 @@ ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.sh
 
 h, w = img.shape[:2]
 newcameramatrix, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
-cv2.imshow('img', img)
 
 # 1
 dst = cv2.undistort(img, mtx, dist, None, newcameramatrix)
 x, y, w, h = roi
 dst = dst[y:y+h, x:x+w]
-cv2.imshow('dst', dst)
 
 # 2
 mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramatrix, (w, h), 5)
 dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 dst = dst[y:y+h, x:x+w]
-cv2.imshow('dst2', dst)
+
+cv2.imshow('img', img)
 cv2.waitKey(0)
 
-pickle.dump(mtx, open('mtx.p', 'wb'))
-pickle.dump(dist, open('dist.p', 'wb'))
+pickle.dump(mtx, open(r'..\\lane_detection3\Pickles\mtx.p', 'wb'))
+pickle.dump(dist, open(r'..\lane_detection3\Pickles\dist.p', 'wb'))

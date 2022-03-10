@@ -48,22 +48,24 @@ def display_lines(image, lines):
 
 def region_of_intrest(image):
     height = image.shape[0]
-    polygons = np.array([[(200, height), (1100, height), (550, 250)]])
+    polygons = np.array([(0, 720), (400, 300), (850, 300), (1280, 720)])
+    polygons = polygons.reshape((-1, polygons.shape[0], polygons.shape[1]))
     mask = np.zeros_like(image)
     cv2.fillPoly(mask, polygons, 255)
     masked_image = cv2.bitwise_and(image, mask)
     return masked_image
 
 
-image = cv2.imread('test_image.jpg')
+# image = cv2.imread('test_image.jpg')
+image = cv2.imread(r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\450.jpg')
 lane_image = np.copy(image)
 canny_image = canny(lane_image)
 cropped_image = region_of_intrest(canny_image)
 lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
 averged_lines = average_slope_intercept(lane_image, lines)
 lines_image = display_lines(lane_image, averged_lines)
-combined_images = cv2.addWeighted(lane_image, 0.8, lines_image, 1, 1)
-cv2.imshow('results', combined_images)
+# combined_images = cv2.addWeighted(lane_image, 0.8, lines_image, 1, 1)
+cv2.imshow('results', lines_image)
 cv2.waitKey(0)
 
 # cap = cv2.VideoCapture("test2.mp4")
