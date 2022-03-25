@@ -12,10 +12,11 @@ def make_coordinates(image, line_parameters):
     return np.array([x1, y1, x2, y2])
 
 
-def average_slope_intercept(image, lines):
+def averaged_slope_intercept(image, lines):
     left_fit = []
     right_fit = []
     for line in lines:
+        # [[x1, y1, x2, y2]] → [x1, y1, x2, y2]
         x1, y1, x2, y2 = line.reshape(4)
         parameters = np.polyfit((x1, x2), (y1, y2), 1)
         slope = parameters[0]
@@ -62,8 +63,8 @@ lane_image = np.copy(image)
 canny_image = canny(lane_image)
 cropped_image = region_of_intrest(canny_image)
 lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
-averged_lines = average_slope_intercept(lane_image, lines)
-lines_image = display_lines(lane_image, averged_lines)
+averaged_lines = averaged_slope_intercept(lane_image, lines)
+lines_image = display_lines(lane_image, averaged_lines)
 # combined_images = cv2.addWeighted(lane_image, 0.8, lines_image, 1, 1)
 cv2.imshow('results', lines_image)
 cv2.waitKey(0)
