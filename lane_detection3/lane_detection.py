@@ -1,13 +1,19 @@
 import os
 import cv2
 import math
+import random
 import numpy as np
 import pandas as pd
 import imutils
 import matplotlib.pyplot as plt
 
-x = 4758
-image = cv2.imread(fr'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\{x}.jpg')
+
+path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
+list_dir = os.listdir(path)
+# 18653 sprawdzić
+random = random.randint(0, len(list_dir)-1)
+print(random)
+image = cv2.imread(os.path.join(path, f'{random}.jpg'))
 # image = cv2.imread(fr'C:\Nowy folder\10\Praca\Datasets\caltech-lanes\TEST\{x}.jpg')
 
 image = cv2.resize(image, (1280, 720))
@@ -161,8 +167,6 @@ blur = cv2.GaussianBlur(gray[down-int(0.3*height): down, :], (5, 5), 0)
 canny = cv2.Canny(blur, 50, 150)
 lines = cv2.HoughLinesP(canny, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=5)
 
-cv2.imshow('canny', canny)
-
 left_lane = []
 right_lane = []
 if lines is not None:
@@ -191,9 +195,6 @@ if right_lane:
     right_mean = np.mean(right_lane, axis=0)
     right_slope = right_mean[0]
     right_intercept = right_mean[1]
-
-cv2.imshow('warp', warp)
-cv2.waitKey(0)
 
 def fit_poly(shape, leftx, lefty, rightx, righty):
     left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
@@ -349,14 +350,41 @@ leftx0, lefty0, rightx0, righty0, out_img0 = find_lanes(copy, True)
 
 # 70/145
 if len(leftx0)<400 or len(rightx0)<400:
-    print('nie wygaszam')
     leftx, lefty, rightx, righty, out_img = find_lanes(image, False)
 else:
-    print('wygaszam')
     leftx, lefty, rightx, righty, out_img = leftx0, lefty0, rightx0, righty0, out_img0
 
-cv2.imshow('out_img', out_img)
-cv2.waitKey(0)
+zeros = np.zeros_like(frame)
+zeros[lefty, leftx] = 255
+zeros[righty, rightx] = 255
+poly = cv2.warpPerspective(zeros, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
+
+t_leftx = poly[:, :width//2].nonzero()[0]
+t_lefty = poly[:, :width//2].nonzero()[1]
+t_rightx = poly[:, width//2:].nonzero()[0]
+t_righty = poly[:, width//2:].nonzero()[1]
+print(t_leftx.min(), t_leftx.max(), len(t_leftx))
+t_left_curve = np.polyfit(t_lefty, t_leftx, 2)
+t_right_curve = np.polyfit(t_righty, t_rightx, 2)
+
+t_y_l = np.linspace(t_lefty.min(), t_lefty.max(), len(t_lefty))
+t_left_x = t_left_curve[0] * t_y_l ** 2 + t_left_curve[1] * t_y_l + t_left_curve[2]
+
+t_y_r = np.linspace(t_righty.max(), t_righty.min(), len(t_righty))
+t_right_x = t_right_curve[0] * t_y_r ** 2 + t_right_curve[1] * t_y_r + t_right_curve[2]
+
+i = 0
+for y in t_y_l:
+    cv2.circle(poly, (int(y), int(t_left_x[i])), radius=2, color=(0, 255, 255), thickness=-1)
+    i += 1
+
+i = 0
+for y in t_y_r:
+    x = int(t_right_x[i])
+    cv2.circle(poly, (int(y)+width//2, x), radius=2, color=(0, 255, 255), thickness=-1)
+    i += 1
+
+cv2.imshow('zeros', poly)
 
 left_curve = np.polyfit(lefty, leftx, 2)
 right_curve = np.polyfit(righty, rightx, 2)
@@ -446,6 +474,7 @@ poly = np.dstack((image, image, image)) * 255
 left = np.array([np.transpose(np.vstack([left_x, y]))])
 right = np.array([np.flipud(np.transpose(np.vstack([right_x, y])))])
 points = np.hstack((left, right))
+
 poly = cv2.fillPoly(poly, np.int_(points), (0, 255, 0))
 
 poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
@@ -483,5 +512,5 @@ frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
 #                     cv2.LINE_AA)
 
 cv2.imshow('frame', frame)
-cv2.imshow('out_img', out_img)
+# cv2.imshow('out_img', out_img)
 cv2.waitKey(0)
