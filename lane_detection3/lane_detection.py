@@ -8,13 +8,15 @@ import imutils
 import matplotlib.pyplot as plt
 
 
-path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
+# path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
+path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
 list_dir = os.listdir(path)
-# 18653 sprawdzić
-random = random.randint(0, len(list_dir)-1)
+# 1455 – brak niezerowych pikseli na jednej połowie
+# random = random.randint(0, len(list_dir)-1)
+random = 1771
 print(random)
 image = cv2.imread(os.path.join(path, f'{random}.jpg'))
-# image = cv2.imread(fr'C:\Nowy folder\10\Praca\Datasets\caltech-lanes\TEST\{x}.jpg')
+# image = cv2.imread(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection2\test\challenge_video_frame_140.jpg')
 
 image = cv2.resize(image, (1280, 720))
 # image = cv2.resize(image, (640, 480))
@@ -37,7 +39,7 @@ win_height = int(image.shape[0]//number)
 # width  –→ col
 # height ↓ row
 
-
+#
 # src = np.float32([(515, 460),
 #                   (150, 660),
 #                   (1130, 660),
@@ -74,17 +76,18 @@ dst = np.float32([(src[0]),
                   (src[-1])])
 
 
-def warp(image, inv=False):
-    M = cv2.getPerspectiveTransform(src, dst)
+def warp_perspective(image, from_=src, to=dst):
+    # M → from_=src, to=dst
+    # M_inv → from_=dst, to=src
+    M = cv2.getPerspectiveTransform(from_, to)
     warp = cv2.warpPerspective(image, M, (width, height), flags=cv2.INTER_LINEAR)
+    return warp, M
 
-    M_inv = cv2.getPerspectiveTransform(dst, src)
-    warp_inv = cv2.warpPerspective(image, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-
-    if inv:
-        return warp_inv
-
-    return warp, M_inv
+# def warp_perspective_inv(image):
+#     M_inv = cv2.getPerspectiveTransform(dst, src)
+#     warp_inv = cv2.warpPerspective(image, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+#
+#     return warp_inv, M_inv
 
 
 def threshold(image, T):
@@ -94,11 +97,11 @@ def threshold(image, T):
     return image
 
 
-def gray(image):
+def gray_img(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-def lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
+def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
     arr = arr.astype(int)
     copy = np.copy(image)
     for i in range(arr.shape[0]):
@@ -134,57 +137,79 @@ def to_jpg(img, name):
     cv2.imwrite(path, img)
 
 
-box = lines(image, src)
-box = lines(box, dst, line_color=(0, 0, 255))
-warp, M_inv = warp(image)
-gray = gray(warp)
-max_val = np.mean(np.amax(gray, axis=1)).astype(int)
+# img = image
+def prepare(img):
+    global contours
+    box = draw_lines(img, src)
+    box = draw_lines(box, dst, line_color=(0, 0, 255))
+    warp, _ = warp_perspective(img)
 
-if max_val > (255*0.75):
-    max_val = int(max_val*0.75)
+    gray = gray_img(warp)
+    max_val = np.mean(np.amax(gray, axis=1)).astype(int)
 
-image = threshold(gray, max_val)
-contours, _ = find_contours(image, display=False)
-gray_rgb = np.dstack((image, image, image)) * 225
-for contour in contours:
-    area = cv2.contourArea(contour)
-    if area < 500:
-        cv2.drawContours(image=gray_rgb, contours=[contour], contourIdx=-1, color=(0, 0, 0), thickness=-1)
+    if max_val > (255*0.75):
+        max_val = int(max_val*0.75)
 
-try:
-    left_min = np.nonzero(gray_rgb[:, :width // 2])[0].max()
-except ValueError:
-    left_min = height - 1
+    image = threshold(gray, max_val)
 
-try:
-    right_min = np.nonzero(gray_rgb[:, width // 2:])[0].max()
-except ValueError:
-    right_min = height - 1
+    contours, _ = find_contours(image, display=False)
+    gray_rgb = np.dstack((image, image, image)) * 225
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < minpix:
+            cv2.drawContours(image=gray_rgb, contours=[contour], contourIdx=-1, color=(0, 0, 0), thickness=-1)
 
-down = min((left_min, right_min))
+    try:
+        left_min = np.nonzero(gray_rgb[:, :width // 2])[0].max()
+    except ValueError:
+        left_min = height - 1
 
-blur = cv2.GaussianBlur(gray[down-int(0.3*height): down, :], (5, 5), 0)
-canny = cv2.Canny(blur, 50, 150)
-lines = cv2.HoughLinesP(canny, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=5)
+    try:
+        right_min = np.nonzero(gray_rgb[:, width // 2:])[0].max()
+    except ValueError:
+        right_min = height - 1
 
-left_lane = []
-right_lane = []
-if lines is not None:
-    for line in lines:
-            x1, y1, x2, y2 = line.reshape(4)
-            y1 = y1 + down-int(0.3*height)
-            y2 = y2 + down-int(0.3*height)
-            parameters = np.polyfit((x1, x2), (y1, y2), 1)
-            slope = parameters[0]
-            intercept = parameters[1]
+    down = min((left_min, right_min))
+    if down < int(0.3*height):
+        down = int(0.3 * height)
 
-            if slope < -0.1: # /_ <- slope
-                left_lane.append((slope, intercept))
-                cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+    blur = cv2.GaussianBlur(gray[down-int(0.3*height): down, :], (5, 5), 0)
+    canny = cv2.Canny(blur, 50, 150)
+    lines = cv2.HoughLinesP(canny, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=5)
 
-            elif slope > 0.1: # slope -> _\
-                right_lane.append((slope, intercept))
-                cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+    left_lane = []
+    right_lane = []
+    if lines is not None:
+        for line in lines:
+                x1, y1, x2, y2 = line.reshape(4)
+                y1 = y1 + down-int(0.3*height)
+                y2 = y2 + down-int(0.3*height)
+                parameters = np.polyfit((x1, x2), (y1, y2), 1)
+                slope = parameters[0]
+                intercept = parameters[1]
+
+                if -0.1 > slope or slope > 0.1:
+                    if x1 <= width//2 or x2 <= width//2:
+                        left_lane.append((slope, intercept))
+                        cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+                    else:
+                        right_lane.append((slope, intercept))
+                        cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+
+                # if slope < -0.1: # /_ <- slope
+                #     left_lane.append((slope, intercept))
+                #     cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+                #
+                # elif slope > 0.1: # slope -> _\
+                #     right_lane.append((slope, intercept))
+                #     cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+
+    cv2.imshow('warp', warp)
+    cv2.waitKey(0)
+
+    return image, left_lane, right_lane
+
+image, left_lane, right_lane = prepare(image)
 
 if left_lane:
     left_mean = np.mean(left_lane, axis=0)
@@ -196,6 +221,9 @@ if right_lane:
     right_slope = right_mean[0]
     right_intercept = right_mean[1]
 
+cv2.imshow('image', image)
+cv2.waitKey(0)
+
 def fit_poly(shape, leftx, lefty, rightx, righty):
     left_a, left_b, left_c = np.polyfit(lefty, leftx, 2)
     right_a,  right_b, right_c = np.polyfit(righty, rightx, 2)
@@ -206,12 +234,19 @@ def fit_poly(shape, leftx, lefty, rightx, righty):
 
 
 def find_lanes(image, drop_out=True):
+    lane_lists = []
     if left_lane or right_lane:
         if drop_out:
             for contour in contours:
                 area = cv2.contourArea(contour)
                 if area < minpix:
                     cv2.drawContours(image=image, contours=[contour], contourIdx=-1, color=(0), thickness=-1)
+        if left_lane:
+            lane_lists.append(left_mean)
+
+        if right_lane:
+            lane_lists.append(right_mean)
+
 
     histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
     out_img = np.dstack((image, image, image))*225
@@ -234,6 +269,21 @@ def find_lanes(image, drop_out=True):
     nonzero = np.nonzero(image)
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
+
+    try:
+        for list in lane_lists:
+            # y = slope * x + intercept
+            # x = (y - intercept) / slope
+            slope = list[0]
+            intercept = list[1]
+            if slope:
+                y1 = 0
+                x1 = int((y1 - intercept) / slope)
+                y2 = height
+                x2 = int((y2 - intercept) / slope)
+                cv2.line(out_img, (x1, y1), (x2, y2), (255, 0, 0), 4)
+    except ValueError:
+        pass
 
     for i in range(number):
         low = image.shape[0] - win_height*(i+1)
@@ -291,21 +341,6 @@ def find_lanes(image, drop_out=True):
         #
         #     side = 'right'
 
-        try:
-            for arr in left_mean, right_mean:
-                # y = slope * x + intercept
-                # x = (y - intercept) / slope
-                slope = arr[0]
-                intercept = arr[1]
-                if slope:
-                    y1 = 0
-                    x1 = int((y1 - intercept) / slope)
-                    y2 = height
-                    x2 = int((y2 - intercept) / slope)
-                    cv2.line(out_img, (x1, y1), (x2, y2), (255, 0, 0), 4)
-        except NameError:
-            pass
-
         left_nonzero = ((nonzeroy >= low) & (nonzeroy <= high) &
                         (nonzerox >= left_left) & (nonzerox <= left_right)).nonzero()[0]
 
@@ -318,52 +353,124 @@ def find_lanes(image, drop_out=True):
         if len(left_nonzero) > minpix:
             left_current = int(np.mean(nonzerox[left_nonzero]))
         else:
+            print('follow left line')
             try:
                 left_current = int((low - left_intercept) / left_slope)
             except NameError:
-                left_current = 0
-
+                # left_current = 0
+                pass
         if len(right_nonzero) > minpix:
             right_current = int(np.mean(nonzerox[right_nonzero]))
         else:
+            print('follow right line')
             try:
                 right_current = int((low - right_intercept) / right_slope)
             except NameError:
-                right_current = width
-
+                # right_current = width
+                pass
     try:
         left_idx = np.concatenate(left_idx)
         right_idx = np.concatenate(right_idx)
     except AttributeError:
         pass
 
-    leftx = nonzerox[left_idx]
-    lefty = nonzeroy[left_idx]
-    rightx = nonzerox[right_idx]
-    righty = nonzeroy[right_idx]
+    leftx0 = nonzerox[left_idx]
+    lefty0 = nonzeroy[left_idx]
+    rightx0 = nonzerox[right_idx]
+    righty0 = nonzeroy[right_idx]
+
+    print(len(leftx0), len(rightx0))
+
+    if len(leftx0) == 0:
+        print('right mirror')
+        leftx0 = -rightx0 + width
+        lefty0 = righty0
+        try:
+            if left_slope > 0:
+                leftx0 = rightx0 - width // 2
+        except NameError:
+            pass
+
+    if len(rightx0) == 0:
+        print('left mirror')
+        rightx0 = -leftx0 + width
+        righty0 = lefty0
+        try:
+            if right_slope < 0:
+                rightx0 = leftx0 + width // 2
+        except NameError:
+            pass
+
+    # if len(leftx0) == 0:
+    #     try:
+    #         if left_slope < 0:
+    #             leftx0 = -rightx0 + width
+    #         else:
+    #             leftx0 = rightx0 - width // 2
+    #     except NameError:
+    #         leftx0 = rightx0 - width // 2
+    #     lefty0 = righty0
+    #
+    # if len(rightx0) == 0:
+    #     try:
+    #         if right_slope > 0:
+    #             rightx0 = -leftx0 + width
+    #         else:
+    #             rightx0 = leftx0 + width // 2
+    #     except NameError:
+    #         rightx0 = leftx0 + width // 2
+    #     righty0 = lefty0
+
+    left_curve0 = np.polyfit(leftx0, lefty0, 2)
+    right_curve0 = np.polyfit(rightx0, righty0, 2)
+
+    left_nonzero1 = (
+                (nonzerox > (left_curve0[0] * (nonzeroy ** 2) + left_curve0[1] * nonzeroy + left_curve0[2] - margin)) &
+                (nonzerox < (left_curve0[0] * (nonzeroy ** 2) + left_curve0[1] * nonzeroy + left_curve0[2] + margin)))
+
+    right_nonzero1 = (
+            (nonzerox > (right_curve0[0] * (nonzeroy ** 2) + right_curve0[1] * nonzeroy + right_curve0[2] - margin)) &
+            (nonzerox < (right_curve0[0] * (nonzeroy ** 2) + right_curve0[1] * nonzeroy + right_curve0[2] + margin)))
+
+    leftx = nonzerox[left_nonzero1]
+    lefty = nonzeroy[left_nonzero1]
+    rightx = nonzerox[right_nonzero1]
+    righty = nonzeroy[right_nonzero1]
+
+    if len(leftx)==0 or len(rightx)==0:
+        leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
+
+    print(len(leftx), len(rightx))
 
     return leftx, lefty, rightx, righty, out_img
 
-
 copy = np.copy(image)
-leftx0, lefty0, rightx0, righty0, out_img0 = find_lanes(copy, True)
+leftx1, lefty1, rightx1, righty1, out_img1 = find_lanes(copy, False)
 
 # 70/145
-if len(leftx0)<400 or len(rightx0)<400:
+if len(leftx1)<400 or len(rightx1)<400:
+    print('nie wygaszaj')
     leftx, lefty, rightx, righty, out_img = find_lanes(image, False)
 else:
-    leftx, lefty, rightx, righty, out_img = leftx0, lefty0, rightx0, righty0, out_img0
+    print('wygaś')
+    leftx, lefty, rightx, righty, out_img = leftx1, lefty1, rightx1, righty1, out_img1
+
+cv2.imshow('out_img', out_img)
+cv2.waitKey(0)
 
 zeros = np.zeros_like(frame)
 zeros[lefty, leftx] = 255
 zeros[righty, rightx] = 255
+warp_inv, M_inv = warp_perspective(frame, from_=dst, to=src)
 poly = cv2.warpPerspective(zeros, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
 
 t_leftx = poly[:, :width//2].nonzero()[0]
 t_lefty = poly[:, :width//2].nonzero()[1]
 t_rightx = poly[:, width//2:].nonzero()[0]
 t_righty = poly[:, width//2:].nonzero()[1]
-print(t_leftx.min(), t_leftx.max(), len(t_leftx))
+
+print(len(t_leftx), len(t_rightx))
+
 t_left_curve = np.polyfit(t_lefty, t_leftx, 2)
 t_right_curve = np.polyfit(t_righty, t_rightx, 2)
 
@@ -384,18 +491,15 @@ for y in t_y_r:
     cv2.circle(poly, (int(y)+width//2, x), radius=2, color=(0, 255, 255), thickness=-1)
     i += 1
 
-cv2.imshow('zeros', poly)
-
 left_curve = np.polyfit(lefty, leftx, 2)
 right_curve = np.polyfit(righty, rightx, 2)
 
 y = np.linspace(0, image.shape[0] - 1, image.shape[0])
 left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
 right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
+
 y_eval = np.max(y)
-
 high = np.append(np.arange(number)*win_height, height-1).reshape((-1, 1))
-
 left_rad = abs(((1 + (2 * left_curve[0] * y_eval + left_curve[1]) ** 2) ** 1.5) / (2 * left_curve[0]))
 right_rad = abs(((1 + (2 * right_curve[0] * y_eval + right_curve[1]) ** 2) ** 1.5) / (2 * right_curve[0]))
 
@@ -406,7 +510,7 @@ for arr in left_x, right_x:
     con = np.concatenate((x, high), axis=1)
 
     # # Polilinia
-    cv2.polylines(out_img, [con], isClosed=False, color=(0, 0, 255), thickness=4)
+    cv2.polylines(out_img, [con], isClosed=False, color=(0, 255, 255), thickness=4)
     cv2.imwrite('Test_frames/polylines.jpg', out_img)
 
     # Linia z punktów na każdym pikselu
@@ -415,9 +519,9 @@ for arr in left_x, right_x:
 
     # Punkty na granicach okien
     arr = np.array([])
-    for i in range(number+1):
+    for i in range(number + 1):
         x_1, y_1 = con[i]
-        cv2.circle(out_img, (x_1, y_1), radius=7, color=(0, 255, 255), thickness=-1)
+        cv2.circle(out_img, (x_1, y_1), radius=7, color=(255, 255), thickness=-1)
 
 #         # Dyskretyzacja
 #         if i is not number:
@@ -510,7 +614,6 @@ frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
 # textsize = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0][0]//2
 # cv2.putText(frame, text, (frame.shape[1]//2 - textsize, 250), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2,
 #                     cv2.LINE_AA)
-
+cv2.imshow('out_img', out_img)
 cv2.imshow('frame', frame)
-# cv2.imshow('out_img', out_img)
 cv2.waitKey(0)

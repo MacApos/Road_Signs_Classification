@@ -1,14 +1,13 @@
-# nor
+a = 1
+b = 1
+list0 = []
 
-a = False
-b = False
-if a and b:
-    print('found')
-
+if a or b:
+    if a:
+        list0.append('a')
+    if b:
+        list0.append('b')
 else:
-    print('not found')
+    print('not appending')
 
-# 0 | 0 = 0
-# 1 | 0 = 0
-# 0 | 1 = 0
-# 1 | 1 = 1
+print(list0)

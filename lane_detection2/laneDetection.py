@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
+from preprocessing import warp, gray, threshold
 
 def find_lane_pixels(image):
     # Sumowanie pikseli z połowy obrazu względem osi pionowej.
@@ -165,7 +165,7 @@ def search_around_poly(image):
         ax.plot(left_fitx, -ploty, c='c')
         ax.plot(right_fitx, -ploty, c='c')
 
-        # plt.show()
+        plt.show()
 
         # Konwersja wartości pikseli na dane rzeczywiste, założono długóśc równą 30m, a szerokość 3.7m
         ym_per_px = 30 / 720 # metry na piksel w osi y
@@ -205,6 +205,15 @@ def search_around_poly(image):
 
 with open(r'test/threshold.npy', 'rb') as file:
     image = np.load(file, allow_pickle=True)
+
+# image = cv2.imread('test/test3.jpg')
+# image = cv2.flip(image, 1)
+# frame, inv_M = warp(image, True)
+# gray_img = gray(frame)
+# threshold_img = threshold(gray_img)
+#
+# cv2.imshow('image', threshold_img)
+# cv2.waitKey(0)
 
 leftx, lefty, rightx, righty, lanes = find_lane_pixels(image)
 img_shape = image.shape

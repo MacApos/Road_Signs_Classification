@@ -40,7 +40,7 @@ def warp(image, draw_lines=False):
                                2, cv2.LINE_AA)
             copy = cv2.circle(text, (x, y), radius=0, color=(0, 0, 255), thickness=10)
             line = cv2.line(copy, (x, y), (x_1, y_1), color=(0, 255, 0), thickness=3)
-        cv2.imshow('outout', line)
+        # cv2.imshow('outout', line)
 
     M = cv2.getPerspectiveTransform(src, dst)
 
@@ -64,11 +64,11 @@ def threshold(image):
 image = cv2.imread('test/test3.jpg')
 image = cv2.flip(image, 1)
 frame, inv_M = warp(image, True)
-cv2.imshow('frame', frame)
-gray = gray(frame)
-threshold = threshold(gray)
-cv2.imshow('threshold', threshold)
-cv2.imwrite('test/threshold.png', threshold)
+# cv2.imshow('frame', frame)
+gray_img = gray(frame)
+threshold_img = threshold(gray_img)
+# cv2.imshow('threshold', threshold)
+cv2.imwrite('test/threshold.png', threshold_img)
 with open('test/threshold.npy', 'wb') as file:
-    np.save(file, threshold)
+    np.save(file, threshold_img)
 cv2.waitKey(0)
