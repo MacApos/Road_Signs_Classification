@@ -1,12 +1,18 @@
 import os
 import cv2
 import math
+import random
 import numpy as np
 import pandas as pd
 import imutils
 import matplotlib.pyplot as plt
 
-image = cv2.imread(r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\5.jpg')
+path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
+# path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
+list_dir = os.listdir(path)
+random = random.randint(0, len(list_dir)-1)
+print(random)
+image = cv2.imread(os.path.join(path, f'{3400}.jpg'))
 image = cv2.resize(image, (1280, 720))
 image = cv2.flip(image, 1)
 frame = image
@@ -243,7 +249,7 @@ def find_lanes(image):
                         (nonzerox >= left_left) & (nonzerox <= left_right)).nonzero()[0]
 
         right_nonzero = ((nonzeroy >= low) & (nonzeroy <= high) &
-                         (nonzerox >= right_left) & (nonzerox <= right_right)).nonzero()
+                         (nonzerox >= right_left) & (nonzerox <= right_right)).nonzero()[0]
         to_csv(right_nonzero, f'right_nonzero_{i}')
 
 
@@ -282,11 +288,11 @@ def find_lanes(image):
 
 leftx, lefty, rightx, righty, out_img = find_lanes(image)
 
-# left_curve = np.polyfit(lefty, leftx, 2)
-# right_curve = np.polyfit(righty, rightx, 2)
-# y = np.linspace(0, image.shape[0] - 1, image.shape[0])
-# left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
-# right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
+left_curve = np.polyfit(lefty, leftx, 2)
+right_curve = np.polyfit(righty, rightx, 2)
+y = np.linspace(0, image.shape[0] - 1, image.shape[0])
+left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
+right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 # y_eval = np.max(y)
 #
 # high = np.append(np.arange(number)*win_height, height-1).reshape((-1, 1))
@@ -359,15 +365,15 @@ leftx, lefty, rightx, righty, out_img = find_lanes(image)
 # ax.plot(right_x, -y, c='b')
 # plt.show()
 
-# poly = np.dstack((image, image, image)) * 255
-#
-# left = np.array([np.transpose(np.vstack([left_x, y]))])
-# right = np.array([np.flipud(np.transpose(np.vstack([right_x, y])))])
-# points = np.hstack((left, right))
-# poly = cv2.fillPoly(poly, np.int_(points), (0, 255, 0))
-#
-# poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
-# frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
+poly = np.dstack((image, image, image)) * 255
+
+left = np.array([np.transpose(np.vstack([left_x, y]))])
+right = np.array([np.flipud(np.transpose(np.vstack([right_x, y])))])
+points = np.hstack((left, right))
+poly = cv2.fillPoly(poly, np.int_(points), (0, 255, 0))
+print(left, right)
+poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
+frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
 #
 # h = 25
 #
@@ -400,5 +406,6 @@ leftx, lefty, rightx, righty, out_img = find_lanes(image)
 # cv2.putText(frame, text, (frame.shape[1]//2 - textsize, 250), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2,
 #                     cv2.LINE_AA)
 
+cv2.imshow('frame', frame)
 cv2.imshow('out_img', out_img)
 cv2.waitKey(0)

@@ -1,13 +1,11 @@
-a = 1
-b = 1
-list0 = []
+import os
+import cv2
 
-if a or b:
-    if a:
-        list0.append('a')
-    if b:
-        list0.append('b')
-else:
-    print('not appending')
+image = cv2.imread('Pictures/test3.jpg')
+cv2.imshow('img', image)
+cv2.waitKey(0)
+name = 'test'
+path = 'Pictures/'+name+'.jpg'
 
-print(list0)
+print(path)
+cv2.imwrite(path, image)
