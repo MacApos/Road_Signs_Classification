@@ -1,5 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-array = np.append([[1, 2, 3], [4, 5, 6]], [[7, 8, 9]], axis=0)
-print(array)
+points = np.array([[], []])
+print(points)
+
+empty = np.empty([2])
+
+a1 = np.arange(6)
+a2 = np.arange(7, 13)
+
+for a in a1, a2:
+    a = a.reshape((3,2))
+    empty = np.append(empty, a, axis=0)
+
+# points = points.reshape((-1, 2))
+print(empty)

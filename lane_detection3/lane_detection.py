@@ -10,10 +10,9 @@ import matplotlib.pyplot as plt
 path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
 list_dir = os.listdir(path)
 random = random.randint(0, len(list_dir)-1)
-# random = 2205
+# random = 754
 print(random)
 image = cv2.imread(os.path.join(path, f'{random}.jpg'))
-# image = cv2.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection2\test\curvy_lines2.jpg')
 
 image = cv2.resize(image, (1280, 720))
 image = cv2.flip(image, 1)
@@ -27,15 +26,6 @@ minpix = 50
 margin = 100
 win_height = int(image.shape[0]//number)
 
-# src = np.float32([(515, 460),
-#                   (150, 660),
-#                   (1130, 660),
-#                   (765, 460)])
-#
-# dst = np.float32([(100, 0),
-#                   (100, 720),
-#                   (1100, 720),
-#                   (1100, 0)])
 
 src = np.float32([[0, 720],
                   [450, 300],
@@ -69,7 +59,7 @@ def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
     for i in range(arr.shape[0]):
         x, y = arr[i][0], arr[i][1]
         x_0, y_0 = arr[i - 1][0], arr[i - 1][1]
-        # cv2.circle(copy, (x, y), radius=1, color=point_color, thickness=10)
+        cv2.circle(copy, (x, y), radius=1, color=point_color, thickness=10)
         cv2.line(copy, (x, y), (x_0, y_0), color=line_color, thickness=4)
     return copy
 
@@ -79,8 +69,7 @@ def find_contours(image, display=False):
     contours = list(imutils.grab_contours(contours))
     edges = np.zeros((image.shape[0], image.shape[1]))
     for contour in contours:
-        cv2.drawContours(image=edges, contours=[contour], contourIdx=-1, color=(255),
-                         thickness=1)
+        cv2.drawContours(image=edges, contours=[contour], contourIdx=-1, color=(255), thickness=1)
     if display:
         cv2.imshow('contours', edges)
         cv2.waitKey(0)
@@ -187,7 +176,6 @@ def find_lanes(image, drop_out=True):
             right_slope = right_mean[0]
             right_intercept = right_mean[1]
             lane_lists.append(right_mean)
-
 
     histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
     out_img = np.dstack((image, image, image))*225
@@ -308,7 +296,6 @@ def find_lanes(image, drop_out=True):
     return leftx, lefty, rightx, righty, out_img
 
 
-
 def find_lanes_perspective():
     global M_inv
     zeros = np.zeros_like(frame)
@@ -344,14 +331,19 @@ def visualise(image, y, left_curve, right_curve, plot):
     left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
     right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
-    points = np.array([])
+    empty = []
+    flipud = False
 
     for arr in left_x, right_x:
         arr = arr.astype(int)
         con = np.concatenate((arr, y), axis=1)
         cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
-        print(arr)
+        if flipud:
+            con = np.flipud(con)
+        flipud = True
+        empty.append(con)
 
+    points = np.vstack((empty[0], empty[1]))
 
     if plot:
         fig, ax = plt.subplots()
@@ -361,16 +353,13 @@ def visualise(image, y, left_curve, right_curve, plot):
         ax.plot(right_x, -y, c='b')
         plt.show()
 
-    return image, left_x, right_x
+    return image, left_x, right_x, points
 
 
 def visualise_perspective(frame):
     poly = np.dstack((image, image, image)) * 255
-    left = np.array([np.transpose(np.vstack([left_x, y]))])
-    right = np.array([np.flipud(np.transpose(np.vstack([right_x, y])))])
-    points = np.hstack((left, right))
+    poly = cv2.fillPoly(poly, [points], (0, 255, 0))
 
-    poly = cv2.fillPoly(poly, np.int_(points), (0, 255, 0))
     poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
     frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
 
@@ -395,40 +384,17 @@ left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
 t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
 
 # Visualisation
-y = np.linspace(0, height-1, number).astype(int).reshape((-1,1))
-out_img, left_x, right_x = visualise(out_img, y, left_curve, right_curve, True)
+y = np.linspace(0, height-1, height).astype(int).reshape((-1,1))
+out_img, left_x, right_x, points = visualise(out_img, y, left_curve, right_curve, True)
 
 down = min(min(t_lefty), min(t_righty))
 up = max(max(t_lefty), max(t_righty))
-t_y = np.linspace(down, up, number).astype(int).reshape((-1,1))
-t_out_img, t_left_x, t_right_x = visualise(t_out_img, t_y, t_left_curve, t_right_curve, False)
+t_y = np.linspace(down, up, (up-down)).astype(int).reshape((-1,1))
+t_out_img, t_left_x, t_right_x, _ = visualise(t_out_img, t_y, t_left_curve, t_right_curve, False)
 
 to_jpg('curves', out_img)
 
-#
-
-#
-# left = np.concatenate((left_x, y), axis=1)
-# right = np.flipud(np.concatenate((right_x, y), axis=1))
-# points = np.int_(np.vstack((left, right)))
-
-
-# _, M_inv = warp_perspective(frame, from_=dst, to=src)
-# poly = np.dstack((image, image, image)) * 255
-# y = np.linspace(0, image.shape[0] - 1, image.shape[0])
-# high = np.append(np.arange(number)*win_height, height-1).reshape((-1, 1))
-# left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
-# right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
-#
-# left = np.array([np.transpose(np.vstack([left_x, y]))])
-# right = np.array([np.flipud(np.transpose(np.vstack([right_x, y])))])
-# points = np.hstack((left, right)).astype(int)
-# poly = cv2.fillPoly(poly, (points), (0, 255, 0))
-#
-# poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
-# frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
-
-# frame = visualise_perspective(frame)
+frame = visualise_perspective(frame)
 
 to_jpg('frame', frame)
 
