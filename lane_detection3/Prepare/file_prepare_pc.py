@@ -31,7 +31,6 @@ print(imglist0)
 imglist = []
 for j in imglist0:
     j = os.listdir(j)
-    j = randomize_file(j)
     print(j)
     # for k in os.listdir(j):
     #     l = os.path.join(j, k)

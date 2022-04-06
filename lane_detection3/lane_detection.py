@@ -7,26 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
-list_dir = os.listdir(path)
-random = random.randint(0, len(list_dir)-1)
-# random = 754
-print(random)
-image = cv2.imread(os.path.join(path, f'{random}.jpg'))
-
-image = cv2.resize(image, (1280, 720))
-image = cv2.flip(image, 1)
-frame = image
-
-height = image.shape[0]
-width = image.shape[1]
-
-number = 9
-minpix = 50
-margin = 100
-win_height = int(image.shape[0]//number)
-
-
 src = np.float32([[0, 720],
                   [450, 300],
                   [850, 300],
@@ -53,6 +33,47 @@ def gray_img(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
+def color_threshold(image, s_thresh, v_thresh):
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    s_channel = hls[:, :, 2]
+    s_binary = np.zeros_like(s_channel)
+    s_binary[(s_channel > s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+
+    hlv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    v_channel = hlv[:, :, 2]
+    v_binary = np.zeros_like(v_channel)
+    v_binary[(v_channel > v_thresh[0]) & (v_channel <= v_thresh[1])] = 1
+
+    output = np.zeros_like(s_channel)
+    output[(s_binary == 1) & (v_binary == 1)] = 1
+
+    return output
+
+
+def abs_sobel(image, orientation, sobel_thresh):
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    l_channel = hls[:, :, 1]
+
+    if orientation == 'x':
+        abs_sobel = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0)
+    if orientation == 'y':
+        abs_sobel = cv2.Sobel(l_channel, cv2.CV_64F, 0, 1)
+
+    output = np.zeros_like(abs_sobel)
+    output[(abs_sobel >= sobel_thresh[0]) & (abs_sobel <= sobel_thresh[1])] = 1
+
+    return output
+
+def sobel_c_thresh(image):
+    output = np.zeros_like(image[:, :, 1])
+    sobel_x = abs_sobel(image, "x", (25, 255))
+    sobel_y = abs_sobel(image, "y", (25, 255))
+    c_binary = color_threshold(image, (25, 255), (25, 255))
+    output[(sobel_x==1)&(sobel_y==1) | (c_binary==1)]=250
+
+    return output
+
+
 def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
     arr = arr.astype(int)
     copy = np.copy(image)
@@ -65,11 +86,9 @@ def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
 
 
 def find_contours(image, display=False):
-    contours = cv2.findContours(image=image, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
-    contours = list(imutils.grab_contours(contours))
+    contours, hierarchy = cv2.findContours(image=image, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
     edges = np.zeros((image.shape[0], image.shape[1]))
-    for contour in contours:
-        cv2.drawContours(image=edges, contours=[contour], contourIdx=-1, color=(255), thickness=1)
+    cv2.drawContours(edges, contours, -1, (255), 1)
     if display:
         cv2.imshow('contours', edges)
         cv2.waitKey(0)
@@ -86,32 +105,30 @@ def to_jpg(name, image):
     path = 'Pictures/'+name+'.jpg'
     cv2.imwrite(path, image)
 
-to_jpg('original', image)
 
-def prepare(image):
+def prepare(image, thresh_flag=True, sobel_flag=False):
     global contours
-
     box = draw_lines(image, src)
-    to_jpg('box', box)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
     warp, _ = warp_perspective(image)
-    to_jpg('warp', warp)
     gray = gray_img(warp)
-    to_jpg('gray', gray)
-    max_val = np.mean(np.amax(gray, axis=1)).astype(int)
 
+    max_val = np.mean(np.amax(gray, axis=1)).astype(int)
     if max_val > (255*0.75):
         max_val = int(max_val*0.75)
 
-    image = threshold(gray, max_val)
-    to_jpg('threshold', image)
-    contours, img = find_contours(image, display=False)
-    to_jpg('contours', img)
-    gray_rgb = np.dstack((image, image, image)) * 225
+    if thresh_flag:
+        thresh = threshold(gray, max_val)
+
+    if sobel_flag:
+        thresh = sobel_c_thresh(warp)
+
+    contours, img = find_contours(thresh, display=False)
+    gray_rgb = np.dstack((thresh, thresh, thresh)) * 225
     for contour in contours:
         area = cv2.contourArea(contour)
         if area < minpix:
-            cv2.drawContours(image=gray_rgb, contours=[contour], contourIdx=-1, color=(0, 0, 0), thickness=-1)
+            cv2.drawContours(gray_rgb, [contour], -1, (0, 0, 0), -1)
 
     try:
         left_max = np.nonzero(gray_rgb[:, :width // 2])[0].max()
@@ -129,7 +146,8 @@ def prepare(image):
 
     blur = cv2.GaussianBlur(gray[down-int(0.3*height): down, :], (5, 5), 0)
     canny = cv2.Canny(blur, 50, 150)
-    lines = cv2.HoughLinesP(canny, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=5)
+    # " [...] threshold of the minimum number of intersections needed to detect a line."
+    lines = cv2.HoughLinesP(canny, 2, np.pi/180, 25, np.array([]), minLineLength=15, maxLineGap=5)
 
     left_lane = []
     right_lane = []
@@ -150,12 +168,17 @@ def prepare(image):
                     right_lane.append((slope, intercept))
                     cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
 
-    to_jpg('Houg', warp)
+    # to_jpg('box', box)
+    # to_jpg('warp', warp)
+    # to_jpg('gray', gray)
+    # to_jpg('threshold', thresh)
+    # to_jpg('contours', img)
+    # to_jpg('Houg', warp)
 
-    return image, left_lane, right_lane
+    return thresh, left_lane, right_lane
 
 
-def find_lanes(image, drop_out=True):
+def find_lanes(image, drop_out=False):
     global left_mean, right_mean
 
     lane_lists = []
@@ -212,7 +235,7 @@ def find_lanes(image, drop_out=True):
     except ValueError:
         pass
 
-    to_jpg('line', out_img)
+    # to_jpg('line', out_img)
 
     for i in range(number):
         low = image.shape[0] - win_height*(i+1)
@@ -237,10 +260,9 @@ def find_lanes(image, drop_out=True):
         if len(left_nonzero) > minpix:
             left_current = int(np.mean(nonzerox[left_nonzero]))
         else:
-
             try:
                 left_current = int((low - left_intercept) / left_slope)
-                print('follow left line')
+                # print('follow left line')
             except NameError:
                 pass
 
@@ -249,11 +271,11 @@ def find_lanes(image, drop_out=True):
         else:
             try:
                 right_current = int((low - right_intercept) / right_slope)
-                print('follow right line')
+                # print('follow right line')
             except NameError:
                 pass
 
-    to_jpg('rectangles', out_img)
+    # to_jpg('rectangles', out_img)
 
     try:
         left_idx = np.concatenate(left_idx)
@@ -328,20 +350,27 @@ def fit_poly(leftx, lefty, rightx, righty):
 
 
 def visualise(image, y, left_curve, right_curve, plot):
-    left_x = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
-    right_x = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
+    fit_leftx = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
+    fit_rightx = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
     empty = []
     flipud = False
 
-    for arr in left_x, right_x:
+    color = (0, 0, 255)
+    for arr in fit_leftx, fit_rightx:
         arr = arr.astype(int)
         con = np.concatenate((arr, y), axis=1)
-        cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
+        # cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
+
+        for val in con:
+            cv2.circle(image, (val), 5, color, -1)
+
         if flipud:
             con = np.flipud(con)
         flipud = True
         empty.append(con)
+
+        color = (255, 0, 0)
 
     points = np.vstack((empty[0], empty[1]))
 
@@ -349,60 +378,147 @@ def visualise(image, y, left_curve, right_curve, plot):
         fig, ax = plt.subplots()
         ax.scatter(leftx, -lefty, c='g')
         ax.scatter(rightx, -righty, c='r')
-        ax.plot(left_x, -y, c='b')
-        ax.plot(right_x, -y, c='b')
+        ax.plot(fit_leftx, -y, c='b')
+        ax.plot(fit_rightx, -y, c='b')
         plt.show()
 
-    return image, left_x, right_x, points
+    return image, fit_leftx, fit_rightx, points
 
 
 def visualise_perspective(frame):
-    poly = np.dstack((image, image, image)) * 255
-    poly = cv2.fillPoly(poly, [points], (0, 255, 0))
-
-    poly = cv2.warpPerspective(poly, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
+    poly = np.dstack((img, img, img)) * 255
+    cv2.fillPoly(poly, [points], (0, 255, 0))
+    poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
     frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
 
-    return frame
+    return poly, frame
 
 
-image, left_lane, right_lane = prepare(image)
+def rgb(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-copy = np.copy(image)
-leftx1, lefty1, rightx1, righty1, out_img1 = find_lanes(copy, True)
 
-if len(leftx1)<400 or len(rightx1)<400:
-    leftx, lefty, rightx, righty, out_img = find_lanes(image, False)
-else:
-    leftx, lefty, rightx, righty, out_img = leftx1, lefty1, rightx1, righty1, out_img1
+# thresh, th_left_lane, th_right_lane = prepare(image)
+# v1 = [thresh, th_left_lane, th_right_lane]
+#
+# sobel, s_left_lane, s_right_lane = prepare(image, thresh_flag=False, sobel_flag=True)
+# v2 = [sobel, s_left_lane, s_right_lane]
+#
+# fig, axs = plt.subplots(2, 2, figsize=(20,20))
+# [ax.set_axis_off() for ax in axs.ravel()]
 
-t_leftx, t_lefty, t_rightx, t_righty, t_out_img = find_lanes_perspective()
+# title = 'thresh'
+# for idx, val in enumerate([v1, v2]):
+#     img = val[0]
+#     left_lane = val[1]
+#     right_lane = val[2]
 
+data_path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple'
+path = data_path + '\TEST'
+list_dir = os.listdir(path)
+random = random.randint(0, len(list_dir)-1)
+# # random = 3285
+# print(random)
+
+number = 9
+minpix = 50
+margin = 100
+
+line_list = []
+t_line_list = []
+poly_list = []
+
+for idx, val in enumerate(list_dir):
+    filepath = data_path + fr'\processed_frames\{idx}.jpg'
+    if os.path.exists(filepath):
+        continue
+
+    print(idx)
+    image = cv2.imread(os.path.join(path, val))
+
+    image = cv2.resize(image, (1280, 720))
+    frame = image
+    height = image.shape[0]
+    width = image.shape[1]
+    win_height = int(image.shape[0] // number)
+
+    img, left_lane, right_lane = prepare(image)
+
+    copy = np.copy(img)
+    leftx, lefty, rightx, righty, out_img = find_lanes(copy, False)
+
+    # if len(leftx1)>500 and len(rightx1)>500:
+    #     leftx, lefty, rightx, righty, out_img = find_lanes(img, True)
+    #
+    # else:
+    #     leftx, lefty, rightx, righty, out_img = leftx1, lefty1, rightx1, righty1, out_img1
+
+    t_leftx, t_lefty, t_rightx, t_righty, _ = find_lanes_perspective()
+
+    left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
+    t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
+
+    curves = np.concatenate((left_curve, right_curve))
+    t_curves = np.concatenate((t_left_curve, t_right_curve))
+
+    # Visualisation
+    y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
+    out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
+
+    down = min(min(t_lefty), min(t_righty))
+    # up = max(max(t_lefty), max(t_righty))
+    t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
+    t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
+
+    poly, frame = visualise_perspective(frame)
+    poly = poly[:,:,1]
+
+    cv2.imwrite(data_path + fr'\processed_frames\{idx}.jpg', frame)
+    line_list.append(curves)
+    t_line_list.append(t_curves)
+    poly_list.append(poly)
+
+# axs[0][idx].imshow(rgb(frame_processed))
+# axs[0][idx].set_title(title)
+# axs[1][idx].imshow(rgb(out_img))
+#
+# title = 'sobel'
+
+# plt.show()
+# to_jpg('original', image)
 # to_jpg('perspective', t_out_img)
+# to_jpg('curves', out_img)
+# to_jpg('frame', frame)
 
-left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
-t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
-
-# Visualisation
-y = np.linspace(0, height-1, height).astype(int).reshape((-1,1))
-out_img, left_x, right_x, points = visualise(out_img, y, left_curve, right_curve, True)
-
-down = min(min(t_lefty), min(t_righty))
-up = max(max(t_lefty), max(t_righty))
-t_y = np.linspace(down, up, (up-down)).astype(int).reshape((-1,1))
-t_out_img, t_left_x, t_right_x, _ = visualise(t_out_img, t_y, t_left_curve, t_right_curve, False)
-
-to_jpg('curves', out_img)
-
-frame = visualise_perspective(frame)
-
-to_jpg('frame', frame)
-
-# cv2.imshow('image', image)
+# cv2.imshow('poly', poly)
 # cv2.waitKey(0)
-cv2.imshow('t_out_img', t_out_img)
-cv2.waitKey(0)
-cv2.imshow('out_img', out_img)
-cv2.waitKey(0)
-cv2.imshow('frame', frame)
-cv2.waitKey(0)
+# cv2.imshow('frame', frame)
+# cv2.waitKey(0)
+# cv2.imshow('t_out_img', t_out_img)
+# cv2.waitKey(0)
+# cv2.imshow('out_img', out_img)
+# cv2.waitKey(0)
+
+
+#
+# other = cv2.cvtColor(np.copy(image), cv2.COLOR_RGB2GRAY)
+#
+# warp_zero = np.zeros_like(other).astype(np.uint8)
+# color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+#
+# fity = np.linspace(0, other.shape[0]-1, other.shape[0])
+#
+# fit_leftx = left_curve[0] * fity ** 2 + left_curve[1] * fity + left_curve[2]
+# fit_rightx = right_curve[0] * fity ** 2 + right_curve[1] * fity + right_curve[2]
+#
+# # Points to fill on the lane image label
+# pts_left = np.array([np.transpose(np.vstack([fit_leftx, fity]))])
+# pts_right = np.array([np.flipud(np.transpose(np.vstack([fit_rightx, fity])))])
+# pts = np.hstack((pts_left, pts_right))
+#
+# # Fill the space
+# cv2.fillPoly(color_warp, np.int_(pts), (0, 255, 0))
+# newwarp = cv2.warpPerspective(color_warp, M_inv, (other.shape[1], other.shape[0]))
+#
+# cv2.imshow('newwarp', newwarp[:,:,1])
+# cv2.waitKey(0)
