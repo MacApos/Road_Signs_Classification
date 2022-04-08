@@ -108,59 +108,60 @@ def prepare(image, thresh_flag=True, sobel_flag=False):
     max_val = np.mean(np.amax(gray, axis=1)).astype(int)
     if max_val > (255*0.75):
         max_val = int(max_val*0.75)
+    print(max_val)
 
     if thresh_flag:
         thresh = threshold(gray, max_val)
 
-    # if sobel_flag:
-    #     thresh = sobel_c_thresh(warp)
+    if sobel_flag:
+        thresh = sobel_c_thresh(warp)
 
-    # contours, img = find_contours(thresh, display=False)
-    # gray_rgb = np.dstack((thresh, thresh, thresh)) * 225
-    # for contour in contours:
-    #     area = cv2.contourArea(contour)
-    #     if area < minpix:
-    #         cv2.drawContours(gray_rgb, [contour], -1, (0, 0, 0), -1)
-    #
-    # try:
-    #     left_max = np.nonzero(gray_rgb[:, :width // 2])[0].max()
-    # except ValueError:
-    #     left_max = height - 1
-    #
-    # try:
-    #     right_max = np.nonzero(gray_rgb[:, width // 2:])[0].max()
-    # except ValueError:
-    #     right_max = height - 1
+    contours, img = find_contours(thresh, display=False)
+    gray_rgb = np.dstack((thresh, thresh, thresh)) * 225
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < minpix:
+            cv2.drawContours(gray_rgb, [contour], -1, (0, 0, 0), -1)
 
-    # down = min((left_max, right_max))
-    # if down < int(0.3*height):
-    #     down = int(0.3 * height)
-    # # gray[down - int(0.3 * height): down, :]
-    # blur = cv2.GaussianBlur(gray, (5, 5), 0)
-    # ''' [...] Any edges with intensity gradient more than maxVal are sure to be edges and those below minVal are sure
-    # to be non-edges, so discarded '''
-    # canny = cv2.Canny(blur, 0, 50)
-    # ''' [...] threshold of the minimum number of intersections needed to detect a line. '''
-    # lines = cv2.HoughLinesP(canny, 2, np.pi/180, 75, np.array([]), minLineLength=15, maxLineGap=5)
-    #
-    # left_lane = []
-    # right_lane = []
-    # if lines is not None:
-    #     for line in lines:
-    #         x1, y1, x2, y2 = line.reshape(4)
-    #         y1 = y1 + down-int(0.3*height)
-    #         y2 = y2 + down-int(0.3*height)
-    #         parameters = np.polyfit((x1, x2), (y1, y2), 1)
-    #         slope = parameters[0]
-    #         intercept = parameters[1]
-    #
-    #         if -0.1 > slope or slope > 0.1:
-    #             if x1 <= width//2 or x2 <= width//2:
-    #                 left_lane.append((slope, intercept))
-    #                 cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
-    #             else:
-    #                 right_lane.append((slope, intercept))
-    #                 cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+    try:
+        left_max = np.nonzero(gray_rgb[:, :width // 2])[0].max()
+    except ValueError:
+        left_max = height - 1
+
+    try:
+        right_max = np.nonzero(gray_rgb[:, width // 2:])[0].max()
+    except ValueError:
+        right_max = height - 1
+
+    down = min((left_max, right_max))
+    if down < int(0.3*height):
+        down = int(0.3 * height)
+    # gray[down - int(0.3 * height): down, :]
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    ''' [...] Any edges with intensity gradient more than maxVal are sure to be edges and those below minVal are sure 
+    to be non-edges, so discarded '''
+    canny = cv2.Canny(blur, 0, 255)
+    ''' [...] threshold of the minimum number of intersections needed to detect a line. '''
+    lines = cv2.HoughLinesP(canny, 2, np.pi/180, 75, np.array([]), minLineLength=15, maxLineGap=5)
+
+    left_lane = []
+    right_lane = []
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line.reshape(4)
+            y1 = y1 + down-int(0.3*height)
+            y2 = y2 + down-int(0.3*height)
+            parameters = np.polyfit((x1, x2), (y1, y2), 1)
+            slope = parameters[0]
+            intercept = parameters[1]
+
+            if -0.1 > slope or slope > 0.1:
+                if x1 <= width//2 or x2 <= width//2:
+                    left_lane.append((slope, intercept))
+                    cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+                else:
+                    right_lane.append((slope, intercept))
+                    cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
 
     # to_jpg('box', box)
     # to_jpg('warp', warp)
@@ -169,33 +170,30 @@ def prepare(image, thresh_flag=True, sobel_flag=False):
     # to_jpg('contours', img)
     # to_jpg('Houg', warp)
 
-    cv2.imshow('box', box)
-    cv2.waitKey(0)
-
-    return thresh#, left_lane, right_lane
+    return thresh, left_lane, right_lane
 
 
 def find_lanes(image, drop_out=False):
-    # global left_mean, right_mean
-    #
-    # lane_lists = []
-    # if left_lane or right_lane:
-    #     if drop_out:
-    #         for contour in contours:
-    #             area = cv2.contourArea(contour)
-    #             if area < minpix:
-    #                 cv2.drawContours(image=image, contours=[contour], contourIdx=-1, color=(0), thickness=-1)
-    #     if left_lane:
-    #         left_mean = np.mean(left_lane, axis=0)
-    #         left_slope = left_mean[0]
-    #         left_intercept = left_mean[1]
-    #         lane_lists.append(left_mean)
-    #
-    #     if right_lane:
-    #         right_mean = np.mean(right_lane, axis=0)
-    #         right_slope = right_mean[0]
-    #         right_intercept = right_mean[1]
-    #         lane_lists.append(right_mean)
+    global left_mean, right_mean
+
+    lane_lists = []
+    if left_lane or right_lane:
+        if drop_out:
+            for contour in contours:
+                area = cv2.contourArea(contour)
+                if area < minpix:
+                    cv2.drawContours(image=image, contours=[contour], contourIdx=-1, color=(0), thickness=-1)
+        if left_lane:
+            left_mean = np.mean(left_lane, axis=0)
+            left_slope = left_mean[0]
+            left_intercept = left_mean[1]
+            lane_lists.append(left_mean)
+
+        if right_lane:
+            right_mean = np.mean(right_lane, axis=0)
+            right_slope = right_mean[0]
+            right_intercept = right_mean[1]
+            lane_lists.append(right_mean)
 
     histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
     out_img = np.dstack((image, image, image))*225
@@ -218,19 +216,19 @@ def find_lanes(image, drop_out=False):
     nonzero = np.nonzero(image)
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
-    #
-    # try:
-    #     for list in lane_lists:
-    #         slope = list[0]
-    #         intercept = list[1]
-    #         if slope:
-    #             y1 = 0
-    #             x1 = int((y1 - intercept) / slope)
-    #             y2 = height
-    #             x2 = int((y2 - intercept) / slope)
-    #             cv2.line(out_img, (x1, y1), (x2, y2), (255, 0, 0), 4)
-    # except ValueError:
-    #     pass
+
+    try:
+        for list in lane_lists:
+            slope = list[0]
+            intercept = list[1]
+            if slope:
+                y1 = 0
+                x1 = int((y1 - intercept) / slope)
+                y2 = height
+                x2 = int((y2 - intercept) / slope)
+                cv2.line(out_img, (x1, y1), (x2, y2), (255, 0, 0), 4)
+    except ValueError:
+        pass
 
     # to_jpg('line', out_img)
 
@@ -251,29 +249,41 @@ def find_lanes(image, drop_out=False):
         right_nonzero = ((nonzeroy >= low) & (nonzeroy <= high) &
                          (nonzerox >= right_left) & (nonzerox <= right_right)).nonzero()[0]
 
+
+
         left_idx.append(left_nonzero)
         right_idx.append(right_nonzero)
 
+        left_idx0 = np.concatenate(left_idx)
+        right_idx0 = np.concatenate(right_idx)
+        print(left_idx0.shape, right_idx0.shape)
+
+        leftx0 = nonzerox[left_idx0]
+        lefty0 = nonzeroy[left_idx0]
+        rightx0 = nonzerox[right_idx0]
+        righty0 = nonzeroy[right_idx0]
+
+        left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
+
         if len(left_nonzero) > minpix:
             left_current = int(np.mean(nonzerox[left_nonzero]))
-        # else:
-        #     try:
-        #         # left_current = int((low - left_intercept) / left_slope)
-        #         print('follow left line')
-        #         left_current = int(left_curve0[0] * low ** 2 + left_curve0[1] * low + left_curve0[2])
-        #     except TypeError:
-        #         print('pass')
-        #         pass
+        else:
+            try:
+                left_current = int((low - left_intercept) / left_slope)
+                # left_current = left_curve[0] * low ** 2 + left_curve[1] * low + left_curve[2]
+                # print('follow left line')
+            except NameError:
+                pass
 
         if len(right_nonzero) > minpix:
             right_current = int(np.mean(nonzerox[right_nonzero]))
-        # else:
-        #     try:
-        #         print('follow right line')
-        #         right_current = int(right_curve0[0] * low ** 2 + right_curve0[1] * low + right_curve0[2])
-        #     except TypeError:
-        #         print('pass')
-        #         pass
+        else:
+            try:
+                right_current = int((low - right_intercept) / right_slope)
+                # fit_rightx = right_curve[0] * low ** 2 + right_curve[1] * low + right_curve[2]
+                # print('follow right line')
+            except NameError:
+                pass
 
     # to_jpg('rectangles', out_img)
 
@@ -287,6 +297,7 @@ def find_lanes(image, drop_out=False):
     lefty1 = nonzeroy[left_idx]
     rightx1 = nonzerox[right_idx]
     righty1 = nonzeroy[right_idx]
+    print('leftx0=', len(leftx1), 'rightx0=', len(rightx1))
 
     if len(leftx1) == 0:
         leftx1 = rightx1 - width // 2
@@ -418,7 +429,7 @@ path = data_path + '\TEST'
 path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
 list_dir = os.listdir(path)
 random = random.randint(0, len(list_dir)-1)
-random = 1900
+random = 2066
 print(random)
 
 src = np.float32([[0, 720],
@@ -457,8 +468,8 @@ height = image.shape[0]
 width = image.shape[1]
 win_height = int(image.shape[0] // number)
 
-img = prepare(image, thresh_flag=True, sobel_flag=False)
-# img, left_lane, right_lane
+img, left_lane, right_lane = prepare(image)
+
 copy = np.copy(img)
 leftx, lefty, rightx, righty, out_img = find_lanes(copy, False)
 
@@ -507,8 +518,8 @@ poly = poly[:,:,1]
 
 # cv2.imshow('poly', poly)
 # cv2.waitKey(0)
-cv2.imshow('frame', frame)
-cv2.waitKey(0)
+# cv2.imshow('frame', frame)
+# cv2.waitKey(0)
 # cv2.imshow('t_out_img', t_out_img)
 # cv2.waitKey(0)
 cv2.imshow('out_img', out_img)
@@ -516,6 +527,10 @@ cv2.waitKey(0)
 
 stop = time.time()
 
+print(stop-start)
+
+
+#
 # other = cv2.cvtColor(np.copy(image), cv2.COLOR_RGB2GRAY)
 #
 # warp_zero = np.zeros_like(other).astype(np.uint8)

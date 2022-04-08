@@ -6,6 +6,8 @@ print(points)
 
 empty = np.empty([2])
 
+print(np.linspace(0, 5))
+
 a1 = np.arange(6)
 a2 = np.arange(7, 13)
 

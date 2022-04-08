@@ -60,7 +60,7 @@ def sobel(image):
 
     return output
 
-path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
+path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple\TEST'
 list_dir = os.listdir(path)
 random = random.randint(0, len(list_dir)-1)
 random = 861
