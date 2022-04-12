@@ -415,10 +415,10 @@ def rgb(image):
 
 data_path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple'
 path = data_path + '\TEST'
-path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
 list_dir = os.listdir(path)
 random = random.randint(0, len(list_dir)-1)
-random = 1900
+# random = 1900
 print(random)
 
 src = np.float32([[0, 720],

@@ -140,17 +140,18 @@ def prepare(image, thresh_flag=True, sobel_flag=False):
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
     ''' [...] Any edges with intensity gradient more than maxVal are sure to be edges and those below minVal are sure 
     to be non-edges, so discarded '''
-    canny = cv2.Canny(blur, 0, 255)
+    canny = cv2.Canny(blur, 50, 150)
     ''' [...] threshold of the minimum number of intersections needed to detect a line. '''
     lines = cv2.HoughLinesP(canny, 2, np.pi/180, 75, np.array([]), minLineLength=15, maxLineGap=5)
+
 
     left_lane = []
     right_lane = []
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line.reshape(4)
-            y1 = y1 + down-int(0.3*height)
-            y2 = y2 + down-int(0.3*height)
+            # y1 = y1 + down-int(0.3*height)
+            # y2 = y2 + down-int(0.3*height)
             parameters = np.polyfit((x1, x2), (y1, y2), 1)
             slope = parameters[0]
             intercept = parameters[1]
@@ -158,15 +159,15 @@ def prepare(image, thresh_flag=True, sobel_flag=False):
             if -0.1 > slope or slope > 0.1:
                 if x1 <= width//2 or x2 <= width//2:
                     left_lane.append((slope, intercept))
-                    cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+                    cv2.line(canny, (x1, y1), (x2, y2), (0, 255, 0), 4)
                 else:
                     right_lane.append((slope, intercept))
-                    cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+                    cv2.line(canny, (x1, y1), (x2, y2), (0, 255, 0), 4)
 
     # to_jpg('box', box)
     # to_jpg('warp', warp)
     # to_jpg('gray', gray)
-    # to_jpg('threshold', thresh)
+    to_jpg('threshold', thresh)
     # to_jpg('contours', img)
     # to_jpg('Houg', warp)
 
@@ -230,7 +231,7 @@ def find_lanes(image, drop_out=False):
     except ValueError:
         pass
 
-    # to_jpg('line', out_img)
+    to_jpg('line', out_img)
 
     for i in range(number):
         low = image.shape[0] - win_height*(i+1)
@@ -253,17 +254,6 @@ def find_lanes(image, drop_out=False):
 
         left_idx.append(left_nonzero)
         right_idx.append(right_nonzero)
-
-        left_idx0 = np.concatenate(left_idx)
-        right_idx0 = np.concatenate(right_idx)
-        print(left_idx0.shape, right_idx0.shape)
-
-        leftx0 = nonzerox[left_idx0]
-        lefty0 = nonzeroy[left_idx0]
-        rightx0 = nonzerox[right_idx0]
-        righty0 = nonzeroy[right_idx0]
-
-        left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
 
         if len(left_nonzero) > minpix:
             left_current = int(np.mean(nonzerox[left_nonzero]))
@@ -371,10 +361,10 @@ def visualise(image, y, left_curve, right_curve, plot):
     for arr in fit_leftx, fit_rightx:
         arr = arr.astype(int)
         con = np.concatenate((arr, y), axis=1)
-        # cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
+        cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
 
-        for val in con:
-            cv2.circle(image, tuple(val), 5, color, -1)
+        # for val in con:
+        #     cv2.circle(image, tuple(val), 5, color, -1)
 
         if flipud:
             con = np.flipud(con)
@@ -426,11 +416,12 @@ def rgb(image):
 
 data_path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple'
 path = data_path + '\TEST'
-path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
+# path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple\small_test'
 list_dir = os.listdir(path)
 random = random.randint(0, len(list_dir)-1)
-random = 2066
-print(random)
+random = 809
+# print(random)
 
 src = np.float32([[0, 720],
                   [450, 300],
@@ -442,9 +433,9 @@ dst = np.float32([src[0],
                   [src[-1][0], 0],
                   src[-1]])
 
-file = open('Pickles/src.p', 'rb')
-src = pickle.load(file)
-file.close()
+# file = open('Pickles/src.p', 'rb')
+# src = pickle.load(file)
+# file.close()
 
 number = 9
 minpix = 50
@@ -511,9 +502,9 @@ poly = poly[:,:,1]
 # title = 'sobel'
 
 # plt.show()
-# to_jpg('original', image)
+to_jpg('original', image)
 # to_jpg('perspective', t_out_img)
-# to_jpg('curves', out_img)
+to_jpg('curves', out_img)
 # to_jpg('frame', frame)
 
 # cv2.imshow('poly', poly)
