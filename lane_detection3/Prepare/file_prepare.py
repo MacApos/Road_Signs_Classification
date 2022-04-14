@@ -5,8 +5,8 @@ import shutil
 import pickle
 import matplotlib.image as mpimg
 
-# src = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\test_set\clips\0531'
-# dst = r'C:\Nowy folder\10\Praca\Datasets\tu-simple\small_test'
+# src = r'F:\Nowy folder\10\Praca\Datasets\tu-simple\train_set\clips\0531'
+# dst = r'F:\Nowy folder\10\Praca\Datasets\tu-simple\small_test'
 
 src = r'C:\Nowy folder\10\Praca\Datasets\caltech-lanes'
 dst = r'C:\Nowy folder\10\Praca\Datasets\caltech-lanes\TEST'
@@ -15,12 +15,9 @@ imglist = []
 for i in os.listdir(src):
     path = os.path.join(src, i)
     # filepath = glob.glob(path + '\\*.jpg')
-    filepath = glob.glob(path + '\\*.png')
+    filepath = glob.glob(path + '\\*.jpg')
     for file in filepath:
         imglist.append(file)
-    # for j in os.listdir(path):
-    #     filepath = os.path.join(path, j)
-    #     imglist.append(filepath)
 
 print(len(imglist), imglist)
 
@@ -33,8 +30,8 @@ for img in imglist:
     image = mpimg.imread(img)
     road_images.append(image)
     idx += 1
-    # if idx == 100:
-    #     break
-#
+    if idx == 500:
+        break
+
 # pickle.dump(road_images, open(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles'
-#                               r'\road_images.p', "wb"))
+#                                r'\road_images.p', "wb"))
