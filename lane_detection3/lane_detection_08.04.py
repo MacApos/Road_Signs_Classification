@@ -149,8 +149,8 @@ def prepare(image, thresh_flag=True, sobel_flag=False):
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line.reshape(4)
-            y1 = y1 + down-int(0.3*height)
-            y2 = y2 + down-int(0.3*height)
+            # y1 = y1 + down-int(0.3*height)
+            # y2 = y2 + down-int(0.3*height)
             parameters = np.polyfit((x1, x2), (y1, y2), 1)
             slope = parameters[0]
             intercept = parameters[1]
@@ -169,6 +169,11 @@ def prepare(image, thresh_flag=True, sobel_flag=False):
     # to_jpg('threshold', thresh)
     # to_jpg('contours', img)
     # to_jpg('Houg', warp)
+
+    cv2.imshow('warp', warp)
+    cv2.imshow('box', box)
+    cv2.imshow('thresh', thresh)
+    cv2.waitKey()
 
     return thresh, left_lane, right_lane
 
@@ -424,12 +429,12 @@ def rgb(image):
 #     left_lane = val[1]
 #     right_lane = val[2]
 
-data_path = r'F:\Nowy folder\10\Praca\Datasets\tu-simple'
+data_path = r'C:\Nowy folder\10\Praca\Datasets\tu-simple'
 path = data_path + '\TEST'
-path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video7\batch1'
 list_dir = os.listdir(path)
 random = random.randint(0, len(list_dir)-1)
-random = 2066
+# random = 2066
 print(random)
 
 src = np.float32([[0, 720],
@@ -442,9 +447,9 @@ dst = np.float32([src[0],
                   [src[-1][0], 0],
                   src[-1]])
 
-file = open('Pickles/src.p', 'rb')
-src = pickle.load(file)
-file.close()
+# file = open('Pickles/src.p', 'rb')
+# src = pickle.load(file)
+# file.close()
 
 number = 9
 minpix = 50
