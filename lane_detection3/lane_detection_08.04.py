@@ -532,7 +532,7 @@ cv2.waitKey(0)
 
 stop = time.time()
 
-print(stop-start)
+print()
 
 
 #

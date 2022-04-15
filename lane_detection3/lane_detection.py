@@ -508,6 +508,8 @@ for label in labels:
         save_t_line.append(t_curves)
         save_poly.append(poly)
 
+print()
+
 
 # axs[0][idx].imshow(rgb(frame_processed))
 # axs[0][idx].set_title(title)
