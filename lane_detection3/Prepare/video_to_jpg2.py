@@ -107,6 +107,7 @@ for video in video_dict:
     video_path = os.path.join(path, video["name"])
     cap = cv2.VideoCapture(video_path)
 
+    print()
 
     j = 0
     k = 0
