@@ -6,30 +6,28 @@ import random
 import shutil
 import numpy as np
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
-train_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
-test_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
-
-
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
+train_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
+test_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
 
 fps = 30
 interval = 15
-# video1 = {"name": "Video1.mp4",
-#           "batch0": (15*fps, 573*fps),
-#           "batch1": (1815*fps, 3805*fps)}
-#
-# video2 = {"name": "Video2.mp4",
-#           "batch0": (380*fps, 1475*fps),
-#           "batch1": (2093 * fps, 2500 * fps),
-#           "batch2": (3185 * fps, 5620 * fps),
-#           "batch3": (5645 * fps, 5830 * fps)}
-#
-# video3 = {"name": "Video3.mp4",
-#           "batch0": (17*fps, 2850*fps)}
-#
-# video4 = {"name": "Video4.mp4",
-#           "batch0": (281*fps, 1655*fps),
-#           "batch1": (2125*fps, 2600*fps)}
+video1 = {"name": "Video1.mp4",
+          "batch0": (15*fps, 573*fps),
+          "batch1": (1815*fps, 3805*fps)}
+
+video2 = {"name": "Video2.mp4",
+          "batch0": (380*fps, 1475*fps),
+          "batch1": (2093 * fps, 2500 * fps),
+          "batch2": (3185 * fps, 5620 * fps),
+          "batch3": (5645 * fps, 5830 * fps)}
+
+video3 = {"name": "Video3.mp4",
+          "batch0": (17*fps, 2850*fps)}
+
+video4 = {"name": "Video4.mp4",
+          "batch0": (281*fps, 1655*fps),
+          "batch1": (2125*fps, 2600*fps)}
 
 # rand = []
 # diff = []
@@ -45,22 +43,22 @@ interval = 15
 #     if d%2==0:
 #         print()
 #     print(f'batch{d%2} = [{rand[d]}, {diff[d]}]')
-
-video1 = {"name": "Video1.mp4",
-          "batch0": (2490, 4470),
-          "batch1": (2730, 4560)}
-
-video2 = {"name": "Video2.mp4",
-          "batch0": (2430, 5160),
-          "batch1": (2910, 4920)}
-
-video3 = {"name": "Video3.mp4",
-          "batch0": (750, 2700),
-          "batch1": (2130, 4170)}
-
-video4 = {"name": "Video4.mp4",
-          "batch0": (1650, 4350),
-          "batch1": (2670, 5340)}
+#
+# video1 = {"name": "Video1.mp4",
+#           "batch0": (2490, 2700),
+#           "batch1": (2730, 4560)}
+#
+# video2 = {"name": "Video2.mp4",
+#           "batch0": (2430, 2880),
+#           "batch1": (2910, 4920)}
+#
+# video3 = {"name": "Video3.mp4",
+#           "batch0": (750, 2700),
+#           "batch1": (2730, 4170)}
+#
+# video4 = {"name": "Video4.mp4",
+#           "batch0": (1650, 4350),
+#           "batch1": (4380, 5340)}
 
 # video1 = {"name": "Video1.mp4",
 #           "batch0": (rand[0], diff[0]),
@@ -78,7 +76,7 @@ video4 = {"name": "Video4.mp4",
 #           "batch0": (rand[6], diff[6]),
 #           "batch1": (rand[7], diff[7])}
 
-video_dict = [video1, video2, video3, video4]
+video_dict = [video1]
 
 frames_num = 0
 for video in video_dict:
@@ -89,7 +87,8 @@ for video in video_dict:
 frames_num = frames_num//interval
 
 indices = random.sample(range(frames_num), frames_num)
-train_size = int(frames_num*0.7)
+train_size = 1400
+# int(frames_num*0.7)
 
 print(frames_num, train_size, frames_num-train_size)
 
@@ -107,23 +106,27 @@ for video in video_dict:
     video_path = os.path.join(path, video["name"])
     cap = cv2.VideoCapture(video_path)
 
-    print()
-
     j = 0
     k = 0
-    print('k=', k)
     while cap.isOpened():
         _, image = cap.read()
         img_path = train_path + fr'\{i}.jpg'
         if values[k][0] < j <= values[k][1] and j%interval==0:
-            cv2.imwrite(img_path, image)
-            print(f'{j}, {i}, copy')
-            i += 1
+            if np.any(image):
+                if not os.path.exists(img_path):
+                    cv2.imwrite(img_path, image)
+                    print(f'{j}, {i}, copy')
+                    i += 1
+                else:
+                    print('already exists')
+                    pass
 
-        if j > values[-1][1]:
+        if j > values[-1][1] or i==2000:
+            print('break')
             break
 
         elif j > values[k][1]:
+            print('k+1, k=', k)
             k += 1
         j += 1
 
@@ -139,10 +142,10 @@ def sort_path(path):
 
 sorted_train = sort_path(train_path)
 
-# test_idx = 0
-# for train_idx, train_img in enumerate(sorted_train):
-#     if train_idx>=train_size:
-#         test_img = test_path + fr'\{test_idx}.jpg'
-#         # print(train_idx, train_img, '->', test_img)
-#         os.replace(train_img, test_img)
-#         test_idx += 1
+test_idx = 0
+for train_idx, train_img in enumerate(sorted_train):
+    if train_idx>=train_size:
+        test_img = test_path + fr'\{test_idx}.jpg'
+        print(train_idx, train_img, '->', test_img)
+        os.replace(train_img, test_img)
+        test_idx += 1
