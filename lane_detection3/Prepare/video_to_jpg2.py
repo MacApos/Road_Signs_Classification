@@ -6,9 +6,11 @@ import random
 import shutil
 import numpy as np
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
-train_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
-test_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
+train_path = os.path.join(path, 'train_set')
+print(train_path)
+train_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
+test_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
 
 fps = 30
 interval = 15
@@ -100,6 +102,7 @@ for data_path in train_path, test_path:
         os.mkdir(data_path)
 
 i = 0
+i1 = 0
 for video in video_dict:
     values = list(video.values())[1:]
 
@@ -114,8 +117,15 @@ for video in video_dict:
         if values[k][0] < j <= values[k][1] and j%interval==0:
             if np.any(image):
                 if not os.path.exists(img_path):
-                    cv2.imwrite(img_path, image)
-                    print(f'{j}, {i}, copy')
+
+                    if i%3==0:
+                        img_path = test_path + fr'\{i1}.jpg'
+                        cv2.imwrite(img_path, image)
+                        print(f'{j}, {i}, test - copy')
+                        i1 += 1
+                    else:
+                        cv2.imwrite(img_path, image)
+                        print(f'{j}, {i}, train - copy')
                     i += 1
                 else:
                     print('already exists')
@@ -142,10 +152,10 @@ def sort_path(path):
 
 sorted_train = sort_path(train_path)
 
-test_idx = 0
-for train_idx, train_img in enumerate(sorted_train):
-    if train_idx>=train_size:
-        test_img = test_path + fr'\{test_idx}.jpg'
-        print(train_idx, train_img, '->', test_img)
-        os.replace(train_img, test_img)
-        test_idx += 1
+# test_idx = 0
+# for train_idx, train_img in enumerate(sorted_train):
+#     if train_idx>=train_size:
+#         test_img = test_path + fr'\{test_idx}.jpg'
+#         print(train_idx, train_img, '->', test_img)
+#         os.replace(train_img, test_img)
+#         test_idx += 1

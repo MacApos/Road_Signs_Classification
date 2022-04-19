@@ -128,28 +128,28 @@ def prepare(image):
 
     thresh = threshold(gray, max_val)
 
-    ''' [...] Any edges with intensity gradient more than maxVal are sure to be edges and those below minVal are sure
-    to be non-edges, so discarded '''
-    canny = cv2.Canny(thresh, 0, 75)
-    ''' [...] threshold of the minimum number of intersections needed to detect a line. '''
-    lines = cv2.HoughLinesP(canny, 2, np.pi/180, 125, np.array([]), minLineLength=15, maxLineGap=5)
-
-    left_lane = []
-    right_lane = []
-    if lines is not None:
-        for line in lines:
-            x1, y1, x2, y2 = line.reshape(4)
-            parameters = np.polyfit((x1, x2), (y1, y2), 1)
-            slope = parameters[0]
-            intercept = parameters[1]
-
-            if -0.1 > slope or slope > 0.1:
-                if x1 <= width//2 or x2 <= width//2:
-                    left_lane.append((slope, intercept))
-                    cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
-                else:
-                    right_lane.append((slope, intercept))
-                    cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+    # ''' [...] Any edges with intensity gradient more than maxVal are sure to be edges and those below minVal are sure
+    # to be non-edges, so discarded '''
+    # canny = cv2.Canny(thresh, 0, 75)
+    # ''' [...] threshold of the minimum number of intersections needed to detect a line. '''
+    # lines = cv2.HoughLinesP(canny, 2, np.pi/180, 125, np.array([]), minLineLength=15, maxLineGap=5)
+    #
+    # left_lane = []
+    # right_lane = []
+    # if lines is not None:
+    #     for line in lines:
+    #         x1, y1, x2, y2 = line.reshape(4)
+    #         parameters = np.polyfit((x1, x2), (y1, y2), 1)
+    #         slope = parameters[0]
+    #         intercept = parameters[1]
+    #
+    #         if -0.1 > slope or slope > 0.1:
+    #             if x1 <= width//2 or x2 <= width//2:
+    #                 left_lane.append((slope, intercept))
+    #                 cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
+    #             else:
+    #                 right_lane.append((slope, intercept))
+    #                 cv2.line(warp, (x1, y1), (x2, y2), (0, 255, 0), 4)
 
     # to_jpg('box', box)
     # to_jpg('warp', warp)
@@ -158,10 +158,11 @@ def prepare(image):
     # to_jpg('contours', img)
     # to_jpg('Houg', warp)
 
-    return thresh, left_lane, right_lane
+    return thresh#, left_lane, right_lane
 
 
-def find_single_lane(side_current, lane_indicator):
+# def find_single_lane(side_current, lane_indicator):
+def find_single_lane(side_current):
     side_left = side_current - margin
     side_right = side_current + margin
     cv2.rectangle(out_img, (side_left, low), (side_right, high), (0, 255, 0), 4)
@@ -174,18 +175,22 @@ def find_single_lane(side_current, lane_indicator):
         if (side_left < 0 or side_right > width) and len(side_nonzero) == 0:
             side_indicator = False
 
-    if lane_indicator:
-        side_mean = np.mean(lane_indicator, axis=0)
-        side_slope = side_mean[0]
-        side_intercept = side_mean[1]
+    # if lane_indicator:
+    #     side_mean = np.mean(lane_indicator, axis=0)
+    #     side_slope = side_mean[0]
+    #     side_intercept = side_mean[1]
 
     if len(side_nonzero) > minpix:
         side_current = int(np.mean(nonzerox[side_nonzero]))
-    else:
-        try:
-            side_current = int((low - side_intercept) / side_slope)
-        except NameError:
-            pass
+    # else:
+    #     try:
+    #         side_current = int((low - side_intercept) / side_slope)
+    #         if side_current >= width:
+    #             side_current = width - margin
+    #         elif side_current <= 0:
+    #             side_current = 0 + margin
+    #     except NameError:
+    #         pass
 
     return side_current, side_nonzero, side_indicator
 
@@ -204,13 +209,13 @@ def find_lanes(image):
     left = np.argmax(histogram[:midpoint])
     right = midpoint + np.argmax(histogram[midpoint:])
 
-    if left > midpoint or (midpoint - left) < 100:
-        left = 0 + margin
-    if right < midpoint or (right - midpoint) < 100:
-        right = width - margin - 1
+    # if left > midpoint or (midpoint - left) < 100:
+    #     left = 0 + margin
+    # if right < midpoint or (right - midpoint) < 100:
+    #     right = width - margin - 1
 
     if left - margin<= 0:
-        left = margin
+        left = 0 + margin
     if right + margin >= width:
         right = width - margin
 
@@ -229,30 +234,30 @@ def find_lanes(image):
 
     lane_lists = []
 
-    if left_lane:
-        left_mean = np.mean(left_lane, axis=0)
-        left_slope = left_mean[0]
-        left_intercept = left_mean[1]
-        lane_lists.append(left_mean)
-
-    if right_lane:
-        right_mean = np.mean(right_lane, axis=0)
-        right_slope = right_mean[0]
-        right_intercept = right_mean[1]
-        lane_lists.append(right_mean)
-
-    try:
-        for lane in lane_lists:
-            slope = lane[0]
-            intercept = lane[1]
-            if slope:
-                y1 = 0
-                x1 = int((y1 - intercept) / slope)
-                y2 = height
-                x2 = int((y2 - intercept) / slope)
-                cv2.line(out_img, (x1, y1), (x2, y2), (255, 0, 0), 4)
-    except ValueError:
-        pass
+    # if left_lane:
+    #     left_mean = np.mean(left_lane, axis=0)
+    #     left_slope = left_mean[0]
+    #     left_intercept = left_mean[1]
+    #     lane_lists.append(left_mean)
+    #
+    # if right_lane:
+    #     right_mean = np.mean(right_lane, axis=0)
+    #     right_slope = right_mean[0]
+    #     right_intercept = right_mean[1]
+    #     lane_lists.append(right_mean)
+    #
+    # try:
+    #     for lane in lane_lists:
+    #         slope = lane[0]
+    #         intercept = lane[1]
+    #         if slope:
+    #             y1 = 0
+    #             x1 = int((y1 - intercept) / slope)
+    #             y2 = height
+    #             x2 = int((y2 - intercept) / slope)
+    #             cv2.line(out_img, (x1, y1), (x2, y2), (255, 0, 0), 4)
+    # except ValueError:
+    #     pass
 
     # to_jpg('line', out_img)
 
@@ -296,26 +301,44 @@ def find_lanes(image):
 
     # to_jpg('rectangles', out_img)
 
+        # if left_indicator and right_indicator:
+        #     left_current, left_nonzero, left_indicator = find_single_lane(left_current, left_lane)
+        #     right_current, right_nonzero, right_indicator = find_single_lane(right_current, right_lane)
+        #
+        #     left_idx.append(left_nonzero)
+        #     right_idx.append(right_nonzero)
+        #
+        # elif left_indicator:
+        #     left_current, left_nonzero, left_indicator = find_single_lane(left_current, left_lane)
+        #     left_idx.append(left_nonzero)
+        #
+        #
+        # elif right_indicator:
+        #     right_current, right_nonzero, right_indicator = find_single_lane(right_current, right_lane)
+        #     right_idx.append(right_nonzero)
+        #
+        # else:
+        #     break
+
+
         if left_indicator and right_indicator:
-            left_current, left_nonzero, left_indicator = find_single_lane(left_current, left_lane)
-            right_current, right_nonzero, right_indicator = find_single_lane(right_current, right_lane)
+            left_current, left_nonzero, left_indicator = find_single_lane(left_current)
+            right_current, right_nonzero, right_indicator = find_single_lane(right_current)
 
             left_idx.append(left_nonzero)
             right_idx.append(right_nonzero)
 
         elif left_indicator:
-            left_current, left_nonzero, left_indicator = find_single_lane(left_current, left_lane)
+            left_current, left_nonzero, left_indicator = find_single_lane(left_current)
             left_idx.append(left_nonzero)
 
 
         elif right_indicator:
-            right_current, right_nonzero, right_indicator = find_single_lane(right_current, right_lane)
+            right_current, right_nonzero, right_indicator = find_single_lane(right_current)
             right_idx.append(right_nonzero)
 
         else:
             break
-
-
 
     try:
         left_idx = np.concatenate(left_idx)
@@ -328,16 +351,19 @@ def find_lanes(image):
     rightx1 = nonzerox[right_idx]
     righty1 = nonzeroy[right_idx]
 
-    if len(leftx1) == 0:
+    if len(leftx1) == 0 or len(leftx1) <= minpix:
+        print('no left')
         # leftx1 = rightx1 - width // 2
         leftx1 = width - rightx1
         lefty1 = righty1
 
-    if len(rightx1) == 0:
+    if len(rightx1) == 0 or len(rightx1) <= minpix:
         print('no right')
         # rightx1 = leftx1 + width // 2
         rightx1 = width - leftx1
         righty1 = lefty1
+
+    # print(len(leftx1), len(rightx1))
 
     left_curve1 = np.polyfit(lefty1, leftx1, 2)
     right_curve1 = np.polyfit(righty1, rightx1, 2)
@@ -364,8 +390,8 @@ def find_lanes(image):
 def find_lanes_perspective():
     global M_inv
     zeros = np.zeros_like(frame)
-    zeros[lefty, leftx] = 255
-    zeros[righty, rightx] = 255
+    zeros[lefty-1, leftx-1] = 255
+    zeros[righty-1, rightx-1] = 255
     _, M_inv = warp_perspective(frame, dst, src)
     t_out_img = cv2.warpPerspective(zeros, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
 
@@ -436,6 +462,14 @@ def visualise_perspective(frame):
 
     return poly, frame
 
+def sort_path(path):
+    sorted_path = []
+    for file in os.listdir(path):
+        number = int(''.join(n for n in file if n.isdigit()))
+        sorted_path.append(number)
+
+    sorted_path = sorted(sorted_path)
+    return [path + fr'\{str(f)}.jpg' for f in sorted_path]
 
 def rgb(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -456,7 +490,7 @@ def rgb(image):
 #     left_lane = val[1]
 #     right_lane = val[2]
 
-data_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+data_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = os.path.join(data_path, 'train_set')
 list_dir = os.listdir(path)
 
@@ -515,7 +549,7 @@ labels = ['train_set', 'test_set']
 for label in labels:
     label_path = data_path + fr'\{label}'
 
-    filepath = glob.glob(label_path + '\\*.jpg')
+    sorted_path = sort_path(label_path)
 
     if label == 'train_set':
         save_path = data_path + fr'\train_labels'
@@ -529,28 +563,29 @@ for label in labels:
         save_t_line = test_t_line
         save_poly = test_poly
 
-
     if not os.path.exists(save_path):
         os.mkdir(save_path)
 
-    for idx, val in enumerate(filepath):
+    for idx, val in enumerate(sorted_path):
+    # val = r'C:\Nowy folder\10\Praca\Datasets\Video_data\train_set\1088.jpg'
         image = cv2.imread(val)
 
         frame = image
 
         # img, left_lane, right_lane = prepare(image)
-        img, left_lane, right_lane = prepare(image)
+        img = prepare(image)
+
         nonzero_pixels = len(img.nonzero()[1])
 
         if nonzero_pixels < 6500:
             image = brighten(image, 25)
-            img, left_lane, right_lane = prepare(image, thresh_flag=True, sobel_flag=False)
+            img, left_lane, right_lane = prepare(image)
         else:
             pass
 
         copy = np.copy(img)
         leftx, lefty, rightx, righty, out_img = find_lanes(copy)
-
+        # im_show('out_img', out_img)
         t_leftx, t_lefty, t_rightx, t_righty, _ = find_lanes_perspective()
 
         left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
@@ -560,18 +595,18 @@ for label in labels:
         t_curves = np.concatenate((t_left_curve, t_right_curve))
 
         # Visualisation
-        y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
-        out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
-
-        down = min(min(t_lefty), min(t_righty))
-        t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
-        t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
+        # y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
+        # out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
+        #
+        # down = min(min(t_lefty), min(t_righty))
+        # t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
+        # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
 
         poly, frame = visualise_perspective(frame)
         poly = poly[:,:,1]
 
         cv2.imwrite(save_path+fr'\{idx}.jpg', frame)
-        print(idx, 'save')
+        print(idx, 'save', val)
         save_line.append(curves)
         save_t_line.append(t_curves)
         save_poly.append(poly)
