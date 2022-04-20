@@ -611,13 +611,13 @@ for label in labels:
         save_t_line.append(t_curves)
         save_poly.append(poly)
 
-pickle.dump(train_line, open('train_line.p', "wb"))
-pickle.dump(train_t_line, open('train_t_line.p', "wb"))
-pickle.dump(train_poly, open('train_poly.p', "wb"))
+pickle.dump(train_line, open('Pickles/train_line', "wb"))
+pickle.dump(train_t_line, open('Pickles/train_t_line.p', "wb"))
+pickle.dump(train_poly, open('Pickles/train_poly.p', "wb"))
 
-pickle.dump(test_line, open('test_line.p', "wb"))
-pickle.dump(test_t_line, open('test_t_line.p', "wb"))
-pickle.dump(test_poly, open('test_poly.p', "wb"))
+pickle.dump(test_line, open('Pickles/test_line.p', "wb"))
+pickle.dump(test_t_line, open('Pickles/test_t_line.p', "wb"))
+pickle.dump(test_poly, open('Pickles/test_poly.p', "wb"))
 
 
 # axs[0][idx].imshow(rgb(frame_processed))

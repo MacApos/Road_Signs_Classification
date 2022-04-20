@@ -1,14 +1,16 @@
 import pickle
 import cv2
 
-filename = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\src.p'
-path = r'C:\Nowy folder\10\Praca\Datasets\TDS'
+lines0 = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\lane_labels.p'
+lines1 = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\train_line.p'
 
-infile = open(filename, 'rb')
-new_dict = pickle.load(infile)
-infile.close()
-print(new_dict)
+file0 = open(lines0, 'rb')
+lines_dict0 = pickle.load(file0)
+file0.close()
 
-# for idx, val in enumerate(new_dict[2]):
-#     dst = '\\'.join((path, f'{idx}.jpg'))
-#     cv2.imwrite(dst, new_dict[idx])
+file1 = open(lines1, 'rb')
+lines_dict1 = pickle.load(file1)
+file1.close()
+
+print(lines_dict0[0].shape)
+print(lines_dict1[0].shape)

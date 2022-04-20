@@ -4,7 +4,7 @@ import matplotlib.image as mpimg
 import glob
 import pickle
 import re
-from scipy.ndimage.interpolation import rotate
+# from scipy.ndimage.interpolation import rotate
 
 
 def natural_key(string_):
@@ -14,8 +14,8 @@ def natural_key(string_):
 
 def load_drawn_images():
     """Load re-drawn lane image locations"""
-    drawn_image_locs = glob.glob('draw/*.jpg')
-    sort_drawn_image_locs = sorted(drawn_image_locs, key=natural_key)
+    drawn_image_locs = glob.glob(r'C:\Nowy folder\10\Praca\Datasets\Video_data\train_set\*.jpg')
+    sort_drawn_image_locs = sorted(drawn_image_locs[:100], key=natural_key)
     return sort_drawn_image_locs
 
 
@@ -30,6 +30,7 @@ def load_drawn_images():
 #     combined_binary = np.zeros_like(R_binary)
 #     combined_binary[(R_binary == 1)] = 1
 #     return combined_binary
+
 
 src = np.float32([[290,650],
                   [570,525],
@@ -123,6 +124,7 @@ def lane_detection(image_list):
     The below code is a modified version of my computer vision-based
     Advanced Lane Lines project.
     """
+    i = 0
     for fname in image_list:
         # Read image
         img = mpimg.imread(fname)
@@ -132,10 +134,6 @@ def lane_detection(image_list):
         histogram = np.sum(binary_warped[binary_warped.shape[0] // 2:, :], axis=0)
         out_img = np.dstack((binary_warped, binary_warped, binary_warped)) * 225
 
-
-        print(len(binary_warped.shape))
-        cv2.imshow('out_img', out_img)
-        cv2.waitKey(0)
 
 
         # Find the peak of the left and right halves of the histogram
@@ -200,10 +198,6 @@ def lane_detection(image_list):
 
             left_lane_inds.append(good_left_inds)
             right_lane_inds.append(good_right_inds)
-            print(left_tracker, right_tracker)
-
-        cv2.imshow('out_img', out_img)
-        cv2.waitKey(0)
 
         # Concatenate the arrays of indices
         left_lane_inds = np.concatenate(left_lane_inds)
@@ -214,6 +208,18 @@ def lane_detection(image_list):
         lefty = nonzeroy[left_lane_inds]
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds]
+
+        if len(leftx) == 0 or len(leftx) <= minpix:
+            print('no left')
+            # leftx1 = rightx1 - width // 2
+            leftx = img.shape[1] - rightx
+            lefty = righty
+
+        if len(rightx) == 0 or len(rightx) <= minpix:
+            print('no right')
+            # rightx1 = leftx1 + width // 2
+            rightx = img.shape[1] - leftx
+            righty = lefty
 
         # Fit a second order polynomial to each
         left_fit = np.polyfit(lefty, leftx, 2)
@@ -238,20 +244,19 @@ def lane_detection(image_list):
         right_fit = np.polyfit(righty, rightx, 2)
 
         # Append to the labels list
+        print(i, 'save')
         lane_labels.append(np.append(left_fit, right_fit))
-
-        cv2.imshow('binary_warped', binary_warped)
-        cv2.waitKey(0)
+        i += 1
 
 
 # Load in the re-drawn lane images
-# images = load_drawn_images()
+images = load_drawn_images()
 
 # Make a list to hold the 'labels' - six coefficients, two for each line
 lane_labels = []
-
-# Run through all the images
-lane_detection([r'F:\Nowy folder\10\Praca\Datasets\Video_data\train_set\1300.jpg'])
-
-# Save the final list to a pickle file for later
-pickle.dump(lane_labels, open('lane_labels.p', "wb"))
+#
+# # Run through all the images
+lane_detection(images)
+#
+# # Save the final list to a pickle file for later
+pickle.dump(lane_labels, open('Pickles/lane_labels.p', "wb"))
