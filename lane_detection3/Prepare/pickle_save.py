@@ -9,10 +9,7 @@ images = glob.glob(path)
 
 road_images = []
 
-for image in images:
+for image in images[:10]:
     img = mpimg.imread(image)
     road_images.append(img)
-
-pickle.dump(road_images, open('road_images.p', "wb"))
-
 

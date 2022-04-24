@@ -14,8 +14,8 @@ def natural_key(string_):
 
 def load_drawn_images():
     """Load re-drawn lane image locations"""
-    drawn_image_locs = glob.glob(r'C:\Nowy folder\10\Praca\Datasets\Video_data\train_set\*.jpg')
-    sort_drawn_image_locs = sorted(drawn_image_locs[:100], key=natural_key)
+    drawn_image_locs = glob.glob(r'F:\Nowy folder\10\Praca\Datasets\Video_data\frames\*.jpg')
+    sort_drawn_image_locs = sorted(drawn_image_locs[:1], key=natural_key)
     return sort_drawn_image_locs
 
 
@@ -66,6 +66,19 @@ def pipeline(img, R_thresh=(230, 255)):
     thresh = threshold(gray, max_val)
     return thresh
 
+def pipeline(img, R_thresh=(230, 255)):
+    """Threshold the re-drawn images for high red threshold"""
+    img = np.copy(img)
+    R = img[:, :, 0]
+
+    max_val = np.mean(np.amax(R, axis=1)).astype(int)
+
+    R_binary = np.zeros_like(R)
+    R_binary[(R >= max_val*0.75) & (R <= max_val)] = 1
+
+    combined_binary = np.zeros_like(R_binary)
+    combined_binary[(R_binary == 1)] = 255
+    return combined_binary
 
 def left_line_detect(out_img, leftx_current, margin, minpix, nonzerox, nonzeroy, win_y_low, win_y_high, window_max,
                      counter):
@@ -129,7 +142,12 @@ def lane_detection(image_list):
         # Read image
         img = mpimg.imread(fname)
         # Binary threshold the image
-        binary_warped = pipeline(img)
+        warp, _ = warp_perspective(img, src, dst)
+
+        binary_warped = pipeline(warp)
+
+        cv2.imshow('binary_warped', binary_warped)
+        cv2.waitKey(0)
 
         histogram = np.sum(binary_warped[binary_warped.shape[0] // 2:, :], axis=0)
         out_img = np.dstack((binary_warped, binary_warped, binary_warped)) * 225
@@ -169,8 +187,6 @@ def lane_detection(image_list):
             win_y_low = binary_warped.shape[0] - (window + 1) * window_height
             win_y_high = binary_warped.shape[0] - window * window_height
             window_max = binary_warped.shape[1]
-
-
 
             if left_tracker == True and right_tracker == True:
                 good_left_inds, leftx_current, left_tracker = left_line_detect(out_img, leftx_current, margin, minpix, nonzerox,

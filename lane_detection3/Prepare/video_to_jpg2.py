@@ -6,11 +6,12 @@ import random
 import shutil
 import numpy as np
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
 train_path = os.path.join(path, 'train_set')
 print(train_path)
-train_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
-test_path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
+frames_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\frames'
+train_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
+test_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
 
 fps = 30
 interval = 15
@@ -94,15 +95,14 @@ train_size = 1400
 
 print(frames_num, train_size, frames_num-train_size)
 
-for data_path in train_path, test_path:
-    if os.path.exists(data_path):
-        shutil.rmtree(data_path)
-        os.mkdir(data_path)
-    else:
-        os.mkdir(data_path)
+# for data_path in train_path, test_path:
+if os.path.exists(frames_path):
+    shutil.rmtree(frames_path)
+    os.mkdir(frames_path)
+else:
+    os.mkdir(frames_path)
 
 i = 0
-i1 = 0
 for video in video_dict:
     values = list(video.values())[1:]
 
@@ -113,19 +113,13 @@ for video in video_dict:
     k = 0
     while cap.isOpened():
         _, image = cap.read()
-        img_path = train_path + fr'\{i}.jpg'
+        img_path = frames_path + fr'\{i}.jpg'
+
         if values[k][0] < j <= values[k][1] and j%interval==0:
             if np.any(image):
                 if not os.path.exists(img_path):
-
-                    if i%3==0:
-                        img_path = test_path + fr'\{i1}.jpg'
-                        cv2.imwrite(img_path, image)
-                        print(f'{j}, {i}, test - copy')
-                        i1 += 1
-                    else:
-                        cv2.imwrite(img_path, image)
-                        print(f'{j}, {i}, train - copy')
+                    cv2.imwrite(img_path, image)
+                    print(f'{j}, {i}, train - copy')
                     i += 1
                 else:
                     print('already exists')
@@ -150,7 +144,7 @@ def sort_path(path):
     sorted_path = sorted(sorted_path)
     return [path + fr'\{str(f)}.jpg' for f in sorted_path]
 
-sorted_train = sort_path(train_path)
+sorted_train = sort_path(frames_path)
 
 # test_idx = 0
 # for train_idx, train_img in enumerate(sorted_train):
