@@ -9,21 +9,25 @@ import numpy as np
 path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\Videos'
 train_path = os.path.join(path, 'train_set')
 print(train_path)
-frames_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\frames'
+frames_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video2(0)'
 train_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
 test_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\test_set'
 
 fps = 30
-interval = 15
+interval = 30
 video1 = {"name": "Video1.mp4",
           "batch0": (15*fps, 573*fps),
           "batch1": (1815*fps, 3805*fps)}
 
+# video2 = {"name": "Video2.mp4",
+#           "batch0": (380*fps, 1475*fps),
+#           "batch1": (2093 * fps, 2500 * fps),
+#           "batch2": (3185 * fps, 5620 * fps),
+#           "batch3": (5645 * fps, 5830 * fps)}
+
 video2 = {"name": "Video2.mp4",
           "batch0": (380*fps, 1475*fps),
-          "batch1": (2093 * fps, 2500 * fps),
-          "batch2": (3185 * fps, 5620 * fps),
-          "batch3": (5645 * fps, 5830 * fps)}
+          "batch1": (2093 * fps, 2500 * fps)}
 
 video3 = {"name": "Video3.mp4",
           "batch0": (17*fps, 2850*fps)}
@@ -79,7 +83,8 @@ video4 = {"name": "Video4.mp4",
 #           "batch0": (rand[6], diff[6]),
 #           "batch1": (rand[7], diff[7])}
 
-video_dict = [video1]
+video_dict = [video1, video2, video3, video4
+              ]
 
 frames_num = 0
 for video in video_dict:
@@ -109,11 +114,13 @@ for video in video_dict:
     video_path = os.path.join(path, video["name"])
     cap = cv2.VideoCapture(video_path)
 
+    print(video_path)
     j = 0
     k = 0
     while cap.isOpened():
         _, image = cap.read()
         img_path = frames_path + fr'\{i}.jpg'
+        # print(j)
 
         if values[k][0] < j <= values[k][1] and j%interval==0:
             if np.any(image):
@@ -122,18 +129,24 @@ for video in video_dict:
                     print(f'{j}, {i}, train - copy')
                     i += 1
                 else:
-                    print('already exists')
-                    pass
+                    print(f'{j}, {i}, already exists')
+                    i += 1
+            else:
+                print('corrupt image')
 
-        if j > values[-1][1] or i==2000:
+        if j > values[k][1]:
+            print('k+1, k=', k)
+            print(f'{values[k][0]}')
+            k += 1
+
+
+        if j > values[-1][1]:
             print('break')
             break
 
-        elif j > values[k][1]:
-            print('k+1, k=', k)
-            k += 1
-        j += 1
 
+        j += 1
+    print('new dict')
 
 def sort_path(path):
     sorted_path = []
