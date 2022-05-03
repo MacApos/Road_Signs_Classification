@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-image = cv2.imread('Test_frames/curvy_lines2.jpg')
+image = cv2.imread('../Test_frames/curvy_lines2.jpg')
 copy = np.copy(image)
 
 height = image.shape[0]

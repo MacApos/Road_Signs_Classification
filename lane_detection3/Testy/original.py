@@ -206,7 +206,7 @@ def lane_detection(image_list):
 # Load in the re-drawn lane images
 # images = load_drawn_images()
 # image = cv2.imread(r'C:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\450.jpg')
-image = cv2.imread(r'Test_frames\straight_lines2.jpg')
+image = cv2.imread(r'../Test_frames/straight_lines2.jpg')
 
 images = glob.glob('Test_frames/*.jpg')
 

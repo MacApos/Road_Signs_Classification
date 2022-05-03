@@ -127,12 +127,12 @@ def find_contours(image, display=False):
 
 def to_csv(arr, name):
     df = pd.DataFrame(arr)
-    path = os.path.join('../lane_detection2/Arrays', name)
+    path = os.path.join('../../lane_detection2/Arrays', name)
     df.to_csv(path, sep='\t', index=False, header=False)
 
 
 def to_jpg(img, name):
-    path = os.path.join('../lane_detection2/test', (name+'.jpg'))
+    path = os.path.join('../../lane_detection2/test', (name + '.jpg'))
     cv2.imwrite(path, img)
 
 
@@ -526,7 +526,7 @@ for arr in left_x, right_x:
 
     # # Polilinia
     cv2.polylines(out_img, [con], isClosed=False, color=(0, 255, 255), thickness=4)
-    cv2.imwrite('Test_frames/polylines.jpg', out_img)
+    cv2.imwrite('../Test_frames/polylines.jpg', out_img)
 
     # Linia z punktów na każdym pikselu
     # for i, a in enumerate(arr):

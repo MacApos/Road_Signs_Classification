@@ -153,7 +153,6 @@ def lane_detection(image_list):
         out_img = np.dstack((binary_warped, binary_warped, binary_warped)) * 225
 
 
-
         # Find the peak of the left and right halves of the histogram
         # These will be the starting point for the left and right lines
         midpoint = np.int(histogram.shape[0] / 2)
@@ -275,4 +274,4 @@ lane_labels = []
 lane_detection(images)
 #
 # # Save the final list to a pickle file for later
-pickle.dump(lane_labels, open('Pickles/lane_labels.p', "wb"))
+pickle.dump(lane_labels, open('../Pickles/lane_labels.p', "wb"))

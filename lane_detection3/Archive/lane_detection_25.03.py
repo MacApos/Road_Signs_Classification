@@ -92,12 +92,12 @@ def find_contours(image, display=False):
 
 def to_csv(arr, name):
     df = pd.DataFrame(arr)
-    path = os.path.join('../lane_detection2/Arrays', name)
+    path = os.path.join('../../lane_detection2/Arrays', name)
     df.to_csv(path, sep='\t', index=False, header=False)
 
 
 def to_jpg(img, name):
-    path = os.path.join('../lane_detection2/test', (name+'.jpg'))
+    path = os.path.join('../../lane_detection2/test', (name + '.jpg'))
     cv2.imwrite(path, img)
 
 

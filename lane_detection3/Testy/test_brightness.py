@@ -93,7 +93,7 @@ dst = np.float32([[0,height],
 
 # pickle.dump(indices, open('Pickles/indices.p', "wb"))
 
-infile = open('Pickles/indices.p', 'rb')
+infile = open('../Pickles/indices.p', 'rb')
 indices = pickle.load(infile)
 infile.close()
 

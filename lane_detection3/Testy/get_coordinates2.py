@@ -2,7 +2,7 @@ import cv2
 
 class DrawLineWidget(object):
     def __init__(self):
-        self.original_image = cv2.imread('Test_frames/test2.jpg')
+        self.original_image = cv2.imread('../Test_frames/test2.jpg')
         self.clone = self.original_image.copy()
 
         cv2.namedWindow('image')
