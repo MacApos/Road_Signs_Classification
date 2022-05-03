@@ -1,10 +1,14 @@
 import pickle
 import cv2
+from datetime import datetime
 
-lines0 = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\lane_labels.p'
+
+lines0 = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\lane_labels_2.p'
 lines1 = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\train_line.p'
 
-labels = pickle.load(open( "Pickles/lane_labels.p", "rb" ))
+labels = pickle.load(open(lines0, "rb" ))
+
+pickle.dump(labels, open('Pickles\lane_labels_2.p', "wb"))
 
 file0 = open(lines0, 'rb')
 lines_dict0 = pickle.load(file0)

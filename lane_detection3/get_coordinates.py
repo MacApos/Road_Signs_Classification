@@ -6,12 +6,12 @@ import numpy as np
 import pandas as pd
 
 # img = cv2.imread(r'F:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\1580.jpg')
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\frames'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video4'
 list_dir = os.listdir(path)
-random = random.randint(0, len(list_dir)-1)
+random = random.sample(list_dir, 1)[0]
 # random = 3786
 print(random)
-img = cv2.imread(os.path.join(path, f'{random}.jpg'))
+img = cv2.imread(os.path.join(path, random))
 height = img.shape[0]
 width = img.shape[1]
 clone = img.copy()
@@ -72,15 +72,20 @@ for point in points:
     new_points.append(new_point)
 
 sorted_points = sorted(new_points[:4], key = x)
-print(sorted_points)
 
 width = img.shape[1]
 # sorted_points[0] = [0, height]
 # sorted_points[-1] = [width, height]
+
+# wyrównanie poziome
 sorted_points[0][1] = sorted_points[3][1]
 sorted_points[1][1] = sorted_points[2][1]
+
+# Odbicie lustrzane
 sorted_points[-1][0] = width-sorted_points[0][0]
 sorted_points[1][0] = width-sorted_points[2][0]
+
+print(sorted_points)
 
 for j in range(len(sorted_points)):
     cv2.line(copy, tuple(sorted_points[j]), tuple(sorted_points[j-1]), (0,0,255), 2)
@@ -89,17 +94,23 @@ cv2.imshow('img', copy)
 cv2.waitKey(0)
 
 src = np.float32(sorted_points)
-# src = np.float32([[290, 670],
-#                   [580, 500],
-#                   [660, 500],
-#                   [990, 670]])
-#
-#
-#
-# box = draw_lines(img, src, point_color=(255, 0, 0), line_color=(0, 255, 0))
-#
-# cv2.imshow('box', box)
-# cv2.waitKey(0)
 
-# cv2.imwrite('Test_frames/video_test.jpg', img)
-# pickle.dump(src, open('Pickles/src.p', "wb"))
+# video1
+# src = np.float32([[290,650], [570,525], [710,525], [990,650]])
+# pickle.dump(src, open('Pickles/src_video1.p', "wb"))
+
+# video2
+# src = np.float32([[320, 645], [565, 500], [700, 500], [960, 645]])
+# pickle.dump(src, open('Pickles/src_video2.p', "wb"))
+
+# video3
+# src = np.float32([[320, 645], [565, 500], [700, 500], [960, 645]])
+# pickle.dump(src, open('Pickles/src_video3.p', "wb"))
+
+box = draw_lines(img, src, point_color=(255, 0, 0), line_color=(0, 255, 0))
+
+cv2.imshow('box', box)
+cv2.waitKey(0)
+
+cv2.imwrite('Test_frames/video_test.jpg', img)
+

@@ -4,16 +4,6 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-src = np.float32([[290,650],
-                  [570,525],
-                  [710,525],
-                  [990,650]])
-
-dst = np.float32([[0,720],
-                  [0,0],
-                  [1280,0],
-                  [1280,720]])
-
 
 def warp_perspective(image, from_, to):
     M = cv2.getPerspectiveTransform(from_, to)
@@ -52,33 +42,49 @@ def white_select(img, thresh=(0, 255)):
     return binary_output
 
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\train_set'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video2'
 list_dir = os.listdir(path)
-random = random.randint(0, len(list_dir)-1)
-random = 1320
+random_img = random.sample(list_dir, 1)[0]
+# random = 1320
 print(random)
 
-for img in list_dir:
-    print(img)
-    img = cv2.imread(os.path.join(path, f'1612.jpg'))
+# for img in list_dir:
+#     print(img)
+img = cv2.imread(os.path.join(path, random_img))
+img_hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
 
-    warp, _ = warp_perspective(img, src, dst)
-    gray = cv2.cvtColor(warp, cv2.COLOR_BGR2GRAY)
+height = img.shape[0]
+width = img.shape[1]
 
-    max_val = max(np.amax(gray, axis=1)).astype(int)
+template = [[300, 650], [550, 500]]
 
-    mean_max_val = np.mean(np.amax(gray, axis=1))
-    mean_max_val = int(max_val * 0.85)
+src = np.float32([template[0],
+                  template[1],
+                  [width - template[1][0], template[1][1]],
+                  [width - template[0][0], template[0][1]]])
 
-    mask_white = cv2.inRange(gray, max_val*0.65, int(max_val))
-    mask_white_image = cv2.bitwise_and(gray, mask_white)
+dst = np.float32([[0,height],
+                  [0,0],
+                  [width,0],
+                  [width,height]])
 
-    gray_binary = white_select(warp, (max_val*0.65, max_val))
+warp, _ = warp_perspective(img, src, dst)
+gray = cv2.cvtColor(warp, cv2.COLOR_BGR2GRAY)
 
-    cv2.imshow('gray_binary', gray_binary)
-    cv2.waitKey(0)
+max_val = max(np.amax(gray, axis=1)).astype(int)
 
-img_hls = cv2.cvtColor(warp, cv2.COLOR_BGR2HLS)
+mean_max_val = np.mean(np.amax(gray, axis=1))
+mean_max_val = int(max_val * 0.85)
+
+mask_white = cv2.inRange(gray, max_val*0.65, int(max_val))
+mask_white_image = cv2.bitwise_and(gray, mask_white)
+
+gray_binary = white_select(warp, (max_val*0.65, max_val))
+
+cv2.imshow('gray_binary', gray_binary)
+cv2.waitKey(0)
+
+
 
 max_light = max(np.amax(img_hls[:, :, 2], axis=1)).astype(int)
 print(img_hls[:, :, 1])
@@ -86,54 +92,53 @@ mask_light = cv2.inRange(gray, max_light*0.65, int(max_light))
 mask_sat_image = cv2.bitwise_and(gray, mask_light)
 hls_binary = hls_select(img_hls, thresh=(max_light*0.95, int(max_light)))
 
-
 _, thresh = cv2.threshold(warp, mean_max_val, 250, cv2.THRESH_BINARY)
+
+# col = 3
+#
+# fig, axs = plt.subplots(1, col, figsize=(20,20), squeeze=False)
+# [ax.set_axis_off() for ax in axs.ravel()]
+
+# for i in range(3):
+#     # x = i//col
+#     # y = (i+col)%col
+#
+#     axs[0][0].imshow(mask_white_image, cmap='gray')
+#     axs[0][0].set_title(f'mask_white')
+#
+#     axs[0][1].imshow(thresh, cmap='gray')
+#     axs[0][1].set_title(f'thresh')
+#
+#     axs[0][2].imshow(gray_binary, cmap='gray')
+#     axs[0][2].set_title(f'mask_sat')
+#
+# plt.show()
+
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
 
 col = 3
 
-fig, axs = plt.subplots(1, col, figsize=(20,20), squeeze=False)
+fig, axs = plt.subplots(3, col, figsize=(20,20), squeeze=False)
 [ax.set_axis_off() for ax in axs.ravel()]
 
+bgr_name = 'BGR'
+hsv_name = 'HSV'
+hls_name = 'HLS'
+
 for i in range(3):
-    # x = i//col
-    # y = (i+col)%col
+    bgr = display_channel(img, i)
+    hls_space = display_channel(img_hls, i)
 
-    axs[0][0].imshow(mask_white_image, cmap='gray')
-    axs[0][0].set_title(f'mask_white')
+    x = i//col
+    y = (i+col)%col
 
-    axs[0][1].imshow(thresh, cmap='gray')
-    axs[0][1].set_title(f'thresh')
+    axs[x][y].imshow(bgr, cmap='gray')
+    axs[x][y].set_title(f'{bgr_name[i]}')
 
-    axs[0][2].imshow(gray_binary, cmap='gray')
-    axs[0][2].set_title(f'mask_sat')
+    axs[x+1][y].imshow(hls_space, cmap='gray')
+    axs[x+1][y].set_title(f'{hls_name[i]}')
 
 plt.show()
-#
-# # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-# # hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-# #
-# col = 3
-#
-# fig, axs = plt.subplots(3, col, figsize=(20,20), squeeze=False)
-# [ax.set_axis_off() for ax in axs.ravel()]
-#
-# bgr_name = 'BGR'
-# hsv_name = 'HSV'
-# hls_name = 'HLS'
-#
-# for i in range(3):
-#     bgr = display_channel(img, i)
-#     hls_space = display_channel(img_hls, i)
-#
-#     x = i//col
-#     y = (i+col)%col
-#
-#     axs[x][y].imshow(bgr, cmap='gray')
-#     axs[x][y].set_title(f'{bgr_name[i]}')
-#
-#     axs[x+1][y].imshow(hls_space, cmap='gray')
-#     axs[x+1][y].set_title(f'{hls_name[i]}')
-#
-# plt.show()
 
 
