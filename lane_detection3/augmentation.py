@@ -160,8 +160,6 @@ data_path = os.path.join(path, 'data')
 
 data_list = image_list(data_path)
 
-print(data_list)
-
 if not os.path.exists(data_path):
     os.mkdir(data_path)
 else:
