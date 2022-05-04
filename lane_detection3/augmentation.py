@@ -1,13 +1,9 @@
 import os
 import cv2
-import pickle
 import random
 import numpy as np
-from scipy import ndimage, misc
-from skimage.transform import resize
 from imutils import paths
 import shutil
-import glob
 
 def sort_path(path):
     sorted_path = []
@@ -158,28 +154,22 @@ def random_list(path, range):
 def image_list(path):
     return list(paths.list_images(path))
 
-aug_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\augmentation'
-data_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video2'
-src = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video2(1)'
-src_data = image_list(src)
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+aug_path = os.path.join(path, 'augmentation')
+data_path = os.path.join(path, 'data')
 
-if os.path.exists(data_path):
-    shutil.rmtree(data_path)
-    shutil.copytree(src, data_path)
+data_list = image_list(data_path)
+
+print(data_list)
+
+if not os.path.exists(data_path):
+    os.mkdir(data_path)
 else:
-    shutil.copytree(src, data_path)
+    # shutil.rmtree(data_path)
+    # os.mkdir(data_path)
+    pass
 
-# if os.path.exists(data_path):
-#     shutil.rmtree(data_path)
-#     os.mkdir(data_path)
-# else:
-#     os.mkdir(data_path)
-
-# for image in src_data[:125]:
-#     dst = os.path.join(data_path, image.split('\\')[-1])
-#     shutil.copyfile(image, dst)
-
-image = cv2.imread(os.path.join(data_path, f'{0:05d}.jpg'))
+image = cv2.imread(data_list[0])
 height = image.shape[0]
 width = image.shape[1]
 
@@ -187,6 +177,6 @@ resize(data_path)
 
 # horizontal_shift(data_path, 0.1, 0.1)
 # vertical_shift(data_path, 0.1, 0.1)
-zoom(data_path, 0.1, 0.1)
-rotate(data_path, 3, 0.1)
-flip(data_path, 0.1)
+# zoom(data_path, 0.1, 0.1)
+# rotate(data_path, 3, 0.1)
+# flip(data_path, 0.1)

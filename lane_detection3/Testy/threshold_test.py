@@ -42,7 +42,7 @@ def white_select(img, thresh=(0, 255)):
     return binary_output
 
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video2'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\video4'
 list_dir = os.listdir(path)
 random_img = random.sample(list_dir, 1)[0]
 # random = 1320

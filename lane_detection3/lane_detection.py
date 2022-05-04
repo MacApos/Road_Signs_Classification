@@ -1,12 +1,12 @@
 import os
 import cv2
-import glob
 import time
 import pickle
 import random
 import shutil
 import numpy as np
 import pandas as pd
+from imutils import paths
 import matplotlib.pyplot as plt
 
 
@@ -51,16 +51,6 @@ def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
     return copy
 
 
-def find_contours(image, display=False):
-    contours, hierarchy = cv2.findContours(image=image, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
-    edges = np.zeros((image.shape[0], image.shape[1]))
-    cv2.drawContours(edges, contours, -1, (255), 1)
-    if display:
-        cv2.imshow('contours', edges)
-        cv2.waitKey(0)
-    return contours, edges
-
-
 def to_csv(name, arr):
     df = pd.DataFrame(arr)
     path = os.path.join('../lane_detection2/Arrays', name)
@@ -72,14 +62,13 @@ def to_jpg(name, image):
     cv2.imwrite(path, image)
 
 
-def prepare(image):
-    global contours
+def prepare(image, thresh):
     box = draw_lines(image, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
     warp, _ = warp_perspective(image, src, dst)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
-    thresh = color_mask(warp, (max_val*0.65, max_val))
+    thresh = color_mask(warp, (max_val*thresh, max_val))
 
     return thresh
 
@@ -179,8 +168,6 @@ def find_lanes(image):
         right_idx = np.concatenate(right_idx)
     except AttributeError:
         pass
-
-    # im_show('out_img', out_img)
 
     leftx1 = nonzerox[left_idx]
     lefty1 = nonzeroy[left_idx]
@@ -317,87 +304,135 @@ def sort_path(path):
 def rgb(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-data_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-labels_path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\labels'
-path = os.path.join(data_path, 'frames')
-list_dir = os.listdir(path)
-random = random.randint(0, len(list_dir)-1)
-# random = 293
-# print(random)
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+data_path = os.path.join(path, 'data')
+labels_path = os.path.join(path, 'labels')
 
-image = cv2.imread(os.path.join(path, f'{random}.jpg'))
+data_list = list(paths.list_images(data_path))
 
+if not os.path.exists(labels_path):
+    os.mkdir(labels_path)
+else:
+    shutil.rmtree(labels_path)
+    os.mkdir(labels_path)
+    pass
+
+random_img = random.sample(data_list, 1)[0]
+# random_img = os.path.join(data_path, f'{32:05d}.jpg')
+# print(random_img)
+
+image = cv2.imread(data_list[0])
 height = image.shape[0]
 width = image.shape[1]
 
-src = np.float32([[290,650],
-                  [570,525],
-                  [710,525],
-                  [990,650]])
+template = [[290,650], [570,525]]
+
+src = np.float32([template[0],
+                  template[1],
+                  [width - template[1][0], template[1][1]],
+                  [width - template[0][0], template[0][1]]])
 
 dst = np.float32([[0,height],
                   [0,0],
                   [width,0],
                   [width,height]])
 
-# src = pickle.load(open( 'Pickles/src.p', 'rb' ))
+video1 = {'name': 'video1',
+          'template': [[290,650], [570,525]],
+          'thresh':0.65,
+          'limit': 100}
+
+video2 = {'name': 'video2',
+          'template': [[280, 650], [570, 500]],
+          'thresh':0.65,
+          'limit': 100}
+
+video3 = {'name': 'video3',
+          'template': [[280, 650], [570, 500]],
+          'thresh':0.85,
+          'limit': 100}
+
+video4 = {'name': 'video4',
+          'template': [[270, 650], [550, 500]],
+          'thresh':0.9,
+          'limit': 100}
+
+video_list = [video1, video2, video3, video4] #video1, video2, video3,
 
 number = 35
 minpix = 50
 margin = 100
-win_height = int(image.shape[0] // number)
+win_height = int(height // number)
 
-lane_labels = []
+label_list = []
 
-# if os.path.exists(labels_path):
-#     shutil.rmtree(labels_path)
-#     os.mkdir(labels_path)
-# else:
-#     os.mkdir(labels_path)
+i = 0
+# for video in video_list:
+#     values = list(video.values())
+#     i = [int(char)-1 for char in values[0] if char.isdigit()][0]*values[3]
+#     print(i)
 
-previous_frame = []
-sorted_path = sort_path(path)
+j = i
+for video in video_list:
+    random_idx = i + random.randint(0, 100)
 
-for idx, val in enumerate(sorted_path):
-    save_path = labels_path+fr'\{idx}.jpg'
-    #
-    # if os.path.exists(save_path):
-    #     print(save_path)
-    #     continue
+    values = list(video.values())
+    name = values[0]
+    template = values[1]
+    thresh = values[2]
+    limit = values[3]
 
-    image = cv2.imread(val)
-    frame = image
+    src = np.float32([template[0],
+                      template[1],
+                      [width-template[1][0], template[1][1]],
+                      [width-template[0][0], template[0][1]]])
 
-    img = prepare(image)
+    frames_path = os.path.join(path, name)
+    frames_list = list(paths.list_images(frames_path))
 
-    copy = np.copy(img)
-    leftx, lefty, rightx, righty, out_img = find_lanes(copy)
-    t_leftx, t_lefty, t_rightx, t_righty, _ = find_lanes_perspective()
+    for path in data_list[i: i+limit]:
+        save_label = labels_path+fr'\{j:05d}.jpg'
+        if os.path.exists(save_label):
+            print(f'{save_label}, already exists')
+            j += 1
+            continue
 
-    previous_frame = []
-    previous_frame.append([leftx, lefty, rightx, righty])
+        image = cv2.imread(path)
+        frame = image
 
-    left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
-    t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
+        img = prepare(image, thresh)
 
-    curves = np.concatenate((left_curve, right_curve))
-    t_curves = np.concatenate((t_left_curve, t_right_curve))
+        copy = np.copy(img)
+        leftx, lefty, rightx, righty, out_img = find_lanes(copy)
+        t_leftx, t_lefty, t_rightx, t_righty, _ = find_lanes_perspective()
 
-    # Visualisation
-    y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
-    out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
+        previous_frame = []
+        previous_frame.append([leftx, lefty, rightx, righty])
 
-    # down = min(min(t_lefty), min(t_righty))
-    # t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
-    # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
+        left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
+        t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
 
-    poly, frame = visualise_perspective(frame)
-    poly = poly[:,:,1]
+        curves = np.concatenate((left_curve, right_curve))
+        t_curves = np.concatenate((t_left_curve, t_right_curve))
 
-    cv2.imwrite(labels_path+fr'\{idx}.jpg', frame)
-    cv2.imwrite(save_path, frame)
-    print(idx, 'save', val)
-    lane_labels.append(curves)
+        # Visualisation
+        y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
+        out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
 
-pickle.dump(lane_labels, open('Pickles/lane_labels_10.p', "wb"))
+        # down = min(min(t_lefty), min(t_righty))
+        # t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
+        # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
 
+        poly, frame = visualise_perspective(frame)
+        poly = poly[:,:,1]
+
+        cv2.imwrite(save_label, frame)
+        print(j, 'save', path)
+        label_list.append(curves)
+
+        j += 1
+
+    i += limit
+    print()
+
+pickle.dump(label_list, open('Pickles/lane_labels_10.p', "wb"))

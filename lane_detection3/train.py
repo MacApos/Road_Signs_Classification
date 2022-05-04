@@ -14,13 +14,10 @@ import cv2
 import os
 
 from keras.models import Sequential
-from keras.layers.normalization import BatchNormalization
-from keras.layers import Flatten, Dense, Deconvolution2D, Conv2D, MaxPooling2D, Dropout, UpSampling2D
+from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D, Dropout, UpSampling2D
 from keras.preprocessing.image import ImageDataGenerator, img_to_array
 from keras.callbacks import ModelCheckpoint
-from keras.optimizers import Adam
-
-
+from keras.optimizers import adam_v2
 
 def plot_hist(history, filename):
     hist = pd.DataFrame(history.history)
@@ -50,7 +47,10 @@ learning_rate = 0.001
 batch_size = 16
 input_shape = (60, 160, 3)
 
-data_path = list(paths.list_images(r'F:\Nowy folder\10\Praca\Datasets\Video_data\video2'))
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+data_path = os.path.join(path, 'data')
+
+data_list = list(paths.list_images(data_path))
 file = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
 labels = pickle.load(open( r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3'
                            r'\Pickles\lane_labels_2.p', 'rb' ))
@@ -149,7 +149,7 @@ model.summary()
 
 datagen = ImageDataGenerator()
 
-model.compile(optimizer=Adam(learning_rate=learning_rate),
+model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
               loss = 'mean_squared_error',
               metrics=['accuracy'])
 

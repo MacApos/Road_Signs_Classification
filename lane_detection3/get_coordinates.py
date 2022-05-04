@@ -1,12 +1,10 @@
 import os
 import cv2
-import pickle
 import random
 import numpy as np
-import pandas as pd
 
 # img = cv2.imread(r'F:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\1580.jpg')
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\video4'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\video4'
 list_dir = os.listdir(path)
 random = random.sample(list_dir, 1)[0]
 # random = 3786
@@ -77,13 +75,13 @@ width = img.shape[1]
 # sorted_points[0] = [0, height]
 # sorted_points[-1] = [width, height]
 
-# wyrównanie poziome
-sorted_points[0][1] = sorted_points[3][1]
-sorted_points[1][1] = sorted_points[2][1]
+# Wyrównanie poziome
+sorted_points[3][1] = sorted_points[0][1]
+sorted_points[2][1] = sorted_points[1][1]
 
 # Odbicie lustrzane
-sorted_points[-1][0] = width-sorted_points[0][0]
-sorted_points[1][0] = width-sorted_points[2][0]
+sorted_points[3][0] = width-sorted_points[0][0]
+sorted_points[2][0] = width-sorted_points[1][0]
 
 print(sorted_points)
 
@@ -96,16 +94,25 @@ cv2.waitKey(0)
 src = np.float32(sorted_points)
 
 # video1
-# src = np.float32([[290,650], [570,525], [710,525], [990,650]])
+# src = np.float32([[290,650], [570,525]])
 # pickle.dump(src, open('Pickles/src_video1.p', "wb"))
 
 # video2
-# src = np.float32([[320, 645], [565, 500], [700, 500], [960, 645]])
+# template = [[280, 650], [575, 500]]
 # pickle.dump(src, open('Pickles/src_video2.p', "wb"))
 
 # video3
-# src = np.float32([[320, 645], [565, 500], [700, 500], [960, 645]])
+# template = np.float32([[345, 660], [580, 490]])
 # pickle.dump(src, open('Pickles/src_video3.p', "wb"))
+
+# video4
+template = np.float32([[340, 660], [565, 505]])
+# pickle.dump(src, open('Pickles/src_video3.p', "wb"))
+
+src = np.float32([template[0],
+                  template[1],
+                  [width-template[1][0], template[1][1]],
+                  [width-template[0][0], template[0][1]]])
 
 box = draw_lines(img, src, point_color=(255, 0, 0), line_color=(0, 255, 0))
 
