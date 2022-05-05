@@ -45,6 +45,7 @@ def save(fname, image_path, image, i):
     cv2.imwrite(image_path, image)
     cv2.imwrite(file_path + fr'\{i:05d}.jpg', image)
 
+
 def horizontal_shift(path, shift, ratio=0.1):
     i = 0
     for image in random_list(path, ratio):
@@ -154,11 +155,9 @@ def random_list(path, range):
 def image_list(path):
     return list(paths.list_images(path))
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 aug_path = os.path.join(path, 'augmentation')
 data_path = os.path.join(path, 'data')
-
-data_list = image_list(data_path)
 
 if not os.path.exists(data_path):
     os.mkdir(data_path)
@@ -166,6 +165,8 @@ else:
     # shutil.rmtree(data_path)
     # os.mkdir(data_path)
     pass
+
+data_list = image_list(data_path)
 
 image = cv2.imread(data_list[0])
 height = image.shape[0]

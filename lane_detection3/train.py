@@ -14,10 +14,13 @@ import cv2
 import os
 
 from keras.models import Sequential
+from keras.layers import Conv2DTranspose
+from keras.layers import Deconvolution2D
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D, Dropout, UpSampling2D
 from keras.preprocessing.image import ImageDataGenerator, img_to_array
 from keras.callbacks import ModelCheckpoint
-from keras.optimizers import adam_v2
+# from keras.optimizers import adam_v2
+from keras.optimizers import Adam
 
 def plot_hist(history, filename):
     hist = pd.DataFrame(history.history)
@@ -149,7 +152,8 @@ model.summary()
 
 datagen = ImageDataGenerator()
 
-model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+model.compile(optimizer=Adam(learning_rate=learning_rate),
+              # optimizer=adam_v2.Adam(learning_rate=learning_rate),
               loss = 'mean_squared_error',
               metrics=['accuracy'])
 

@@ -68,7 +68,7 @@ def prepare(image, thresh):
     warp, _ = warp_perspective(image, src, dst)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
-    thresh = color_mask(warp, (max_val*thresh, max_val))
+    thresh = color_mask(warp, (max_val*0.65, max_val))
 
     return thresh
 
@@ -304,18 +304,18 @@ def sort_path(path):
 def rgb(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 data_path = os.path.join(path, 'data')
 labels_path = os.path.join(path, 'labels')
-
-data_list = list(paths.list_images(data_path))
 
 if not os.path.exists(labels_path):
     os.mkdir(labels_path)
 else:
-    shutil.rmtree(labels_path)
-    os.mkdir(labels_path)
+    # shutil.rmtree(labels_path)
+    # os.mkdir(labels_path)
     pass
+
+data_list = list(paths.list_images(data_path))
 
 random_img = random.sample(data_list, 1)[0]
 # random_img = os.path.join(data_path, f'{32:05d}.jpg')
@@ -325,7 +325,7 @@ image = cv2.imread(data_list[0])
 height = image.shape[0]
 width = image.shape[1]
 
-template = [[290,650], [570,525]]
+template = [[280,650], [570,525]]
 
 src = np.float32([template[0],
                   template[1],
@@ -338,26 +338,26 @@ dst = np.float32([[0,height],
                   [width,height]])
 
 video1 = {'name': 'video1',
-          'template': [[290,650], [570,525]],
+          'template': [[290,390], [550,265]],
           'thresh':0.65,
-          'limit': 100}
+          'limit': 2548}
 
 video2 = {'name': 'video2',
-          'template': [[280, 650], [570, 500]],
-          'thresh':0.65,
-          'limit': 100}
+          'template': [[285, 390], [550, 265]],
+          'thresh':0.55,
+          'limit': 4122}
 
 video3 = {'name': 'video3',
-          'template': [[280, 650], [570, 500]],
+          'template': [[280, 400], [570, 230]],
           'thresh':0.85,
-          'limit': 100}
+          'limit': 2833}
 
 video4 = {'name': 'video4',
-          'template': [[270, 650], [550, 500]],
+          'template': [[270, 400], [550, 245]],
           'thresh':0.9,
-          'limit': 100}
+          'limit': 1840}
 
-video_list = [video1, video2, video3, video4] #video1, video2, video3,
+video_list = [video1] #video1, video2, video3,
 
 number = 35
 minpix = 50
@@ -365,6 +365,7 @@ margin = 100
 win_height = int(height // number)
 
 label_list = []
+previous_frame = []
 
 i = 0
 # for video in video_list:
@@ -418,7 +419,6 @@ for video in video_list:
         # Visualisation
         y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
         out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
-
         # down = min(min(t_lefty), min(t_righty))
         # t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
         # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)

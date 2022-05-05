@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 # img = cv2.imread(r'F:\Nowy folder\10\Praca\Datasets\tu-simple\TEST\1580.jpg')
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data\video4'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data\data'
 list_dir = os.listdir(path)
 random = random.sample(list_dir, 1)[0]
 # random = 3786
@@ -94,19 +94,19 @@ cv2.waitKey(0)
 src = np.float32(sorted_points)
 
 # video1
-# src = np.float32([[290,650], [570,525]])
+# src = np.float32([[290,390], [570,265]])
 # pickle.dump(src, open('Pickles/src_video1.p', "wb"))
 
 # video2
-# template = [[280, 650], [575, 500]]
+template = [[280, 390], [570, 240]]
 # pickle.dump(src, open('Pickles/src_video2.p', "wb"))
 
 # video3
-# template = np.float32([[345, 660], [580, 490]])
+# template = np.float32([[280, 400], [570, 230]])
 # pickle.dump(src, open('Pickles/src_video3.p', "wb"))
 
 # video4
-template = np.float32([[340, 660], [565, 505]])
+# template = np.float32([[270, 400], [550, 245]])
 # pickle.dump(src, open('Pickles/src_video3.p', "wb"))
 
 src = np.float32([template[0],

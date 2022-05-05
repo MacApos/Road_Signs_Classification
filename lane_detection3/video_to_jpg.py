@@ -4,9 +4,10 @@ import shutil
 import numpy as np
 from imutils import paths
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 videos_path = os.path.join(path, 'Videos')
 data_path = os.path.join(path, 'data')
+video1_path = os.path.join(path, 'video1')
 
 if not os.path.exists(data_path):
     os.mkdir(data_path)
@@ -34,7 +35,7 @@ video4 = {"name": "Video4.mp4",
           "batch0": (290*fps, 1655*fps),
           "batch1": (2125*fps, 2600*fps)}
 
-video_list = [video2]
+video_list = [video1]
 
 
 limit = 100
@@ -86,12 +87,14 @@ for video in video_list:
     k = 0
     while cap.isOpened():
         _, image = cap.read()
+        resized_img = image[260:, :]
+
         img_path = data_path + fr'\{i:05d}.jpg'
 
         if values[k][0] < j <= values[k][1] and j%interval==0:
             if np.any(image):
                 if not os.path.exists(img_path):
-                    cv2.imwrite(img_path, image)
+                    cv2.imwrite(img_path, resized_img)
                     print(f'{j}, {i:05d}, copy')
                     i += 1
                 else:
@@ -113,14 +116,20 @@ for video in video_list:
         j += 1
     print('new dict')
 
-# def sort_path(path):
-#     sorted_path = []
-#     for file in os.listdir(path):
-#         number = int(''.join(n for n in file if n.isdigit()))
-#         sorted_path.append(number)
-#
-#     sorted_path = sorted(sorted_path)
-#     return [path + fr'\{str(f)}.jpg' for f in sorted_path]
+def sort_path(path):
+    sorted_path = []
+    for file in os.listdir(path):
+        number = int(''.join(n for n in file if n.isdigit()))
+        sorted_path.append(number)
+
+    sorted_path = sorted(sorted_path)
+    return [path + fr'\{str(f)}.jpg' for f in sorted_path]
+
+# i = 0
+# for src in sort_path(video1_path):
+#     dst = os.path.join(data_path, f'{i:05d}.jpg')
+#     shutil.copy(src, dst)
+#     i += 1
 
 # test_idx = 0
 # for train_idx, train_img in enumerate(sorted_train):
