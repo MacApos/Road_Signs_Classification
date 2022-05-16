@@ -6,15 +6,13 @@ from imutils import paths
 
 path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 videos_path = os.path.join(path, 'Videos')
-data_path = os.path.join(path, 'data')
-video1_path = os.path.join(path, 'video1')
+data_path = os.path.join(path, 'raw_data')
+
+# if os.path.exists(data_path):
+#     shutil.rmtree(data_path)
 
 if not os.path.exists(data_path):
     os.mkdir(data_path)
-else:
-    shutil.rmtree(data_path)
-    os.mkdir(data_path)
-    pass
 
 fps = 30
 interval = 30
@@ -35,8 +33,7 @@ video4 = {"name": "Video4.mp4",
           "batch0": (290*fps, 1655*fps),
           "batch1": (2125*fps, 2600*fps)}
 
-video_list = [video1]
-
+video_list = [video1, video2]
 
 limit = 100
 i = 0

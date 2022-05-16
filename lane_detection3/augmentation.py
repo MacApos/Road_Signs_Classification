@@ -37,13 +37,13 @@ def fill_nearest(img, top, bottom, left, right):
     return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_REPLICATE)
 
 
-def save(fname, image_path, image, i):
+def save(fname, image_path, image):
     file_path = os.path.join(aug_path, fname)
     if not os.path.exists(file_path):
         os.mkdir(file_path)
 
     cv2.imwrite(image_path, image)
-    cv2.imwrite(file_path + fr'\{i:05d}.jpg', image)
+    cv2.imwrite(file_path + fr'\{os.path.basename(image_path)}', image)
 
 
 def horizontal_shift(path, shift, ratio=0.1):
@@ -63,9 +63,9 @@ def horizontal_shift(path, shift, ratio=0.1):
             shifted_img = img[:, int(-1 * w_shift):, :]
             shifted_img = fill_nearest(shifted_img, 0, 0, 0, -1 * w_shift)
 
-        save('h_shift', image, shifted_img, i)
+        save('h_shift', image, shifted_img)
         # cv2.imwrite(image, shifted_img)
-        print('h_shift', i, image)
+        print(i, 'h_shift', image)
         i += 1
 
 
@@ -86,9 +86,9 @@ def vertical_shift(path, shift, ratio=0.1):
             shifted_img = img[int(-1 * v_shift):, :, :]
             shifted_img = fill_nearest(shifted_img, 0, -1 * v_shift, 0, 0)
 
-        save('v_shift', image, shifted_img, i)
+        save('v_shift', image, shifted_img)
         # cv2.imwrite(image, shifted_img)
-        print('v_shift', i, image)
+        print(i, 'v_shift', image)
         i += 1
 
 
@@ -108,9 +108,9 @@ def zoom(path, zoom, ratio):
         # zoomed_img = cv2.copyMakeBorder(zoomed_img, h_zoom, h_zoom, w_zoom, w_zoom, cv2.BORDER_CONSTANT, 0)
         # cv2.rectangle(img, (w_zoom, h_zoom), (w-w_zoom, h-h_zoom), (0, 255, 0), 4)
 
-        save('zoom', image, zoomed_img, i)
+        save('zoom', image, zoomed_img)
         # cv2.imwrite(image, zoomed_img)
-        print('zoom', i, image)
+        print(i, 'zoom', image)
         i += 1
 
 def rotate(path, angle, ratio):
@@ -125,9 +125,9 @@ def rotate(path, angle, ratio):
         M = cv2.getRotationMatrix2D((w // 2, h // 2), random_angle, 1)
         rotated_img = cv2.warpAffine(img, M, (w, h))
 
-        save('rotation', image, rotated_img, i)
+        save('rotation', image, rotated_img)
         # cv2.imwrite(image, flipped_img)
-        print('rotation', i, image)
+        print(i, 'rotation', image)
         i += 1
 
         # cv2.imwrite(path+fr'\{i:05d}.jpg', rotated_img)
@@ -141,9 +141,9 @@ def flip(path, ratio):
 
         flipped_img = np.fliplr(img)
 
-        save('flip', image, flipped_img, i)
+        save('flip', image, flipped_img)
         # cv2.imwrite(image, flipped_img)
-        print('flip', i, image)
+        print(i, 'flip', image)
         i += 1
 
 
@@ -157,14 +157,23 @@ def image_list(path):
 
 path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 aug_path = os.path.join(path, 'augmentation')
+raw_data_path = os.path.join(path, 'raw_data')
 data_path = os.path.join(path, 'data')
 
+
+
+if len(os.listdir(raw_data_path)) != len(os.listdir(data_path)):
+    shutil.rmtree(data_path)
+
 if not os.path.exists(data_path):
-    os.mkdir(data_path)
-else:
-    # shutil.rmtree(data_path)
-    # os.mkdir(data_path)
-    pass
+    shutil.copytree(raw_data_path, data_path)
+
+# if os.path.exists(aug_path):
+#     shutil.rmtree(aug_path)
+
+if not os.path.exists(aug_path):
+    os.mkdir(aug_path)
+
 
 data_list = image_list(data_path)
 
@@ -172,10 +181,10 @@ image = cv2.imread(data_list[0])
 height = image.shape[0]
 width = image.shape[1]
 
-resize(data_path)
+# resize(data_path)
 
-# horizontal_shift(data_path, 0.1, 0.1)
-# vertical_shift(data_path, 0.1, 0.1)
-# zoom(data_path, 0.1, 0.1)
-# rotate(data_path, 3, 0.1)
-# flip(data_path, 0.1)
+horizontal_shift(data_path, 0.1, 0.1)
+vertical_shift(data_path, 0.1, 0.1)
+zoom(data_path, 0.1, 0.1)
+rotate(data_path, 3, 0.1)
+flip(data_path, 0.1)
