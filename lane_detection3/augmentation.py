@@ -33,17 +33,18 @@ def resize(path):
 def fill(img, w, h):
     return cv2.resize(img, (w, h), cv2.INTER_CUBIC)
 
+
 def fill_nearest(img, top, bottom, left, right):
     return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_REPLICATE)
 
 
-def save(fname, image_path, image):
+def save(fname, image_path, image, i):
     file_path = os.path.join(aug_path, fname)
     if not os.path.exists(file_path):
         os.mkdir(file_path)
 
     cv2.imwrite(image_path, image)
-    cv2.imwrite(file_path + fr'\{os.path.basename(image_path)}', image)
+    cv2.imwrite(file_path + fr'\{i:05d}.jpg', image)
 
 
 def horizontal_shift(path, shift, ratio=0.1):
@@ -63,9 +64,9 @@ def horizontal_shift(path, shift, ratio=0.1):
             shifted_img = img[:, int(-1 * w_shift):, :]
             shifted_img = fill_nearest(shifted_img, 0, 0, 0, -1 * w_shift)
 
-        save('h_shift', image, shifted_img)
+        save('h_shift', image, shifted_img, i)
         # cv2.imwrite(image, shifted_img)
-        print(i, 'h_shift', image)
+        print('h_shift', i, image)
         i += 1
 
 
@@ -86,9 +87,9 @@ def vertical_shift(path, shift, ratio=0.1):
             shifted_img = img[int(-1 * v_shift):, :, :]
             shifted_img = fill_nearest(shifted_img, 0, -1 * v_shift, 0, 0)
 
-        save('v_shift', image, shifted_img)
+        save('v_shift', image, shifted_img, i)
         # cv2.imwrite(image, shifted_img)
-        print(i, 'v_shift', image)
+        print('v_shift', i, image)
         i += 1
 
 
@@ -108,9 +109,9 @@ def zoom(path, zoom, ratio):
         # zoomed_img = cv2.copyMakeBorder(zoomed_img, h_zoom, h_zoom, w_zoom, w_zoom, cv2.BORDER_CONSTANT, 0)
         # cv2.rectangle(img, (w_zoom, h_zoom), (w-w_zoom, h-h_zoom), (0, 255, 0), 4)
 
-        save('zoom', image, zoomed_img)
+        save('zoom', image, zoomed_img, i)
         # cv2.imwrite(image, zoomed_img)
-        print(i, 'zoom', image)
+        print('zoom', i, image)
         i += 1
 
 def rotate(path, angle, ratio):
@@ -125,9 +126,9 @@ def rotate(path, angle, ratio):
         M = cv2.getRotationMatrix2D((w // 2, h // 2), random_angle, 1)
         rotated_img = cv2.warpAffine(img, M, (w, h))
 
-        save('rotation', image, rotated_img)
+        save('rotation', image, rotated_img, i)
         # cv2.imwrite(image, flipped_img)
-        print(i, 'rotation', image)
+        print('rotation', i, image)
         i += 1
 
         # cv2.imwrite(path+fr'\{i:05d}.jpg', rotated_img)
@@ -141,9 +142,9 @@ def flip(path, ratio):
 
         flipped_img = np.fliplr(img)
 
-        save('flip', image, flipped_img)
+        save('flip', image, flipped_img, i)
         # cv2.imwrite(image, flipped_img)
-        print(i, 'flip', image)
+        print('flip', i, image)
         i += 1
 
 
@@ -155,27 +156,18 @@ def random_list(path, range):
 def image_list(path):
     return list(paths.list_images(path))
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 aug_path = os.path.join(path, 'augmentation')
-raw_data_path = os.path.join(path, 'raw_data')
 data_path = os.path.join(path, 'data')
 
 print('commit')
 
-if os.path.exists(data_path):
-    if len(os.listdir(raw_data_path)) != len(os.listdir(data_path)):
-        shutil.rmtree(data_path)
-
 if not os.path.exists(data_path):
-    shutil.copytree(raw_data_path, data_path)
-
-# if os.path.exists(aug_path):
-#     shutil.rmtree(aug_path)
-
-if not os.path.exists(aug_path):
-    os.mkdir(aug_path)
-
+    os.mkdir(data_path)
+else:
+    # shutil.rmtree(data_path)
+    # os.mkdir(data_path)
+    pass
 
 data_list = image_list(data_path)
 
@@ -183,10 +175,10 @@ image = cv2.imread(data_list[0])
 height = image.shape[0]
 width = image.shape[1]
 
-# resize(data_path)
+resize(data_path)
 
-horizontal_shift(data_path, 0.1, 0.1)
-vertical_shift(data_path, 0.1, 0.1)
-zoom(data_path, 0.1, 0.1)
-rotate(data_path, 3, 0.1)
-flip(data_path, 0.1)
+# horizontal_shift(data_path, 0.1, 0.1)
+# vertical_shift(data_path, 0.1, 0.1)
+# zoom(data_path, 0.1, 0.1)
+# rotate(data_path, 3, 0.1)
+# flip(data_path, 0.1)

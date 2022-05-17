@@ -18,8 +18,6 @@ else:
 fps = 15
 seconds = 10
 
-print('commit')
-
 start = 2175
 stop = start + fps*seconds
 
