@@ -47,7 +47,7 @@ def plot_hist(history, filename):
 epochs = 20
 learning_rate = 0.001
 batch_size = 16
-input_shape = (60, 160, 3)
+input_shape = (80, 160, 3)
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # labels = pickle.load(open(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
@@ -99,49 +99,62 @@ model = Sequential()
 # model.add(BatchNormalization(input_shape=input_shape))
 
 # Conv 1
-model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding='valid', input_shape=input_shape))
-model.add(Activation('relu'))
-model.add(Dropout(0.1))
+# model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding='valid', input_shape=input_shape))
+# model.add(Activation('relu'))
+# model.add(Dropout(0.1))
+#
+# # Conv 2
+# model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1,1), padding='valid', activation = 'relu'))
+# model.add(Activation('relu'))
+#
+# # Conv 3
+# model.add(Conv2D(filters=16, kernel_size=(3, 3), strides=(1,1), padding='valid'))
+# model.add(Activation('relu'))
+#
+# # Conv 4
+# model.add(Conv2D(filters=8, kernel_size=(3, 3), strides=(1,1), padding='valid'))
+# model.add(Activation('relu'))
+#
+# # MaxPool
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+#
+# # Flatten
+# model.add(Flatten())
+# model.add(Dropout(0.5))
+#
+# # Dense 1
+# model.add(Dense(units=128))
+# model.add(Activation('relu'))
+# model.add(Dropout(0.5))
+#
+# # Dense 2
+# model.add(Dense(units=64))
+# model.add(Activation('relu'))
+#
+# # Dense 3
+# model.add(Dense(units=32))
+# model.add(Activation('relu'))
+#
+# # Last - six outputs - three coefficients for each lane
+# model.add(Dense(6))
 
-# Conv 2
-model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-
-# Conv 3
-model.add(Conv2D(filters=16, kernel_size=(3, 3), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-
-# Conv 4
-model.add(Conv2D(filters=8, kernel_size=(3, 3), strides=(1,1), padding='valid'))
-model.add(Activation('relu'))
-
-# MaxPool
+model.add(Conv2D(filters=32, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-
-# Flatten
+model.add(Dropout(0.25))
+model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu'))
+model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
 model.add(Flatten())
+model.add(Dense(units=1024, activation='relu'))
 model.add(Dropout(0.5))
-
-# Dense 1
-model.add(Dense(units=128))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-
-# Dense 2
-model.add(Dense(units=64))
-model.add(Activation('relu'))
-
-# Dense 3
-model.add(Dense(units=32))
-model.add(Activation('relu'))
-
-# Last - six outputs - three coefficients for each lane
-model.add(Dense(6))
+model.add(Dense(units=6, activation='sigmoid'))
 
 model.summary()
 
-datagen = ImageDataGenerator(rotation_range=30,
-                             height_shift_range=0.2,
+datagen = ImageDataGenerator(rotation_range=10,
+                             height_shift_range=0.1,
                              vertical_flip=True)
 
 model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
