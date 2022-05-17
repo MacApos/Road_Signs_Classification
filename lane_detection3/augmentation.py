@@ -155,15 +155,15 @@ def random_list(path, range):
 def image_list(path):
     return list(paths.list_images(path))
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 aug_path = os.path.join(path, 'augmentation')
 raw_data_path = os.path.join(path, 'raw_data')
 data_path = os.path.join(path, 'data')
 
-
-
-if len(os.listdir(raw_data_path)) != len(os.listdir(data_path)):
-    shutil.rmtree(data_path)
+if os.path.exists(data_path):
+    if len(os.listdir(raw_data_path)) != len(os.listdir(data_path)):
+        shutil.rmtree(data_path)
 
 if not os.path.exists(data_path):
     shutil.copytree(raw_data_path, data_path)

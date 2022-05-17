@@ -181,13 +181,13 @@ def find_lanes(image):
         rightx1 = previous_frame[0][2]
         righty1 = previous_frame[0][3]
 
-    elif len(leftx1) == 0 or len(leftx1) <= minpix:
+    elif len(leftx1) <= minpix:
         print('no left')
         # leftx1 = rightx1 - width // 2
         leftx1 = width - rightx1
         lefty1 = righty1
 
-    elif len(rightx1) == 0 or len(rightx1) <= minpix:
+    elif len(rightx1) <= minpix:
         print('no right')
         # rightx1 = leftx1 + width // 2
         rightx1 = width - leftx1
@@ -210,8 +210,8 @@ def find_lanes(image):
     lefty = nonzeroy[left_nonzero1]
     rightx = nonzerox[right_nonzero1]
     righty = nonzeroy[right_nonzero1]
-    #
-    if len(leftx)==0 or len(rightx)==0:
+
+    if len(leftx) <= minpix or len(rightx) <= minpix:
         leftx, lefty, rightx, righty = leftx1, lefty1, rightx1, righty1
 
     return leftx, lefty, rightx, righty, out_img
@@ -313,7 +313,8 @@ raw = ['raw_data', 'raw_labels']
 augmented = ['data', 'augmented_labels']
 
 for folder in raw, augmented:
-    path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+    # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+    path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
     data_path = os.path.join(path, folder[0])
     labels_path = os.path.join(path, folder[1])
 
@@ -386,7 +387,7 @@ for folder in raw, augmented:
                           [width-template[0][0], template[0][1]]])
 
         for path in data_list[i: i+limit]:
-            save_label = labels_path+fr'\{j:05d}.jpg'
+            save_label = labels_path+fr'\{os.path.basename(path)}'
             if os.path.exists(save_label):
                 print(f'{save_label}, already exists')
                 j += 1
