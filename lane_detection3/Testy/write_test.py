@@ -1,23 +1,20 @@
 import os
 import cv2
 
-# path = r'F:\krzysztof\Maciej_Apostol\StopieńII\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = 'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+img_name = os.path.join(path, '01.jpg')
 
-data_path = os.path.join(path, 'test')
+print(img_name)
 
-video_path = os.path.join(path, r'Videos\Video1.mp4')
+# if not os.path.exists(test):
+#     print('not exists')
+#     os.mkdir(test)
 
-cap = cv2.VideoCapture(video_path)
 
-print(video_path)
+image = cv2.imread('C:/Users/macie/PycharmProjects/Road_Signs_Classification/lane_detection3/Pictures/gray.jpg')
 
-i = 0
-while cap.isOpened():
-    _, image = cap.read()
+# cv2.imshow(img_name, image)
+# cv2.waitKey(0)
 
-    img_path = data_path + fr'\{i:05d}.jpg'
-
-    cv2.imwrite(img_path, image)
-
-    i += 1
+if not cv2.imwrite(img_name, image):
+     raise Exception("Could not write image")

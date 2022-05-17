@@ -148,11 +148,9 @@ def find_lanes(image):
             left_idx.append(left_nonzero)
             right_idx.append(right_nonzero)
 
-
         elif left_indicator:
             left_current, left_nonzero, left_indicator, left_count, _, _ = find_single_lane(left_current, left_count)
             left_idx.append(left_nonzero)
-
 
         elif right_indicator:
             right_current, right_nonzero, right_indicator, right_count, _, _ = find_single_lane(right_current,
@@ -292,6 +290,7 @@ def visualise_perspective(frame):
 
     return poly, frame
 
+
 def sort_path(path):
     sorted_path = []
     for file in os.listdir(path):
@@ -301,30 +300,31 @@ def sort_path(path):
     sorted_path = sorted(sorted_path)
     return [path + fr'\{str(f)}.jpg' for f in sorted_path]
 
+
 def rgb(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 # data_path = os.path.join(path, 'data')
 # labels_path = os.path.join(path, 'labels')
 
-print('commit')
-
-names = ['data', 'labels']
-raw = ['raw_data', 'raw_labels']
-augmented = ['data', 'augmented_labels']
+raw = ['data', 'frames', 'labels']
+augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
 
 for folder in raw, augmented:
     # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-    path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+    # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+    path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
     data_path = os.path.join(path, folder[0])
-    labels_path = os.path.join(path, folder[1])
+    frames_path = os.path.join(path, folder[1])
+    labels_path = os.path.join(path, folder[2])
 
-    if os.path.exists(labels_path):
-        shutil.rmtree(labels_path)
+    for folder_path in frames_path, labels_path:
+        shutil.rmtree(folder_path)
 
-    if not os.path.exists(labels_path):
-        os.mkdir(labels_path)
+        if not os.path.exists(folder_path):
+            os.mkdir(folder_path)
 
     data_list = list(paths.list_images(data_path))
 
@@ -332,36 +332,36 @@ for folder in raw, augmented:
     height = image.shape[0]
     width = image.shape[1]
 
-    template = [[280,650], [570,525]]
+    template = [[280, 650], [570, 525]]
 
     src = np.float32([template[0],
                       template[1],
                       [width - template[1][0], template[1][1]],
                       [width - template[0][0], template[0][1]]])
 
-    dst = np.float32([[0,height],
-                      [0,0],
-                      [width,0],
-                      [width,height]])
+    dst = np.float32([[0, height],
+                      [0, 0],
+                      [width, 0],
+                      [width, height]])
 
     video1 = {'name': 'video1',
-              'template': [[290,390], [550,265]],
-              'thresh':0.65,
-              'limit': 2548}
+              'template': [[290, 390], [550, 265]],
+              'thresh': 0.65,
+              'limit': 10}#2548
 
     video2 = {'name': 'video2',
               'template': [[285, 390], [550, 265]],
-              'thresh':0.55,
-              'limit': 4122}
+              'thresh': 0.55,
+              'limit': 10}#4122
 
     video3 = {'name': 'video3',
               'template': [[280, 400], [570, 230]],
-              'thresh':0.85,
+              'thresh': 0.85,
               'limit': 2833}
 
     video4 = {'name': 'video4',
               'template': [[270, 400], [550, 245]],
-              'thresh':0.9,
+              'thresh': 0.9,
               'limit': 1840}
 
     video_list = [video1, video2]
@@ -388,10 +388,11 @@ for folder in raw, augmented:
                           [width-template[1][0], template[1][1]],
                           [width-template[0][0], template[0][1]]])
 
-        for path in data_list[i: i+limit]:
+        for path in data_list[i: i + limit]:
+            save_frame = frames_path+fr'\{os.path.basename(path)}'
             save_label = labels_path+fr'\{os.path.basename(path)}'
-            if os.path.exists(save_label):
-                print(f'{save_label}, already exists')
+            if os.path.exists(save_frame) and os.path.exists(save_label):
+                print(i, j, {path}, 'already processed')
                 j += 1
                 continue
 
@@ -421,9 +422,16 @@ for folder in raw, augmented:
             # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
 
             poly, frame = visualise_perspective(frame)
-            poly = poly[:,:,1]
+            poly = poly[:, :, 1]
 
-            cv2.imwrite(save_label, frame)
+            # im_show('poly', poly)
+
+            if not os.path.exists(save_frame):
+                cv2.imwrite(save_frame, frame)
+
+            if not os.path.exists(save_label):
+                cv2.imwrite(save_label, poly)
+
             print(i, j, 'save', path)
             label_list.append(curves)
 
@@ -433,4 +441,4 @@ for folder in raw, augmented:
         print(i)
     print('next')
 
-    pickle.dump(label_list, open(f'Pickles/{folder[1]}.p', "wb"))
+    pickle.dump(label_list, open(f'Pickles/{folder[2]}.p', "wb"))
