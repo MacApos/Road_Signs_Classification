@@ -20,3 +20,5 @@ while cap.isOpened():
     print(img_path)
 
     i += 1
+
+print('commit')
