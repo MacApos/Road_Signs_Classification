@@ -286,9 +286,10 @@ def visualise_perspective(frame):
     poly = np.dstack((img, img, img)) * 255
     cv2.fillPoly(poly, [points], (0, 255, 0))
     poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
-    frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
+    out_frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
+    poly = poly[:, :, 1]
 
-    return poly, frame
+    return poly, out_frame
 
 
 def sort_path(path):
@@ -312,7 +313,7 @@ def rgb(image):
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
 
-for folder in raw, augmented:
+for folder in [raw]:
     # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
     # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
     path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
@@ -347,12 +348,12 @@ for folder in raw, augmented:
     video1 = {'name': 'video1',
               'template': [[290, 390], [550, 265]],
               'thresh': 0.65,
-              'limit': 10}#2548
+              'limit': 2548}#
 
     video2 = {'name': 'video2',
               'template': [[285, 390], [550, 265]],
               'thresh': 0.55,
-              'limit': 10}#4122
+              'limit': 4122}#
 
     video3 = {'name': 'video3',
               'template': [[280, 400], [570, 230]],
@@ -422,8 +423,6 @@ for folder in raw, augmented:
             # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
 
             poly, frame = visualise_perspective(frame)
-            poly = poly[:, :, 1]
-
             # im_show('poly', poly)
 
             if not os.path.exists(save_frame):
