@@ -9,6 +9,8 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 videos_path = os.path.join(path, 'Videos')
 data_path = os.path.join(path, 'raw_data')
 
+print('commit')
+
 # if os.path.exists(data_path):
 #     shutil.rmtree(data_path)
 

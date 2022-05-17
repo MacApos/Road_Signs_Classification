@@ -161,6 +161,8 @@ aug_path = os.path.join(path, 'augmentation')
 raw_data_path = os.path.join(path, 'raw_data')
 data_path = os.path.join(path, 'data')
 
+print('commit')
+
 if os.path.exists(data_path):
     if len(os.listdir(raw_data_path)) != len(os.listdir(data_path)):
         shutil.rmtree(data_path)

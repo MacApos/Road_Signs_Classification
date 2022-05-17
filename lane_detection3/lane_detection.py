@@ -308,6 +308,8 @@ def rgb(image):
 # data_path = os.path.join(path, 'data')
 # labels_path = os.path.join(path, 'labels')
 
+print('commit')
+
 names = ['data', 'labels']
 raw = ['raw_data', 'raw_labels']
 augmented = ['data', 'augmented_labels']
