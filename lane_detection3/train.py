@@ -16,9 +16,20 @@ import os
 from keras.models import Sequential
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
-from keras.preprocessing.image import ImageDataGenerator, img_to_array
+from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import img_to_array
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import adam_v2
+
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU')
+try:
+  tf.config.experimental.set_memory_growth(physical_devices[0], True)
+  tf.config.experimental.set_memory_growth(physical_devices[1], True)
+except:
+  # Invalid device or cannot modify virtual devices once initialized.
+  pass
 
 
 def plot_hist(history, filename):
@@ -44,23 +55,23 @@ def plot_hist(history, filename):
     po.plot(fig, filename=filename, auto_open=True)
 
 
-epochs = 1
+epochs = 3
 learning_rate = 0.001
-batch_size = 16
+batch_size = 150
 input_shape = (80, 160, 3)
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-labels = pickle.load(open(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
-                          'rb'))
-data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
-
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-#
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # labels = pickle.load(open(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
 #                           'rb'))
 # data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-# output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
+# output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
+
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+
+labels = pickle.load(open(r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
+                          'rb'))
+data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
 
 data_path = os.path.join(path, 'data')
 data_list = list(paths.list_images(data_path))
@@ -73,7 +84,8 @@ if os.path.exists(data_npy):
     print('data array already exists')
 else:
     data = []
-    for path in data_list:
+    for idx, path in enumerate(data_list):
+        print(f'processing image {idx} ')
         image = cv2.imread(path)
         image = cv2.resize(image, (input_shape[1], input_shape[0]))
         image = img_to_array(image)
@@ -161,16 +173,17 @@ model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
               loss='mean_absolute_error',
               metrics=['accuracy'])
 
-dt = datetime.now().strftime('%d.%m_%H:%M')
+dt = datetime.now().strftime('%d.%m_%H.%M')
+print(dt)
 model_path = os.path.join(output, 'model_' + dt + '.hdf5')
 checkpoint = ModelCheckpoint(filepath=model_path,
                              monitor='val_accuracy',
                              save_best_only=True)
 
-history = model.fit(
+history = model.fit_generator(
     generator=datagen.flow(x_train, y_train, batch_size=batch_size),
     validation_data=(x_test, y_test),
-    steps_per_epoch=len(x_train) // batch_size,
+    steps_per_epoch=len(x_train),
     epochs=epochs,
     callbacks=[checkpoint])
 

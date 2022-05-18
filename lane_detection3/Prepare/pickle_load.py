@@ -1,22 +1,20 @@
-import pickle
+import os
 import cv2
+import pickle
+from imutils import paths
 from datetime import datetime
 
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+data_path = os.path.join(path, 'data')
+labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
 
-lines0 = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\lane_labels_2.p'
-lines1 = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\train_line.p'
+data_list = list(paths.list_images(data_path))
+labels_list = pickle.load(open(labels_path, 'rb' ))
 
-labels = pickle.load(open(lines0, "rb" ))
+# file0 = open(path, 'rb')
+# lines_dict0 = pickle.load(file0)
+# file0.close()
 
-pickle.dump(labels, open('Pickles\lane_labels_2.p', "wb"))
+new_labels = labels_list[:2547]
+print(new_labels[0])
 
-file0 = open(lines0, 'rb')
-lines_dict0 = pickle.load(file0)
-file0.close()
-
-file1 = open(lines1, 'rb')
-lines_dict1 = pickle.load(file1)
-file1.close()
-
-print(lines_dict0[0].shape)
-print(lines_dict1[0].shape)

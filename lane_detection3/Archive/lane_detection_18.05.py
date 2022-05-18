@@ -9,7 +9,6 @@ import pandas as pd
 from imutils import paths
 import matplotlib.pyplot as plt
 
-
 start = time.time()
 
 
@@ -58,7 +57,7 @@ def to_csv(name, arr):
 
 
 def to_jpg(name, image):
-    path = 'Pictures/'+name+'.jpg'
+    path = 'Pictures/' + name + '.jpg'
     cv2.imwrite(path, image)
 
 
@@ -68,9 +67,10 @@ def prepare(image, thresh):
     warp, _ = warp_perspective(image, src, dst)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
-    thresh = color_mask(warp, (max_val*0.65, max_val))
+    thresh = color_mask(warp, (max_val * 0.65, max_val))
 
     return thresh
+
 
 def find_single_lane(side_current, count):
     side_left = side_current - margin
@@ -103,10 +103,10 @@ def find_lanes(image):
     global nonzerox, nonzeroy
     global left_intercept, left_slope, right_intercept, right_slope
 
-    histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
+    histogram = np.sum(image[image.shape[0] // 2:, :], axis=0)
     out_img = np.dstack((image, image, image))
 
-    midpoint = int(histogram.shape[0]//2)
+    midpoint = int(histogram.shape[0] // 2)
     left = np.argmax(histogram[:midpoint])
     right = midpoint + np.argmax(histogram[midpoint:])
 
@@ -137,8 +137,8 @@ def find_lanes(image):
     right_count = 0
 
     for i in range(number):
-        low = image.shape[0] - win_height*(i+1)
-        high = image.shape[0] - win_height*i
+        low = image.shape[0] - win_height * (i + 1)
+        high = image.shape[0] - win_height * i
 
         if left_indicator and right_indicator:
             left_current, left_nonzero, left_indicator, left_count, _, left_right = find_single_lane(left_current,
@@ -197,8 +197,8 @@ def find_lanes(image):
     right_curve1 = np.polyfit(righty1, rightx1, 2)
 
     left_nonzero1 = (
-                (nonzerox > (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] - margin)) &
-                (nonzerox < (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] + margin)))
+            (nonzerox > (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] - margin)) &
+            (nonzerox < (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] + margin)))
 
     right_nonzero1 = (
             (nonzerox > (right_curve1[0] * (nonzeroy ** 2) + right_curve1[1] * nonzeroy + right_curve1[2] - margin)) &
@@ -218,8 +218,8 @@ def find_lanes(image):
 def find_lanes_perspective():
     global M_inv
     zeros = np.zeros_like(frame)
-    zeros[lefty-1, leftx-1] = 255
-    zeros[righty-1, rightx-1] = 255
+    zeros[lefty - 1, leftx - 1] = 255
+    zeros[righty - 1, rightx - 1] = 255
     _, M_inv = warp_perspective(frame, dst, src)
     t_out_img = cv2.warpPerspective(zeros, M_inv, (frame.shape[1], frame.shape[0]), flags=cv2.INTER_LINEAR)
 
@@ -306,9 +306,18 @@ def rgb(image):
     return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 
-def detect_lane(path, data_list, folder, visualise):
-    global src, dst
-    global height, width
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# data_path = os.path.join(path, 'data')
+# labels_path = os.path.join(path, 'labels')
+
+raw = ['data', 'frames', 'labels']
+augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
+
+for folder in [raw]:
+    # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+    # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+    path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+    data_path = os.path.join(path, folder[0])
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
 
@@ -318,23 +327,33 @@ def detect_lane(path, data_list, folder, visualise):
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
 
+    data_list = list(paths.list_images(data_path))
+
     image = cv2.imread(data_list[0])
     height = image.shape[0]
     width = image.shape[1]
 
     template = [[280, 650], [570, 525]]
 
+    src = np.float32([template[0],
+                      template[1],
+                      [width - template[1][0], template[1][1]],
+                      [width - template[0][0], template[0][1]]])
 
+    dst = np.float32([[0, height],
+                      [0, 0],
+                      [width, 0],
+                      [width, height]])
 
     video1 = {'name': 'video1',
               'template': [[290, 390], [550, 265]],
               'thresh': 0.65,
-              'limit': 2548}#
+              'limit': 2548}  #
 
     video2 = {'name': 'video2',
               'template': [[285, 390], [550, 265]],
               'thresh': 0.55,
-              'limit': 4122}#
+              'limit': 4122}  #
 
     video3 = {'name': 'video3',
               'template': [[280, 400], [570, 230]],
@@ -346,7 +365,7 @@ def detect_lane(path, data_list, folder, visualise):
               'thresh': 0.9,
               'limit': 1840}
 
-    video_list = [video1]#video2
+    video_list = [video1]  # video2
 
     number = 35
     minpix = 50
@@ -360,24 +379,19 @@ def detect_lane(path, data_list, folder, visualise):
     j = 0
     for video in video_list:
         values = list(video.values())
+        name = values[0]
         template = values[1]
         thresh = values[2]
         limit = values[3]
 
         src = np.float32([template[0],
                           template[1],
-                          [width-template[1][0], template[1][1]],
-                          [width-template[0][0], template[0][1]]])
-
-        dst = np.float32([[0, height],
-                          [0, 0],
-                          [width, 0],
-                          [width, height]])
-
+                          [width - template[1][0], template[1][1]],
+                          [width - template[0][0], template[0][1]]])
         # i: i + limit
         for path in data_list[:10]:
-            save_frame = frames_path+fr'\{os.path.basename(path)}'
-            save_label = labels_path+fr'\{os.path.basename(path)}'
+            save_frame = frames_path + fr'\{os.path.basename(path)}'
+            save_label = labels_path + fr'\{os.path.basename(path)}'
             # if os.path.exists(save_frame) and os.path.exists(save_label):
             #     print(i, j, {path}, 'already processed')
             #     j += 1
@@ -401,7 +415,8 @@ def detect_lane(path, data_list, folder, visualise):
             curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
 
-            y = np.linspace(0, height-1, 15).astype(int).reshape((-1,1))
+            # Visualisation
+            y = np.linspace(0, height - 1, 15).astype(int).reshape((-1, 1))
             out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
             # down = min(min(t_lefty), min(t_righty))
             # t_y = np.linspace(down, 720, 15).astype(int).reshape((-1,1))
@@ -409,8 +424,7 @@ def detect_lane(path, data_list, folder, visualise):
 
             poly, frame = visualise_perspective(frame)
 
-            if visualise:
-                im_show('frame', frame)
+            im_show('out_img', frame)
 
             # if not os.path.exists(save_frame):
             #     cv2.imwrite(save_frame, frame)
@@ -427,12 +441,3 @@ def detect_lane(path, data_list, folder, visualise):
     print('next')
 
     pickle.dump(label_list, open(f'Pickles/{folder[2]}.p', "wb"))
-
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-data_path = os.path.join(path, 'data')
-data_list = list(paths.list_images(data_path))
-
-raw = ['frames', 'labels']
-augmented = ['augmented_frames', 'augmented_labels']
