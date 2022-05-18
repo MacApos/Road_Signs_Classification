@@ -313,16 +313,16 @@ def rgb(image):
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
 
-for folder in [raw]:
+for folder in [raw, augmented]:
     # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-    # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-    path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+    path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+    # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
     data_path = os.path.join(path, folder[0])
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
 
     for folder_path in frames_path, labels_path:
-        shutil.rmtree(folder_path)
+        # shutil.rmtree(folder_path)
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)

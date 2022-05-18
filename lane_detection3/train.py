@@ -41,35 +41,32 @@ def plot_hist(history, filename):
     fig.update_xaxes(title_text='Loss', row=2, col=1)
     fig.update_layout(width=1400, height=1000, title='Metrics')
 
-    po.plot(fig, filename=filename, auto_open=False)
+    po.plot(fig, filename=filename, auto_open=True)
 
 
-epochs = 20
+epochs = 1
 learning_rate = 0.001
 batch_size = 16
 input_shape = (80, 160, 3)
 
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# labels = pickle.load(open(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
-#                           'rb'))
-# file = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-# output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
-
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 labels = pickle.load(open(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
                           'rb'))
 data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
+output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
+
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+#
+# labels = pickle.load(open(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
+#                           'rb'))
+# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+# output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
 
 data_path = os.path.join(path, 'data')
 data_list = list(paths.list_images(data_path))
 
-print(data_list)
-
 if not os.path.exists(output):
     os.mkdir(output)
-
 
 if os.path.exists(data_npy):
     data = np.load(data_npy)
@@ -89,7 +86,7 @@ labels = np.array(labels)
 
 print(f'{len(data_list)} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
 
-data, labels = shuffle(data, labels)
+# data, labels = shuffle(data, labels)
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
 print(x_train.shape)
@@ -138,16 +135,18 @@ model = Sequential()
 # # Last - six outputs - three coefficients for each lane
 # model.add(Dense(6))
 
-model.add(Conv2D(filters=32, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu'))
-model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
 model.add(Flatten())
-model.add(Dense(units=1024, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(units=128, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(units=64, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(units=32, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(units=6, activation='sigmoid'))
 
@@ -162,18 +161,24 @@ model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
               loss='mean_absolute_error',
               metrics=['accuracy'])
 
-dt = datetime.now().strftime('%d/%m_%H:%M')
-filepath = os.path.join(output, 'model_'+dt+'.hdf5')
-checkpoint = ModelCheckpoint(filepath=filepath,
+dt = datetime.now().strftime('%d.%m_%H:%M')
+model_path = os.path.join(output, 'model_' + dt + '.hdf5')
+checkpoint = ModelCheckpoint(filepath=model_path,
                              monitor='val_accuracy',
                              save_best_only=True)
 
-history = model.fit_generator(
+history = model.fit(
     generator=datagen.flow(x_train, y_train, batch_size=batch_size),
     validation_data=(x_test, y_test),
     steps_per_epoch=len(x_train) // batch_size,
     epochs=epochs,
     callbacks=[checkpoint])
 
-filename = os.path.join(output, 'report_' + dt + '.html')
-plot_hist(history, filename=filename)
+report_path = os.path.join(output, 'report_' + dt + '.html')
+plot_hist(history, filename=report_path)
+
+model_json = model.to_json()
+with open('Output/model_' + dt + '.json', 'w') as json_file:
+    json_file.write(model_json)
+
+model.save_weights('Output/weights_'+ dt +'.h5')

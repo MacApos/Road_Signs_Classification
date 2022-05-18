@@ -1,8 +1,8 @@
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, Dense
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import to_categorical
+from keras.utils.np_utils import to_categorical
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import adam_v2
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from plotly.subplots import make_subplots
@@ -129,7 +129,7 @@ model.add(Dense(units=classes, activation='softmax'))
 
 model.summary()
 
-model.compile(optimizer=Adam(lr=learning_rate),
+model.compile(optimizer=adam_v2.Adam(lr=learning_rate),
               loss='binary_crossentropy',
               metrics=['accuracy'])
 history = model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_test, y_test))
