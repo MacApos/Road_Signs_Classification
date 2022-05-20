@@ -25,14 +25,28 @@ video1 = 2547
 
 print(len(labels_list))
 
-new_labels = labels_list
+small_labels = []
+
+for label in labels_list:
+    coefficient_list = []
+    for coefficient in label:
+        coefficient = coefficient / 8
+        coefficient_list.append(coefficient)
+
+    coefficient_list = np.array(coefficient_list, dtype='float')
+    small_labels.append(coefficient_list)
+
+small_labels = np.array(small_labels, dtype='float')
+
+print(small_labels[0], labels_list[0])
+
 random_img = random.sample(data_list[:video1], 1)[0]
-random_label = labels_list[data_list.index(random_img)]
+random_label = small_labels[data_list.index(random_img)]
 
 left_curve = random_label[:3]
 right_curve = random_label[3:]
 
-print(left_curve, right_curve)
+# print(left_curve, right_curve)
 
 input_shape = (80, 160, 3)
 image = cv2.imread(random_img)
@@ -58,7 +72,7 @@ for video in video_list:
     width = image.shape[1]
     height = image.shape[0]
 
-    src, dst = warp_arr(template, width, height, scaley, scalex)
+    src, dst = warp_arr(template, width, height, scalex, scaley)
 
     img = prepare(image, src, dst, width, height)
 
@@ -67,7 +81,7 @@ for video in video_list:
     y = np.linspace(0, height - 1, 15).astype(int).reshape((-1, 1))
     out_img, fit_leftx, fit_rightx, points = visualise(img, y, left_curve, right_curve, False)
 
-    im_show('out_img', out_img)
+    im_show('img', img)
 
     poly, frame = visualise_perspective(img, points, M_inv, frame)
     im_show('poly', poly)
