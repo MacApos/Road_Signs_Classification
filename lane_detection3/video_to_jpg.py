@@ -5,8 +5,8 @@ import numpy as np
 from imutils import paths
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 videos_path = os.path.join(path, 'Videos')
 data_path = os.path.join(path, 'data')
 
@@ -86,7 +86,8 @@ for video in video_list:
     k = 0
     while cap.isOpened():
         _, image = cap.read()
-        resized_img = image[260:, :]
+        resized_img = image[260:, :, :]
+        resized_img = cv2.copyMakeBorder(resized_img, 20, 0, 0, 0, cv2.BORDER_REPLICATE)
 
         img_path = data_path + fr'\{i:05d}.jpg'
 
@@ -94,6 +95,7 @@ for video in video_list:
             if np.any(image):
                 if not os.path.exists(img_path):
                     cv2.imwrite(img_path, resized_img)
+
                     print(f'{j}, {i:05d}, copy')
                     i += 1
                 else:
@@ -110,6 +112,9 @@ for video in video_list:
 
         if j > values[-1][1]:
             print('break')
+            break
+
+        if i == 30:
             break
 
         j += 1
