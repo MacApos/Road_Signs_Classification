@@ -158,9 +158,9 @@ def image_list(path):
     return list(paths.list_images(path))
 
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 augmentation_folder = os.path.join(path, 'augmentation')
 data_path = os.path.join(path, 'data')
 aug_path = os.path.join(path, 'augmented_data')

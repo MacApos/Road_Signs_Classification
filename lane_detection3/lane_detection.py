@@ -1,8 +1,6 @@
 import os
 import cv2
-import time
 import pickle
-import random
 import shutil
 import numpy as np
 import pandas as pd
@@ -10,9 +8,10 @@ from imutils import paths
 import matplotlib.pyplot as plt
 
 
-def im_show(name, image):
+def im_show(image, name='Image'):
     cv2.imshow(name, image)
     cv2.waitKey(0)
+
 
 def to_csv(name, arrqy):
     array_list = []
@@ -23,7 +22,8 @@ def to_csv(name, arrqy):
         array_list.append(arr)
 
     df = pd.DataFrame(array_list)
-    path = os.path.join(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Arrays', name)
+    path = os.path.join(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Arrays', name)
+    # path = os.path.join(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Arrays', name)
     df.to_csv(path, sep='\t', index=False, header=False)
 
 
@@ -61,19 +61,21 @@ def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
 
 
 def to_jpg(name, image):
-    path = 'Pictures/'+name+'.jpg'
+    path = 'Pictures/' + name + '.jpg'
     cv2.imwrite(path, image)
 
 
 def prepare(image, src, dst, width, height):
     box = draw_lines(image, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
+    im_show(box)
     warp, _ = warp_perspective(image, src, dst, width, height)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
-    thresh = color_mask(warp, (max_val*0.65, max_val))
+    thresh = color_mask(warp, (max_val * 0.65, max_val))
 
     return thresh
+
 
 def find_single_lane(side_current, count):
     side_left = side_current - margin
@@ -106,10 +108,10 @@ def find_lanes(image):
     global nonzerox, nonzeroy
     global left_intercept, left_slope, right_intercept, right_slope
 
-    histogram = np.sum(image[image.shape[0]//2:, :], axis=0)
+    histogram = np.sum(image[image.shape[0] // 2:, :], axis=0)
     out_img = np.dstack((image, image, image))
 
-    midpoint = int(histogram.shape[0]//2)
+    midpoint = int(histogram.shape[0] // 2)
     left = np.argmax(histogram[:midpoint])
     right = midpoint + np.argmax(histogram[midpoint:])
 
@@ -142,8 +144,8 @@ def find_lanes(image):
     win_height = int(height // number)
 
     for i in range(number):
-        low = image.shape[0] - win_height*(i+1)
-        high = image.shape[0] - win_height*i
+        low = image.shape[0] - win_height * (i + 1)
+        high = image.shape[0] - win_height * i
 
         if left_indicator and right_indicator:
             left_current, left_nonzero, left_indicator, left_count, _, left_right = find_single_lane(left_current,
@@ -202,8 +204,8 @@ def find_lanes(image):
     right_curve1 = np.polyfit(righty1, rightx1, 2)
 
     left_nonzero1 = (
-                (nonzerox > (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] - margin)) &
-                (nonzerox < (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] + margin)))
+            (nonzerox > (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] - margin)) &
+            (nonzerox < (left_curve1[0] * (nonzeroy ** 2) + left_curve1[1] * nonzeroy + left_curve1[2] + margin)))
 
     right_nonzero1 = (
             (nonzerox > (right_curve1[0] * (nonzeroy ** 2) + right_curve1[1] * nonzeroy + right_curve1[2] - margin)) &
@@ -220,25 +222,6 @@ def find_lanes(image):
     return leftx, lefty, rightx, righty, out_img
 
 
-def find_lanes_perspective(image):
-    global M_inv
-    t_out_img, M_inv = warp_perspective(image, dst, src, width, height)
-    t_leftx = t_out_img[:, :width // 2].nonzero()[1]
-    t_lefty = t_out_img[:, :width // 2].nonzero()[0]
-    t_rightx = t_out_img[:, width // 2:].nonzero()[1] + width // 2
-    t_righty = t_out_img[:, width // 2:].nonzero()[0]
-
-    if len(t_leftx) == 0:
-        t_leftx = -t_rightx + width
-        t_lefty = t_righty
-
-    if len(t_rightx) == 0:
-        t_rightx = -t_leftx + width
-        t_righty = t_lefty
-
-    return t_leftx, t_lefty, t_rightx, t_righty, t_out_img
-
-
 def fit_poly(leftx, lefty, rightx, righty):
     left_curve = np.polyfit(lefty, leftx, 2)
     right_curve = np.polyfit(righty, rightx, 2)
@@ -246,21 +229,24 @@ def fit_poly(leftx, lefty, rightx, righty):
     return left_curve, right_curve
 
 
-def visualise(image, y, left_curve, right_curve, plot):
-    fit_leftx = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
-    fit_rightx = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
+def visualise(height, image, left_curve, right_curve, show_lines=False, show_points=True, plot=False):
+    y = np.linspace(0, height - 1, 15).astype(int).reshape((-1, 1))
+    fit_left = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
+    fit_right = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
     empty = []
     flipud = False
 
-    color = (0, 0, 255)
-    for arr in fit_leftx, fit_rightx:
+    colors = [(0, 0, 255), (255, 0, 0)]
+    for idx, arr in enumerate([fit_left, fit_right]):
         arr = arr.astype(int)
         con = np.concatenate((arr, y), axis=1)
-        # cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
+        if show_lines:
+            cv2.polylines(image, [con], isClosed=False, color=(0, 0, 255), thickness=4)
 
-        for val in con:
-            cv2.circle(image, tuple(val), 5, color, -1)
+        if show_points:
+            for val in con:
+                cv2.circle(image, tuple(val), 5, colors[idx], -1)
 
         if flipud:
             con = np.flipud(con)
@@ -268,79 +254,69 @@ def visualise(image, y, left_curve, right_curve, plot):
         flipud = True
         empty.append(con)
 
-        color = (255, 0, 0)
-
     points = np.vstack((empty[0], empty[1]))
 
     if plot:
         fig, ax = plt.subplots()
         ax.scatter(leftx, -lefty, c='g')
         ax.scatter(rightx, -righty, c='r')
-        ax.plot(fit_leftx, -y, c='b')
-        ax.plot(fit_rightx, -y, c='b')
+        ax.plot(fit_left, -y, c='b')
+        ax.plot(fit_right, -y, c='b')
         plt.show()
 
-    return image, fit_leftx, fit_rightx, points
+    return image, fit_left, fit_right, points
 
 
-# def visualise_perspective(img, points, M_inv, frame):
-#     poly = np.dstack((img, img, img)) * 255
-#     cv2.fillPoly(poly, [points], (0, 255, 0))
-#     poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
-#     out_frame = cv2.addWeighted(frame, 1, poly, 0.6, 0)
-#     poly = poly[:, :, 1]
-#
-#     return poly, out_frame
-
-
-def visualise_perspective(img, points, M_inv, frame, show_lines=True, show_points=False):
+def visualise_perspective(img, points, M_inv, frame, show_lines=False, show_points=False):
     poly = np.dstack((img, img, img)) * 255
-    lines = np.copy(poly)
-    zeros = np.zeros((poly.shape[0], poly.shape[1]))
+    lines_img = np.copy(poly)
+    points_img = np.copy(poly)
 
+    width = poly.shape[1]
+    height = poly.shape[0]
 
+    left_points = points[points.shape[0] // 2:, :]
+    right_points = points[:points.shape[0] // 2, :]
 
-    for point in points:
-        cv2.circle(zeros, (point), 1, 1, -1)
+    colors = [(255, 0, 0), (0, 0, 255)]
+    for idx, side_points in enumerate([left_points, right_points]):
+        cv2.polylines(lines_img, [side_points], isClosed=False, color=colors[idx], thickness=25)
 
-    im_show('zeros', zeros)
-
-    left_points = points[points.shape[0]//2:, :]
-    right_points = points[:points.shape[0]//2, :]
-
-    color = (255, 0, 0)
-    for side_points in left_points, right_points:
-        if show_lines:
-            cv2.polylines(lines, [side_points], isClosed=False, color=color, thickness=10)
-
+        zeros = np.zeros_like(poly)
         for point in side_points:
-            cv2.circle(lines, point, 1, 1, -1)
+            cv2.circle(points_img, tuple(point), 15, colors[idx], -1)
+            cv2.circle(zeros, tuple(point), 1, 1, -1)
 
-        nonzero = np.nonzero(lines)
-        nonzeroy = np.array(nonzero[0])
-        nonzerox = np.array(nonzero[1])
+        zeros = cv2.warpPerspective(zeros, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        nonzero = np.nonzero(zeros)
 
-        print(nonzeroy)
+        nonzerox = np.array(nonzero[1]).reshape((-1, 1))
+        nonzeroy = np.array(nonzero[0]).reshape((-1, 1))
 
-        lines = cv2.warpPerspective(lines, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
-        color = (0, 0, 255)
+        con = np.concatenate((nonzerox, nonzeroy), axis=1)
 
-    im_show('lines', lines)
+        # if show_lines:
+        #     cv2.polylines(frame, [con], isClosed=False, color=colors[idx], thickness=5)
+        #
+        # if show_points:
+        #     for val in con:
+        #         cv2.circle(frame, tuple(val), 5, colors[idx], -1)
 
+    if show_lines:
+        lines_img = cv2.warpPerspective(lines_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        frame = cv2.addWeighted(frame, 1, lines_img, 1, 0)
 
+    if show_points:
+        points_img = cv2.warpPerspective(points_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        frame = cv2.addWeighted(frame, 1, points_img, 1, 0)
 
-
-
-
-
-
-
+    cv2.fillPoly(poly, [points], (0, 255, 0))
     poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
     out_frame = cv2.addWeighted(frame, 1, poly, 0.5, 0)
-    test_frame = cv2.addWeighted(frame, 1, lines, 1, 0)
     poly = poly[:, :, 1]
 
     return poly, out_frame
+
 
 def sort_path(path):
     sorted_path = []
@@ -366,25 +342,25 @@ def params(width, height):
 
     video1 = {'name': 'video1',
               'template': np.float32([[290, 410],
-                                      [550, 285]])*scale,
+                                      [550, 285]]) * scale,
               'thresh': 0.65,
               'limit': 2548}
 
     video2 = {'name': 'video2',
               'template': np.float32([[285, 410],
-                                      [550, 285]])*scale, # [[:, 390+20], [:, 265+20]]
+                                      [550, 285]]) * scale,  # [[:, 390+20], [:, 265+20]]
               'thresh': 0.55,
               'limit': 4122}
 
     video3 = {'name': 'video3',
               'template': np.float32([[280, 420],
-                                      [570, 250]])*scale,
+                                      [570, 250]]) * scale,
               'thresh': 0.85,
               'limit': 2833}
 
     video4 = {'name': 'video4',
               'template': np.float32([[270, 420],
-                                      [550, 265]])*scale,
+                                      [550, 265]]) * scale,
               'thresh': 0.9,
               'limit': 1840}
 
@@ -406,6 +382,7 @@ def warp_arr(template, width, height):
 
     return src, dst
 
+
 def detect_lines(path, folder):
     global width, height
     global leftx, lefty, rightx, righty
@@ -418,13 +395,13 @@ def detect_lines(path, folder):
     data_list = list(paths.list_images(data_path))
 
     for folder_path in frames_path, labels_path:
-        # shutil.rmtree(folder_path)
+        shutil.rmtree(folder_path)
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
 
     image = cv2.imread(data_list[0])
-    scale_factor = 1
+    scale_factor = 1/4
     image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
     width = image.shape[1]
     height = image.shape[0]
@@ -444,10 +421,11 @@ def detect_lines(path, folder):
         limit = values[3]
 
         src, dst = warp_arr(template, width, height)
+        _, M_inv = warp_perspective(image, dst, src, width, height)
 
         for path in data_list:
-            save_frame = frames_path+fr'\{os.path.basename(path)}'
-            save_label = labels_path+fr'\{os.path.basename(path)}'
+            save_frame = frames_path + fr'\{os.path.basename(path)}'
+            save_label = labels_path + fr'\{os.path.basename(path)}'
 
             frame_exists = os.path.exists(save_frame)
             label_exists = os.path.exists(save_frame)
@@ -466,30 +444,24 @@ def detect_lines(path, folder):
             copy = np.copy(img)
 
             leftx, lefty, rightx, righty, out_img = find_lanes(copy)
-            t_leftx, t_lefty, t_rightx, t_righty, _ = find_lanes_perspective(copy)
-
-            find_lanes_perspective(copy)
 
             previous_frame = []
             previous_frame.append([leftx, lefty, rightx, righty])
 
             left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
-            t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
 
             curves = np.concatenate((left_curve, right_curve))
-            t_curves = np.concatenate((t_left_curve, t_right_curve))
             label_list.append(curves)
 
-            y = np.linspace(0, height - 1, 15).astype(int).reshape((-1, 1))
-            out_img, fit_leftx, fit_rightx, points = visualise(out_img, y, left_curve, right_curve, False)
-            down = min(min(t_lefty), min(t_righty))
-            up = max(max(t_lefty), max(t_righty))
-            t_y = np.linspace(down, up, 15).astype(int).reshape((-1,1))
-            # t_out_img, fit_t_leftx, fit_t_rightx, _ = visualise(np.copy(image), t_y, t_left_curve, t_right_curve, False)
-            poly, frame = visualise_perspective(img, points, M_inv, frame)
+            out_img, fit_left, fit_right, points = visualise(height, out_img, left_curve, right_curve)
+            im_show(out_img)
 
+            poly, frame = visualise_perspective(img, points, M_inv, frame)
+            im_show(frame)
+
+            y = np.linspace(0, height - 1, 15).astype(int).reshape((-1, 1))
             small_y = np.linspace(0, 60 - 1, 15).astype(int).reshape((-1, 1))
-            csv_list = [left_curve, right_curve, y, fit_leftx, fit_rightx, small_y]
+            csv_list = [left_curve, right_curve, y, fit_left, fit_right, small_y]
             str_csv_list = ['left_curve', 'right_curve', 'y', 'fit_leftx', 'fit_rightx', 'small_y']
 
             if os.path.basename(path) == '00000.jpg':
@@ -519,8 +491,9 @@ def detect_lines(path, folder):
 
     pickle.dump(label_list, open(f'Pickles/big_labels.p', "wb"))
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 raw = ['data', 'frames', 'labels']
