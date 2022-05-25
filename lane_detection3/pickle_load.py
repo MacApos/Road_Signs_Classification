@@ -7,11 +7,11 @@ from imutils import paths
 from datetime import datetime
 from lane_detection import im_show, params, visualise_perspective
 
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-# labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_labels.p'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_labels.p'
 
 data_path = os.path.join(path, 'data')
 data_list = list(paths.list_images(data_path))
@@ -33,7 +33,7 @@ for label in labels_list:
     coefficient_list = np.array(coefficient_list, dtype='float')
     small_labels.append(coefficient_list)
 
-labels_list = np.array(small_labels, dtype='float')
+small_labels = np.array(small_labels, dtype='float')
 
 # random_img = random.sample(data_list, 1)[0]
 # random_img = data_list[0]
@@ -53,14 +53,13 @@ for video in video_list:
     limit = video['limit']
     src = video['src']
 
-    for idx, path in enumerate(data_list[i: i + limit]):
-        left_curve = labels_list[idx][3:]
-        right_curve = labels_list[idx][:3]
-        print(left_curve)
+    for idx, path in enumerate(data_list[: i + limit]):
+        left_curve = labels_list[idx][:3]
+        right_curve = labels_list[idx][3:]
         image = cv2.imread(path)
         image = cv2.resize(image, (width, height))
 
         poly, frame = visualise_perspective(image, left_curve, right_curve, src, dst)
-
         im_show(frame)
+
     i += limit

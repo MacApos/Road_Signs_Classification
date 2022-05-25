@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from imutils import paths
 import matplotlib.pyplot as plt
+from keras.utils import img_to_array
 
 
 def im_show(image, name='Image'):
@@ -318,7 +319,7 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, show_lines=F
     points = np.vstack((points_arr[0], points_arr[1]))
     cv2.fillPoly(poly, [points], (0, 255, 0))
     poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
-    out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
+    out_frame = cv2.addWeighted(image, 1, poly, 0.15, 0)
     poly = poly[:, :, 1]
 
     return poly, out_frame
@@ -407,6 +408,14 @@ def params(width, height):
 
     return video_list, dst
 
+def make_input(message):
+    print(message, ' [y/n]')
+    x = input()
+    x = x.lower()
+    if x != 'y' and x != 'n':
+        raise Exception('Invalid input')
+
+    return x
 
 def detect_lines(path, folder):
     global width, height
@@ -416,11 +425,14 @@ def detect_lines(path, folder):
     data_path = os.path.join(path, folder[0])
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
-
+    data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
     data_list = list(paths.list_images(data_path))
 
+    x = make_input('Delete previous data?')
+
     for folder_path in frames_path, labels_path:
-        shutil.rmtree(folder_path)
+        if os.path.exists(folder_path) and x == 'y':
+            shutil.rmtree(folder_path)
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
@@ -433,7 +445,8 @@ def detect_lines(path, folder):
 
     video_list, dst = params(width, height)
 
-    label_list = []
+    data = []
+    labels = []
     previous_frame = []
 
     i = 0
@@ -459,6 +472,9 @@ def detect_lines(path, folder):
             image = cv2.imread(path)
             image = cv2.resize(image, (width, height))
 
+            img_arr = img_to_array(image)
+            data.append(img_arr)
+
             frame = np.copy(image)
 
             img = prepare(image, src, dst, width, height)
@@ -475,13 +491,13 @@ def detect_lines(path, folder):
 
             curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
-            label_list.append(curves)
+            labels.append(curves)
 
             start = min(min(t_lefty), min(t_righty))
-
             # out_img = visualise(out_img, left_curve, right_curve, show_lines=True)
             t_out_img = visualise(image, t_left_curve, t_right_curve, start, show_lines=True)
             poly, frame = visualise_perspective(frame, left_curve, right_curve, src, dst)
+            # im_show(frame)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -504,15 +520,18 @@ def detect_lines(path, folder):
         i += limit
     print('next')
 
-    pickle.dump(label_list, open(f'Pickles/labels.p', "wb"))
+    data = np.array(data, dtype='float') / 255.
+    np.save(data_npy, data)
+    pickle.dump(labels, open(f'Pickles/labels.p', "wb"))
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
 
-# for folder in raw, augmented:
-detect_lines(path, raw)
+y = make_input('Detect lines?')
+if y=='y':
+    detect_lines(path, raw)

@@ -55,55 +55,54 @@ def plot_hist(history, filename):
     po.plot(fig, filename=filename, auto_open=True)
 
 
-epochs = 20
+epochs = 3
 learning_rate = 0.001
 batch_size = 150
 input_shape = (120, 320, 3)
 
-# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# labels = pickle.load(open(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
+#                           'rb'))
 # data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
 # output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
 
-labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+labels = pickle.load(open(r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p',
+                          'rb'))
 data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
 output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
+
+data_path = os.path.join(path, 'data')
+data_list = list(paths.list_images(data_path))
 
 if not os.path.exists(output):
     os.mkdir(output)
 
+if os.path.exists(data_npy):
+    data = np.load(data_npy)
+    print('data array already exists')
+else:
+    data = []
+    for idx, path in enumerate(data_list):
+        print(f'processing image {idx} ')
+        image = cv2.imread(path)
+        image = cv2.resize(image, (input_shape[1], input_shape[0]))
+        image = img_to_array(image)
+        data.append(image)
+
+    data = np.array(data, dtype='float') / 255.
+    np.save(data_npy, data)
+
 data = np.load(data_npy)
-labels = pickle.load(open(labels_path, 'rb'))
 labels = np.array(labels)
 
-# check
-# from lane_detection import im_show, params, visualise_perspective
-# width = data.shape[2]
-# height = data.shape[1]
-#
-# video_list, dst = params(width, height)
-#
-# i=0
-# for video in video_list:
-#     name = video['name']
-#     thresh = video['thresh']
-#     limit = video['limit']
-#     src = video['src']
-#
-#     j = 100
-#     k = j
-#     for idx, image in enumerate(data[j: j+100]):
-#         left_curve = labels[k][:3]
-#         right_curve = labels[k][3:]
-#         poly, frame = visualise_perspective(image, left_curve, right_curve, src, dst)
-#         im_show(frame)
-#         k += 1
-#
-#     i += limit
-
-print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
+print(f'{len(data_list)} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
 
 # data, labels = shuffle(data, labels)
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
+
+print(x_train.shape)
+print(x_test.shape)
 
 model = Sequential()
 # model.add(BatchNormalization(input_shape=input_shape))
@@ -143,7 +142,7 @@ checkpoint = ModelCheckpoint(filepath=model_path,
 history = model.fit_generator(
     generator=datagen.flow(x_train, y_train, batch_size=batch_size),
     validation_data=(x_test, y_test),
-    steps_per_epoch=len(x_train) // batch_size,
+    steps_per_epoch=len(x_train),
     epochs=epochs,
     callbacks=[checkpoint])
 
