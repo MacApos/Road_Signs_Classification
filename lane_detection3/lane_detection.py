@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from imutils import paths
 import matplotlib.pyplot as plt
-# from keras import img_to_array
-from keras.preprocessing.image import img_to_array
+from keras.utils import img_to_array
+# from keras.preprocessing.image import img_to_array
 
 
 def im_show(image, name='Image'):
