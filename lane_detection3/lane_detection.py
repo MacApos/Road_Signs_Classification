@@ -412,7 +412,7 @@ def detect_lines(path, folder):
     data_path = os.path.join(path, folder[0])
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
-    data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+    data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_data.npy'
     # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
     data_list = list(paths.list_images(data_path))
 
@@ -426,7 +426,7 @@ def detect_lines(path, folder):
             os.mkdir(folder_path)
 
     image = cv2.imread(data_list[0])
-    scale_factor = 1/8
+    scale_factor = 1/1
     image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
     width = image.shape[1]
     height = image.shape[0]
@@ -509,8 +509,8 @@ def detect_lines(path, folder):
     print('next')
 
     data = np.array(data, dtype='float') / 255.
-    np.save(data_npy, data)
-    pickle.dump(labels, open(f'Pickles/labels.p', "wb"))
+    # np.save(data_npy, data)
+    pickle.dump(labels, open(f'Pickles/big_labels.p', "wb"))
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'

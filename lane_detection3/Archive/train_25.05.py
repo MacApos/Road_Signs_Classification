@@ -17,7 +17,8 @@ from keras.models import Sequential
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import img_to_array
+from keras.preprocessing.image import img_to_array
+# from keras.utils import img_to_array
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import adam_v2
 
@@ -60,15 +61,15 @@ learning_rate = 0.001
 batch_size = 150
 input_shape = (120, 320, 3)
 
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# labels_path = 'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
-# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_lanes.npy'
-# output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_lanes.npy'
+output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
 
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-labels_path = 'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
-data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# labels_path = 'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+# output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
 
 data_path = os.path.join(path, 'data')
 data_list = list(paths.list_images(data_path))
@@ -86,9 +87,7 @@ else:
         print(f'processing image {idx} ')
         image = cv2.imread(path)
         image = cv2.resize(image, (input_shape[1], input_shape[0]))
-
-        image_arr = img_to_array(image)
-        cv2.imshow('image', image_arr)
+        cv2.imshow('image', image)
         cv2.waitKey(0)
         data.append(image)
 

@@ -78,49 +78,49 @@ labels = pickle.load(open(labels_path, 'rb'))
 labels = np.array(labels)
 data = np.load(data_npy)
 
-newdata = []
-
-if os.path.exists(newdata_npy):
-    newdata = np.load(newdata_npy)
-    print('data array already exists')
-else:
-    for idx, image in enumerate(data):
-        print(f'processing image {idx} ')
-        image = cv2.resize(image, (160, 80))
-        image = img_to_array(image)
-        newdata.append(image)
-
-    newdata = np.array(newdata, dtype='float') / 255.
-    np.save(newdata_npy, newdata)
-
-data = newdata
+# newdata = []
+#
+# if os.path.exists(newdata_npy):
+#     newdata = np.load(newdata_npy)
+#     print('data array already exists')
+# else:
+#     for idx, image in enumerate(data):
+#         print(f'processing image {idx} ')
+#         image = cv2.resize(image, (160, 80))
+#         image = img_to_array(image)
+#         newdata.append(image)
+#
+#     newdata = np.array(newdata, dtype='float') / 255.
+#     np.save(newdata_npy, newdata)
+#
+# data = newdata
 
 print(data.shape)
 
 # check
-# from lane_detection import im_show, params, visualise_perspective
-# width = data.shape[2]
-# height = data.shape[1]
-#
-# video_list, dst = params(width, height)
-#
-# i=0
-# for video in video_list:
-#     name = video['name']
-#     thresh = video['thresh']
-#     limit = video['limit']
-#     src = video['src']
-#
-#     j = 100
-#     k = j
-#     for idx, image in enumerate(data[j: j+100]):
-#         left_curve = labels[k][:3]
-#         right_curve = labels[k][3:]
-#         poly, frame = visualise_perspective(image, left_curve, right_curve, src, dst)
-#         im_show(frame)
-#         k += 1
-#
-#     i += limit
+from lane_detection import im_show, params, visualise_perspective
+width = data.shape[2]
+height = data.shape[1]
+
+video_list, dst = params(width, height)
+
+i=0
+for video in video_list:
+    name = video['name']
+    thresh = video['thresh']
+    limit = video['limit']
+    src = video['src']
+
+    j = 100
+    k = j
+    for idx, image in enumerate(data[j: j+100]):
+        left_curve = labels[k][:3]
+        right_curve = labels[k][3:]
+        poly, frame = visualise_perspective(image, left_curve, right_curve, src, dst)
+        im_show(frame)
+        k += 1
+
+    i += limit
 
 print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
 
