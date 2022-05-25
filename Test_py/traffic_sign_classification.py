@@ -16,7 +16,7 @@ from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 classes = 43
 data_path = os.getcwd()
 
-file1 = os.path.join(data_path, '../data.npy')
+file1 = os.path.join(data_path, '../data_lanes.npy')
 file2 = os.path.join(data_path, '../labels.npy')
 
 if not os.path.exists(file1) or not os.path.exists(file2):

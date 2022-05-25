@@ -61,7 +61,7 @@ batch_size = 150
 input_shape = (120, 320, 3)
 
 # labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
-# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_lanes.npy'
 # output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
 
 labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
@@ -74,25 +74,27 @@ if not os.path.exists(output):
 
 data = np.load(data_npy)
 
-newdata = []
-
-if os.path.exists(newdata_npy):
-    newdata = np.load(newdata_npy)
-    print('data array already exists')
-else:
-    for idx, image in enumerate(data):
-        print(f'processing image {idx} ')
-        image = cv2.resize(image, (160, 80))
-        image = img_to_array(image)
-        newdata.append(image)
-
-    newdata = np.array(newdata, dtype='float') / 255.
-    np.save(newdata_npy, newdata)
-
-labels = pickle.load(open(labels_path, 'rb'))
-labels = np.array(labels)
-
-data = newdata
+# newdata = []
+#
+# if os.path.exists(newdata_npy):
+#     newdata = np.load(newdata_npy)
+#     print('data array already exists')
+# else:
+#     for idx, image in enumerate(data):
+#         print(f'processing image {idx} ')
+#         image = cv2.resize(image, (160, 80))
+#         cv2.imread('image', image)
+#         cv2.waitKey(0)
+#         image = img_to_array(image)
+#         newdata.append(image)
+#
+#     newdata = np.array(newdata, dtype='float') / 255.
+#     np.save(newdata_npy, newdata)
+#
+# labels = pickle.load(open(labels_path, 'rb'))
+# labels = np.array(labels)
+#
+# data = newdata
 
 # check
 # from lane_detection import im_show, params, visualise_perspective
@@ -121,56 +123,56 @@ data = newdata
 
 print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
 
-# data, labels = shuffle(data, labels)
-x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
-
-model = Sequential()
-# model.add(BatchNormalization(input_shape=input_shape))
-model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dropout(0.5))
-model.add(Dense(units=128, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(units=64, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(units=32, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(units=6, activation='sigmoid'))
-
-model.summary()
-
-datagen = ImageDataGenerator(rotation_range=10,
-                             height_shift_range=0.1,
-                             vertical_flip=True)
-
-model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              # optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              loss='mean_absolute_error',
-              metrics=['accuracy'])
-
-dt = datetime.now().strftime('%d.%m_%H.%M')
-print(dt)
-model_path = os.path.join(output, 'model_' + dt + '.hdf5')
-checkpoint = ModelCheckpoint(filepath=model_path,
-                             monitor='val_accuracy',
-                             save_best_only=True)
-
-history = model.fit_generator(
-    generator=datagen.flow(x_train, y_train, batch_size=batch_size),
-    validation_data=(x_test, y_test),
-    steps_per_epoch=len(x_train) // batch_size,
-    epochs=epochs,
-    callbacks=[checkpoint])
-
-report_path = os.path.join(output, 'report_' + dt + '.html')
-plot_hist(history, filename=report_path)
-
-model_json = model.to_json()
-with open('Output/model_' + dt + '.json', 'w') as json_file:
-    json_file.write(model_json)
-
-model.save_weights('Output/weights_'+ dt +'.h5')
+# # data, labels = shuffle(data, labels)
+# x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
+#
+# model = Sequential()
+# # model.add(BatchNormalization(input_shape=input_shape))
+# model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+# model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+# model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+# model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+# model.add(Flatten())
+# model.add(Dropout(0.5))
+# model.add(Dense(units=128, activation='relu'))
+# model.add(Dropout(0.5))
+# model.add(Dense(units=64, activation='relu'))
+# model.add(Dropout(0.5))
+# model.add(Dense(units=32, activation='relu'))
+# model.add(Dropout(0.5))
+# model.add(Dense(units=6, activation='sigmoid'))
+#
+# model.summary()
+#
+# datagen = ImageDataGenerator(rotation_range=10,
+#                              height_shift_range=0.1,
+#                              vertical_flip=True)
+#
+# model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+#               # optimizer=adam_v2.Adam(learning_rate=learning_rate),
+#               loss='mean_absolute_error',
+#               metrics=['accuracy'])
+#
+# dt = datetime.now().strftime('%d.%m_%H.%M')
+# print(dt)
+# model_path = os.path.join(output, 'model_' + dt + '.hdf5')
+# checkpoint = ModelCheckpoint(filepath=model_path,
+#                              monitor='val_accuracy',
+#                              save_best_only=True)
+#
+# history = model.fit_generator(
+#     generator=datagen.flow(x_train, y_train, batch_size=batch_size),
+#     validation_data=(x_test, y_test),
+#     steps_per_epoch=len(x_train) // batch_size,
+#     epochs=epochs,
+#     callbacks=[checkpoint])
+#
+# report_path = os.path.join(output, 'report_' + dt + '.html')
+# plot_hist(history, filename=report_path)
+#
+# model_json = model.to_json()
+# with open('Output/model_' + dt + '.json', 'w') as json_file:
+#     json_file.write(model_json)
+#
+# model.save_weights('Output/weights_'+ dt +'.h5')

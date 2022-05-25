@@ -274,6 +274,58 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
 
     return image
 
+def visualise_test(image, left_curve, right_curve, src, dst, show_lines=False, show_points=False):
+    poly = np.zeros_like(image) * 255
+    t_right = np.copy(poly)
+    t_left = np.copy(poly)
+    points_img = np.copy(poly)
+    width = poly.shape[1]
+    height = poly.shape[0]
+
+    M_inv = cv2.getPerspectiveTransform(dst, src)
+    points_arr = generate_points(image, left_curve, right_curve)
+
+    colors = [(255, 0, 0), (0, 0, 255)]
+    side = [t_left]
+    for idx, arr in enumerate(points_arr):
+        cv2.polylines(lines_img, [arr], isClosed=False, color=colors[idx], thickness=25)
+
+        zeros = np.zeros_like(poly)
+        for point in arr:
+            cv2.circle(points_img, tuple(point), 15, colors[idx], -1)
+            cv2.circle(zeros, tuple(point), 1, 1, -1)
+
+        zeros = cv2.warpPerspective(zeros, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        nonzero = np.nonzero(zeros)
+
+        nonzerox = np.array(nonzero[1]).reshape((-1, 1))
+        nonzeroy = np.array(nonzero[0]).reshape((-1, 1))
+
+        con = np.concatenate((nonzerox, nonzeroy), axis=1)
+
+        # if show_lines:
+        #     cv2.polylines(frame, [con], isClosed=False, color=colors[idx], thickness=5)
+        #
+        # if show_points:
+        #     for val in con:
+        #         cv2.circle(frame, tuple(val), 5, colors[idx], -1)
+
+    if show_lines:
+        lines_img = cv2.warpPerspective(lines_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        image = cv2.addWeighted(image, 1, lines_img, 1, 0)
+
+    if show_points:
+        points_img = cv2.warpPerspective(points_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        image = cv2.addWeighted(image, 1, points_img, 1, 0)
+
+    points = np.vstack((points_arr[0], points_arr[1]))
+    cv2.fillPoly(poly, [points], (0, 255, 0))
+    poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
+    out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
+    poly = poly[:, :, 1]
+
+    return poly, out_frame
+
 
 def visualise_perspective(image, left_curve, right_curve, src, dst, show_lines=False, show_points=False):
     poly = np.zeros_like(image) * 255
@@ -320,7 +372,7 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, show_lines=F
     points = np.vstack((points_arr[0], points_arr[1]))
     cv2.fillPoly(poly, [points], (0, 255, 0))
     poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
-    out_frame = cv2.addWeighted(image, 1, poly, 0.15, 0)
+    out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
     poly = poly[:, :, 1]
 
     return poly, out_frame
@@ -412,8 +464,8 @@ def detect_lines(path, folder):
     data_path = os.path.join(path, folder[0])
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
-    data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-    # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+    # data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_lanes.npy'
+    data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_lanes.npy'
     data_list = list(paths.list_images(data_path))
 
     x = make_input('Delete previous data?')
@@ -426,7 +478,7 @@ def detect_lines(path, folder):
             os.mkdir(folder_path)
 
     image = cv2.imread(data_list[0])
-    scale_factor = 1/4
+    scale_factor = 1/1
     image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
     width = image.shape[1]
     height = image.shape[0]
@@ -514,8 +566,8 @@ def detect_lines(path, folder):
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
