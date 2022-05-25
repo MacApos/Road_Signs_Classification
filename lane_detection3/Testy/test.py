@@ -1,6 +1,7 @@
-import numpy as np
+my_dict1 = {"james": 18, "potter": 67}
 
-x = np.array([[1, 0, 0],
-              [3, 0, 4],
-              [5, 0, 0]])
-print(np.nonzero(x)[0], np.nonzero(x)[1])
+new_dictionary = {"George": 12, "Micheal": 91}
+my_dict1.update(new_dictionary)
+my_dict1['james']='elon'
+
+print(my_dict1)

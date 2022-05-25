@@ -233,9 +233,9 @@ def fit_poly(leftx, lefty, rightx, righty):
 
     return left_curve, right_curve
 
-def generate_points(image, left_curve, right_curve, start=0):
+def generate_points(image, left_curve, right_curve, stop):
     height = image.shape[0]
-    y = np.linspace(start, height - 1, 15).astype(int).reshape((-1, 1))
+    y = np.linspace(stop, height - 1, 15).astype(int).reshape((-1, 1))
     fit_left = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
     fit_right = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
@@ -255,11 +255,11 @@ def generate_points(image, left_curve, right_curve, start=0):
     points = np.vstack((empty[0], empty[1]))
     points = np.split(points, 2, 0)
 
-    return points
+    return points, fit_left, fit_right
 
 
-def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_points=False):
-    points_arr = generate_points(image, left_curve, right_curve, start)
+def visualise(image, left_curve, right_curve, stop, show_lines=False, show_points=False):
+    points_arr, _, _ = generate_points(image, left_curve, right_curve, stop)
     colors = [(0, 0, 255), (255, 0, 0)]
 
     for idx, arr in enumerate(points_arr):
@@ -271,57 +271,6 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
                 cv2.circle(image, tuple(point), 5, colors[idx], -1)
 
     return image
-
-
-def visualise_perspective(image, left_curve, right_curve, src, dst, show_lines=False, show_points=False):
-    poly = np.zeros_like(image) * 255
-    lines_img = np.copy(poly)
-    points_img = np.copy(poly)
-    width = poly.shape[1]
-    height = poly.shape[0]
-
-    M_inv = cv2.getPerspectiveTransform(dst, src)
-    points_arr = generate_points(image, left_curve, right_curve)
-
-    colors = [(255, 0, 0), (0, 0, 255)]
-    for idx, arr in enumerate(points_arr):
-        cv2.polylines(lines_img, [arr], isClosed=False, color=colors[idx], thickness=25)
-
-        zeros = np.zeros_like(poly)
-        for point in arr:
-            cv2.circle(points_img, tuple(point), 15, colors[idx], -1)
-            cv2.circle(zeros, tuple(point), 1, 1, -1)
-
-        zeros = cv2.warpPerspective(zeros, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-        nonzero = np.nonzero(zeros)
-
-        nonzerox = np.array(nonzero[1]).reshape((-1, 1))
-        nonzeroy = np.array(nonzero[0]).reshape((-1, 1))
-
-        con = np.concatenate((nonzerox, nonzeroy), axis=1)
-
-        # if show_lines:
-        #     cv2.polylines(frame, [con], isClosed=False, color=colors[idx], thickness=5)
-        #
-        # if show_points:
-        #     for val in con:
-        #         cv2.circle(frame, tuple(val), 5, colors[idx], -1)
-
-    if show_lines:
-        lines_img = cv2.warpPerspective(lines_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-        image = cv2.addWeighted(image, 1, lines_img, 1, 0)
-
-    if show_points:
-        points_img = cv2.warpPerspective(points_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-        image = cv2.addWeighted(image, 1, points_img, 1, 0)
-
-    points = np.vstack((points_arr[0], points_arr[1]))
-    cv2.fillPoly(poly, [points], (0, 255, 0))
-    poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
-    out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-    poly = poly[:, :, 1]
-
-    return poly, out_frame
 
 
 def find_lanes_perspective(image):
@@ -349,6 +298,56 @@ def find_lanes_perspective(image):
         t_righty = t_lefty
 
     return t_leftx, t_lefty, t_rightx, t_righty, t_out_img
+
+
+def visualise_perspective(image, left_curve, right_curve, src, dst, show_lines=False, show_points=False):
+    poly = np.zeros_like(image) * 255
+    lines_img = np.copy(poly)
+    points_img = np.copy(poly)
+    height = poly.shape[0]
+
+    M_inv = cv2.getPerspectiveTransform(dst, src)
+    points_arr, _, _ = generate_points(image, left_curve, right_curve, height)
+
+    # colors = [(255, 0, 0), (0, 0, 255)]
+    # for idx, arr in enumerate(points_arr):
+    #     cv2.polylines(lines_img, [arr], isClosed=False, color=colors[idx], thickness=25)
+    #
+    #     zeros = np.zeros_like(poly)
+    #     for point in arr:
+    #         cv2.circle(points_img, tuple(point), 15, colors[idx], -1)
+    #         cv2.circle(zeros, tuple(point), 1, 1, -1)
+    #
+    #     zeros = cv2.warpPerspective(zeros, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+    #     nonzero = np.nonzero(zeros)
+    #
+    #     nonzerox = np.array(nonzero[1]).reshape((-1, 1))
+    #     nonzeroy = np.array(nonzero[0]).reshape((-1, 1))
+    #
+    #     con = np.concatenate((nonzerox, nonzeroy), axis=1)
+    #
+    #     # if show_lines:
+    #     #     cv2.polylines(frame, [con], isClosed=False, color=colors[idx], thickness=5)
+    #     #
+    #     # if show_points:
+    #     #     for val in con:
+    #     #         cv2.circle(frame, tuple(val), 5, colors[idx], -1)
+    #
+    # if show_lines:
+    #     lines_img = cv2.warpPerspective(lines_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+    #     frame = cv2.addWeighted(image, 1, lines_img, 1, 0)
+    #
+    # if show_points:
+    #     points_img = cv2.warpPerspective(points_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+    #     frame = cv2.addWeighted(image, 1, points_img, 1, 0)
+
+    points = np.vstack((points_arr[0], points_arr[1]))
+    cv2.fillPoly(poly, [points], (0, 255, 0))
+    poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
+    out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
+    poly = poly[:, :, 1]
+
+    return poly, out_frame
 
 
 def sort_path(path):
@@ -426,7 +425,7 @@ def detect_lines(path, folder):
             os.mkdir(folder_path)
 
     image = cv2.imread(data_list[0])
-    scale_factor = 1/4
+    scale_factor = 1/1
     image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
     width = image.shape[1]
     height = image.shape[0]
@@ -462,9 +461,10 @@ def detect_lines(path, folder):
             frame = np.copy(image)
 
             img = prepare(image, src, dst, width, height)
+            copy = np.copy(img)
 
             M_inv = cv2.getPerspectiveTransform(dst, src)
-            leftx, lefty, rightx, righty, out_img = find_lanes(img)
+            leftx, lefty, rightx, righty, out_img = find_lanes(copy)
             t_leftx, t_lefty, t_rightx, t_righty, t_out_img = find_lanes_perspective(image)
 
             previous_frame = []
@@ -475,36 +475,48 @@ def detect_lines(path, folder):
 
             curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
-            label_list.append(curves)
 
             start = min(min(t_lefty), min(t_righty))
+            stop = max(max(t_lefty), max(t_righty))
 
-            # out_img = visualise(out_img, left_curve, right_curve, show_lines=True)
-            t_out_img = visualise(image, t_left_curve, t_right_curve, start, show_lines=True)
-            poly, frame = visualise_perspective(frame, left_curve, right_curve, src, dst)
+            out_img = visualise(out_img, left_curve, right_curve, height, True)
+            t_out_img = visualise(t_out_img, t_left_curve, t_right_curve, start, show_lines=True)
 
-            if not frame_exists and not label_exists:
-                cv2.imwrite(save_frame, frame)
-                cv2.imwrite(save_label, poly)
-                print(name, j, path, 'saving frame and label')
+            # poly, frame = visualise_perspective(frame, left_curve, right_curve, src, dst)
+            im_show(t_out_img)
 
-            elif not frame_exists and label_exists:
-                cv2.imwrite(save_label, poly)
-                print(name, j, path, 'saving frame')
+            _, fit_left, fit_right = generate_points(image, left_curve, right_curve, stop)
+            y = np.linspace(0, height - 1, 15).astype(int).reshape((-1, 1))
+            small_y = np.linspace(0, 60 - 1, 15).astype(int).reshape((-1, 1))
+            csv_list = [left_curve, right_curve, y, fit_left, fit_right, small_y]
+            str_csv_list = ['left_curve', 'right_curve', 'y', 'fit_leftx', 'fit_rightx', 'small_y']
 
-            elif frame_exists and not label_exists:
-                cv2.imwrite(save_label, poly)
-                print(name, j, path, 'saving label')
-
-            else:
-                print(name, j, path, 'already processed')
+            # if os.path.basename(path) == '00000.jpg':
+            #     for idx, csv in enumerate(csv_list):
+            #         to_csv(str_csv_list[idx], csv)
+            #
+            # if not frame_exists and not label_exists:
+            #     cv2.imwrite(save_frame, frame)
+            #     cv2.imwrite(save_label, poly)
+            #     print(name, j, path, 'saving frame and label')
+            #
+            # elif not frame_exists and label_exists:
+            #     cv2.imwrite(save_label, poly)
+            #     print(name, j, path, 'saving frame')
+            #
+            # elif frame_exists and not label_exists:
+            #     cv2.imwrite(save_label, poly)
+            #     print(name, j, path, 'saving label')
+            #
+            # else:
+            #     print(name, j, path, 'already processed')
 
             j += 1
 
         i += limit
     print('next')
 
-    pickle.dump(label_list, open(f'Pickles/labels.p', "wb"))
+    pickle.dump(label_list, open(f'Pickles/big_labels.p', "wb"))
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
