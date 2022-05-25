@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 from imutils import paths
 import matplotlib.pyplot as plt
-from keras.utils import img_to_array
+# from keras import img_to_array
+from keras.preprocessing.image import img_to_array
 
 
 def im_show(image, name='Image'):
@@ -352,20 +353,6 @@ def find_lanes_perspective(image):
     return t_leftx, t_lefty, t_rightx, t_righty, t_out_img
 
 
-def sort_path(path):
-    sorted_path = []
-    for file in os.listdir(path):
-        number = int(''.join(n for n in file if n.isdigit()))
-        sorted_path.append(number)
-
-    sorted_path = sorted(sorted_path)
-    return [path + fr'\{str(f)}.jpg' for f in sorted_path]
-
-
-def rgb(image):
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-
 def params(width, height):
     scale = width / 1280
 
@@ -425,7 +412,8 @@ def detect_lines(path, folder):
     data_path = os.path.join(path, folder[0])
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
-    data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+    data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+    # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
     data_list = list(paths.list_images(data_path))
 
     x = make_input('Delete previous data?')
@@ -526,8 +514,8 @@ def detect_lines(path, folder):
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']

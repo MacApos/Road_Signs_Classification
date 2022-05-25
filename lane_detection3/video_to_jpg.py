@@ -5,8 +5,8 @@ import numpy as np
 from imutils import paths
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 videos_path = os.path.join(path, 'Videos')
 data_path = os.path.join(path, 'data')
 
@@ -16,12 +16,14 @@ data_path = os.path.join(path, 'data')
 print('Delete previous data? [y/n]')
 x = input()
 x = x.lower()
-
-if not os.path.exists(data_path):
-    os.mkdir(data_path)
+if x != 'y' and x != 'n':
+    raise Exception('Invalid input')
 
 if os.path.exists(data_path) and x == 'y':
     shutil.rmtree(data_path)
+
+if not os.path.exists(data_path):
+    os.mkdir(data_path)
 
 fps = 30
 interval = 30
