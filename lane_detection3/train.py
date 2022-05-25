@@ -66,14 +66,33 @@ input_shape = (120, 320, 3)
 
 labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
 data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+newdata_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\newdata.npy'
 output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
 
 if not os.path.exists(output):
     os.mkdir(output)
 
 data = np.load(data_npy)
+
+newdata = []
+
+if os.path.exists(newdata_npy):
+    newdata = np.load(newdata_npy)
+    print('data array already exists')
+else:
+    for idx, image in enumerate(data):
+        print(f'processing image {idx} ')
+        image = cv2.resize(image, (160, 80))
+        image = img_to_array(image)
+        newdata.append(image)
+
+    newdata = np.array(newdata, dtype='float') / 255.
+    np.save(newdata_npy, newdata)
+
 labels = pickle.load(open(labels_path, 'rb'))
 labels = np.array(labels)
+
+data = newdata
 
 # check
 # from lane_detection import im_show, params, visualise_perspective
