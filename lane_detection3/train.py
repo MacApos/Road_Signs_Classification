@@ -17,7 +17,8 @@ from keras.models import Sequential
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import img_to_array
+from keras.preprocessing.image import img_to_array
+# from keras.utils import img_to_array
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import adam_v2
 
@@ -60,18 +61,21 @@ learning_rate = 0.001
 batch_size = 150
 input_shape = (120, 320, 3)
 
-# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
-# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-# output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
+labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+newdata_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\newdata.npy'
+output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
 
-labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
-data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
-newdata_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\newdata.npy'
-output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
+# labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
+# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+# newdata_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\newdata.npy'
+# output = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data\output'
 
 if not os.path.exists(output):
     os.mkdir(output)
 
+labels = pickle.load(open(labels_path, 'rb'))
+labels = np.array(labels)
 data = np.load(data_npy)
 
 newdata = []
@@ -89,10 +93,9 @@ else:
     newdata = np.array(newdata, dtype='float') / 255.
     np.save(newdata_npy, newdata)
 
-labels = pickle.load(open(labels_path, 'rb'))
-labels = np.array(labels)
-
 data = newdata
+
+print(data.shape)
 
 # check
 # from lane_detection import im_show, params, visualise_perspective

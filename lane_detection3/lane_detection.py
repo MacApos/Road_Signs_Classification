@@ -426,7 +426,7 @@ def detect_lines(path, folder):
             os.mkdir(folder_path)
 
     image = cv2.imread(data_list[0])
-    scale_factor = 1/4
+    scale_factor = 1/8
     image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
     width = image.shape[1]
     height = image.shape[0]
