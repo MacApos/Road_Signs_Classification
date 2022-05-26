@@ -25,7 +25,7 @@ def to_csv(name, arrqy):
 
     df = pd.DataFrame(array_list)
     # path = os.path.join(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\lane_detection3\Arrays', name)
-    path = os.path.join(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Arrays', name)
+    path = os.path.join(r'/lane_detection3/Arrays', name)
     df.to_csv(path, sep='\t', index=False, header=False)
 
 
@@ -275,78 +275,105 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
     return image
 
 
-def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor, perspective=False):
+
+def visualise_perspective(image, left_curve, right_curve, src, dst, show_lines=False, show_points=False):
     poly = np.zeros_like(image) * 255
+    lines_img = np.copy(poly)
+    points_img = np.copy(poly)
     width = poly.shape[1]
     height = poly.shape[0]
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
 
-    nonzero = []
+    colors = [(255, 0, 0), (0, 0, 255)]
+    for idx, arr in enumerate(points_arr):
+        cv2.polylines(lines_img, [arr], isClosed=False, color=colors[idx], thickness=25)
 
-    for arr in points_arr:
-        side = np.zeros((height, width))
-        side = cv2.polylines(side, [arr], isClosed=False, color=1, thickness=20)
-        if perspective:
-            side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-        side = cv2.resize(side, (int(width*scale_factor), int(height*scale_factor)))
-        nonzerox = side.nonzero()[1]
-        nonzeroy = side.nonzero()[0]
-        nonzero.append(nonzerox)
-        nonzero.append(nonzeroy)
+        zeros = np.zeros_like(poly)
+        for point in arr:
+            cv2.circle(points_img, tuple(point), 15, colors[idx], -1)
+            cv2.circle(zeros, tuple(point), 1, 1, -1)
 
-    leftx, lefty, rightx, righty = nonzero
+        zeros = cv2.warpPerspective(zeros, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        nonzero = np.nonzero(zeros)
 
-    if len(leftx) == 0:
-        leftx = width - rightx
-        lefty = righty
+        nonzerox = np.array(nonzero[1]).reshape((-1, 1))
+        nonzeroy = np.array(nonzero[0]).reshape((-1, 1))
 
-    if len(rightx) == 0:
-        rightx = width - leftx
-        righty = lefty
+        con = np.concatenate((nonzerox, nonzeroy), axis=1)
 
-    return leftx, lefty, rightx, righty
+        # if show_lines:
+        #     cv2.polylines(frame, [con], isClosed=False, color=colors[idx], thickness=5)
+        #
+        # if show_points:
+        #     for val in con:
+        #         cv2.circle(frame, tuple(val), 5, colors[idx], -1)
 
+    if show_lines:
+        lines_img = cv2.warpPerspective(lines_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        image = cv2.addWeighted(image, 1, lines_img, 1, 0)
 
-def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor):
-    poly = np.zeros_like(image) * 255
-    width = poly.shape[1]
-    height = poly.shape[0]
-
-    M_inv = cv2.getPerspectiveTransform(dst, src)
-    points_arr = generate_points(image, left_curve, right_curve)
+    if show_points:
+        points_img = cv2.warpPerspective(points_img, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+        image = cv2.addWeighted(image, 1, points_img, 1, 0)
 
     points = np.vstack((points_arr[0], points_arr[1]))
     cv2.fillPoly(poly, [points], (0, 255, 0))
-    poly = cv2.warpPerspective(poly, M_inv, (width, height), flags=cv2.INTER_LINEAR)
+    poly = cv2.warpPerspective(poly, M_inv, (poly.shape[1], poly.shape[0]), flags=cv2.INTER_LINEAR)
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
     poly = poly[:, :, 1]
-
-    poly = cv2.resize(poly, (int(width*scale_factor), int(height*scale_factor)))
-    out_frame = cv2.resize(out_frame, (int(width*scale_factor), int(height*scale_factor)))
 
     return poly, out_frame
 
 
+def find_lanes_perspective(image):
+    t_left = np.zeros_like(image)
+    t_right = np.zeros_like(image)
+    t_left[lefty - 1, leftx - 1] = 255
+    t_right[righty - 1, rightx - 1] = 255
+
+    t_left = cv2.warpPerspective(t_left, M_inv, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
+    t_right = cv2.warpPerspective(t_right, M_inv, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
+
+    t_out_img = cv2.addWeighted(t_left, 1, t_right, 1, 0)
+
+    t_leftx = t_left.nonzero()[1]
+    t_lefty = t_left.nonzero()[0]
+    t_rightx = t_right.nonzero()[1]
+    t_righty = t_right.nonzero()[0]
+
+    if len(t_leftx) == 0:
+        t_leftx = -t_rightx + width
+        t_lefty = t_righty
+
+    if len(t_rightx) == 0:
+        t_rightx = width-t_leftx
+        t_righty = t_lefty
+
+    return t_leftx, t_lefty, t_rightx, t_righty, t_out_img
+
+
 def params(width, height):
+    scale = width / 1280
+
     video1 = {'name': 'video1',
-              'src': np.float32([[290, 410], [550, 285]]),
+              'src': np.float32([[290, 410], [550, 285]]) * scale,
               'thresh': 0.65,
               'limit': 2548}
 
     video2 = {'name': 'video2',
-              'src': np.float32([[285, 410], [550, 285]]),  # [[:, 390+20], [:, 265+20]]
+              'src': np.float32([[285, 410], [550, 285]]) * scale,  # [[:, 390+20], [:, 265+20]]
               'thresh': 0.55,
               'limit': 4122}
 
     video3 = {'name': 'video3',
-              'src': np.float32([[280, 420], [570, 250]]),
+              'src': np.float32([[280, 420], [570, 250]]) * scale,
               'thresh': 0.85,
               'limit': 2833}
 
     video4 = {'name': 'video4',
-              'src': np.float32([[270, 420], [550, 265]]),
+              'src': np.float32([[270, 420], [550, 265]]) * scale,
               'thresh': 0.9,
               'limit': 1840}
 
@@ -390,17 +417,18 @@ def detect_lines(path, folder):
     # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
     data_list = list(paths.list_images(data_path))
 
-    # x = make_input('Delete previous data?')
+    x = make_input('Delete previous data?')
 
     for folder_path in frames_path, labels_path:
-        # if os.path.exists(folder_path) and x == 'y':
-        if os.path.exists(folder_path):
+        if os.path.exists(folder_path) and x == 'y':
             shutil.rmtree(folder_path)
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
 
     image = cv2.imread(data_list[0])
+    scale_factor = 1/4
+    image = cv2.resize(image, (int(image.shape[1] * scale_factor), int(image.shape[0] * scale_factor)))
     width = image.shape[1]
     height = image.shape[0]
 
@@ -418,7 +446,7 @@ def detect_lines(path, folder):
         limit = video['limit']
         src = video['src']
 
-        for path in data_list[i: i+limit]:
+        for path in data_list[i: i+100]:
             save_frame = frames_path + fr'\{os.path.basename(path)}'
             save_label = labels_path + fr'\{os.path.basename(path)}'
 
@@ -431,22 +459,19 @@ def detect_lines(path, folder):
             #     continue
 
             image = cv2.imread(path)
+            image = cv2.resize(image, (width, height))
+            data.append(image)
+
             frame = np.copy(image)
+
             img = prepare(image, src, dst, width, height)
 
             M_inv = cv2.getPerspectiveTransform(dst, src)
-            leftx0, lefty0, rightx0, righty0, out_img = find_lanes(img)
+            leftx, lefty, rightx, righty, out_img = find_lanes(img)
+            t_leftx, t_lefty, t_rightx, t_righty, t_out_img = find_lanes_perspective(image)
 
             previous_frame = []
-            previous_frame.append([leftx0, lefty0, rightx0, righty0])
-
-            left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
-
-            scale_factor = 1 / 8
-            leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0,
-                                                                 src, dst, scale_factor, perspective=False)
-            t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0,
-                                                                         src, dst, scale_factor, perspective=True)
+            previous_frame.append([leftx, lefty, rightx, righty])
 
             left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
             t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
@@ -455,13 +480,12 @@ def detect_lines(path, folder):
             t_curves = np.concatenate((t_left_curve, t_right_curve))
             labels.append(curves)
 
-            poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
-
-            image = cv2.resize(frame, (int(width*scale_factor), int(height*scale_factor)))
-            data.append(image)
-
             start = min(min(t_lefty), min(t_righty))
-            perspective = visualise(image, t_left_curve, t_right_curve, start, show_points=True)
+            # out_img = visualise(out_img, left_curve, right_curve, show_lines=True)
+            # t_out_img = visualise(image, t_left_curve, t_right_curve, start, show_lines=True)
+            poly, frame = visualise_perspective(frame, left_curve, right_curve, src, dst)
+            test(frame, left_curve, right_curve, src, dst)
+            # im_show(frame)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -484,9 +508,9 @@ def detect_lines(path, folder):
         i += limit
     print('next')
 
-    pickle.dump(labels, open(f'Pickles/big_labels.p', "wb"))
-    # data = np.array(data, dtype='float') / 255.
-    # np.save(data_npy, data)
+    pickle.dump(labels, open(f'../Pickles/small_labels.p', "wb"))
+    data = np.array(data, dtype='float') / 255.
+    np.save(data_npy, data)
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
@@ -496,6 +520,6 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
 
-# y = make_input('Detect lines?')
-# if y=='y':
-detect_lines(path, raw)
+y = make_input('Detect lines?')
+if y=='y':
+    detect_lines(path, raw)

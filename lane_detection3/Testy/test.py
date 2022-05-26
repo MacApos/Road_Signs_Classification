@@ -27,7 +27,6 @@ img_cv = cv2.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\l
 img_plt = mpimg.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pictures\perspective.jpg')
 print(type(img_plt))
 
-#
 # img = tf.keras.preprocessing.image.array_to_img(img_data)
 # plt.imshow(img)
 # plt.show()
@@ -38,3 +37,9 @@ print(type(img_plt))
 # plt.show()
 #
 # cv2.waitKey(0)
+
+
+zeros = np.zeros((480, 640))
+cv2.circle(zeros, (320, 240), 5, 1, -1)
+cv2.imshow('zeros', zeros)
+cv2.waitKey(0)
