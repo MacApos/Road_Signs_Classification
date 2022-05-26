@@ -17,8 +17,8 @@ from keras.models import Sequential
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
 from keras.preprocessing.image import ImageDataGenerator
-from keras.preprocessing.image import img_to_array
-# from keras.utils import img_to_array
+# from keras.preprocessing.image import img_to_array
+from keras.utils import img_to_array
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import adam_v2
 
@@ -60,22 +60,21 @@ learning_rate = 0.001
 batch_size = 150
 input_shape = (60, 160, 3)
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\big_labels.p'
-data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_test.npy'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\big_labels.p'
+# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_test.npy'
 
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-# labels_path = 'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
-# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\big_labels.p'
+data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data_test.npy'
 
-output = os.path.join(path, 'output')
+output_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'data')
 data_list = list(paths.list_images(data_path))
 labels = pickle.load(open(labels_path, 'rb'))
 
-
-if not os.path.exists(output):
-    os.mkdir(output)
+if not os.path.exists(output_path):
+    os.mkdir(output_path)
 
 data = []
 if os.path.exists(data_npy):
@@ -86,6 +85,8 @@ else:
         print(f'processing image {idx} ')
         image = cv2.imread(path)
         image = cv2.resize(image, (input_shape[1], input_shape[0]))
+        # cv2.imshow('image', image)
+        # cv2.waitKey(0)
         data.append(image)
 
 data_arr = np.array(data, dtype='float') / 255.
@@ -143,7 +144,7 @@ model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
 
 dt = datetime.now().strftime('%d.%m_%H.%M')
 print(dt)
-model_path = os.path.join(output, 'model_' + dt + '.hdf5')
+model_path = os.path.join(output_path, 'model_' + dt + '.hdf5')
 checkpoint = ModelCheckpoint(filepath=model_path,
                              monitor='val_accuracy',
                              save_best_only=True)
@@ -158,14 +159,14 @@ history = model.fit(
     steps_per_epoch=len(x_train)//batch_size
 )
 
-report_path = os.path.join(output, 'report_' + dt + '.html')
+report_path = os.path.join(output_path, 'report_' + dt + '.html')
 plot_hist(history, filename=report_path)
 
 model_json = model.to_json()
-json_path = os.path.join(output, 'model_'+ dt +'.json')
+json_path = os.path.join(output_path, 'model_'+ dt +'.json')
 
 with open(json_path, 'w') as json_file:
     json_file.write(model_json)
 
-weights_path = os.path.join(output, 'weights_'+ dt +'.json')
+weights_path = os.path.join(output_path, 'weights_'+ dt +'.json')
 model.save_weights(weights_path)

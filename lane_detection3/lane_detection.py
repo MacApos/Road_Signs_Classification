@@ -6,8 +6,6 @@ import numpy as np
 import pandas as pd
 from imutils import paths
 import matplotlib.pyplot as plt
-# from keras import img_to_array
-from keras.preprocessing.image import img_to_array
 
 
 def im_show(image, name='Image'):
@@ -443,8 +441,11 @@ def detect_lines(path, folder):
             left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
 
             scale_factor = 1 / 8
-            leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0,
-                                                                 src, dst, scale_factor, perspective=False)
+            if scale_factor == 1:
+                leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
+            else:
+                leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0,
+                                                                     src, dst, scale_factor, perspective=False)
             t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0,
                                                                          src, dst, scale_factor, perspective=True)
 
@@ -457,11 +458,13 @@ def detect_lines(path, folder):
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
 
-            image = cv2.resize(frame, (int(width*scale_factor), int(height*scale_factor)))
+            image = cv2.resize(image, (int(width*scale_factor), int(height*scale_factor)))
+            # frame = cv2.resize(frame, (int(width*scale_factor), int(height*scale_factor)))
             data.append(image)
 
             start = min(min(t_lefty), min(t_righty))
-            perspective = visualise(image, t_left_curve, t_right_curve, start, show_points=True)
+            perspective = visualise(np.copy(image), t_left_curve, t_right_curve, start, show_points=True)
+            im_show(frame)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -490,12 +493,12 @@ def detect_lines(path, folder):
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 raw = ['data', 'frames', 'labels']
 augmented = ['augmented_data', 'augmented_frames', 'augmented_labels']
 
 # y = make_input('Detect lines?')
 # if y=='y':
-detect_lines(path, raw)
+# detect_lines(path, raw)
