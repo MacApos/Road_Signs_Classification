@@ -62,37 +62,42 @@ batch_size = 30
 input_shape = (60, 160, 3)
 scale_factor = 1/8
 
-# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_labels.p'
-# data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_data.npy'
-# output = r'C:\Nowy folder\10\Praca\Datasets\Video_data\output'
-
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_labels.p'
-data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_data.npy'
+root_path = os.path.dirname(__file__)
+
 
 output_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'data')
+pickles_path = os.path.join(root_path, 'Pickles')
+labels_path = os.path.join(pickles_path, 'small_labels.p')
+t_data_npy = os.path.join(pickles_path, 'data.npy')
+
 data_list = list(paths.list_images(data_path))
-labels = pickle.load(open(labels_path, 'rb'))
 
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
+labels = pickle.load(open(labels_path, 'rb'))
 labels = np.array(labels)
-data = np.load(data_npy)
+data = np.load(t_data_npy)
 
 cv2.imshow('data', data[0])
 cv2.waitKey(0)
 
 print(len(labels))
 
-# # check
-# from lane_detection import im_show, params, visualise_perspective, visualise
-# width = data.shape[2]
-# height = data.shape[1]
-#
-# video_list, dst = params(width, height)
-#
+# check
+from lane_detection import params, im_show, visualise
+video_list, dst = params()
+
+for idx, image in enumerate(data):
+    left_curve = labels[idx][:3]
+    right_curve = labels[idx][3:]
+    img = visualise(image, left_curve, right_curve, show_lines=True)
+    im_show(img)
+
+
 # i=0
 # for video in video_list:
 #     name = video['name']
@@ -110,86 +115,86 @@ print(len(labels))
 #     i += limit
 
 print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
-
-# data, labels = shuffle(data, labels)
-x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
-
-model = Sequential()
-# model.add(BatchNormalization(input_shape=input_shape))
-model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape,
-                 activation='relu'))
-model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D())
-model.add(Flatten())
-model.add(Dropout(0.5))
-model.add(Dense(units=64, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(units=32, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(units=6, activation='sigmoid'))
-
-# model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+#
+# # data, labels = shuffle(data, labels)
+# x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
+#
+# model = Sequential()
+# # model.add(BatchNormalization(input_shape=input_shape))
+# model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape,
+#                  activation='relu'))
 # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 # model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
 # model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
-# model.add(MaxPooling2D(pool_size=(2, 2)))
+# model.add(MaxPooling2D())
 # model.add(Flatten())
-# model.add(Dropout(0.5))
-# model.add(Dense(units=128, activation='relu'))
 # model.add(Dropout(0.5))
 # model.add(Dense(units=64, activation='relu'))
 # model.add(Dropout(0.5))
 # model.add(Dense(units=32, activation='relu'))
 # model.add(Dropout(0.5))
 # model.add(Dense(units=6, activation='sigmoid'))
-
-model.summary()
-
-datagen = ImageDataGenerator(rotation_range=10,
-                             height_shift_range=0.1,
-                             vertical_flip=True)
-
-model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              # optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              loss='mean_absolute_error',
-              metrics=['accuracy'],
-              run_eagerly=True)
-
-dt = datetime.now().strftime('%d.%m_%H.%M')
-print(dt)
-model_path = os.path.join(output_path, 'model_' + dt + '.hdf5')
-checkpoint = ModelCheckpoint(filepath=model_path,
-                             monitor='val_accuracy',
-                             save_best_only=True)
-
-# history = model.fit_generator(
-#     generator=datagen.flow(x_train, y_train, batch_size=batch_size),
+#
+# # model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+# # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+# # model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+# # model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
+# # model.add(MaxPooling2D(pool_size=(2, 2)))
+# # model.add(Flatten())
+# # model.add(Dropout(0.5))
+# # model.add(Dense(units=128, activation='relu'))
+# # model.add(Dropout(0.5))
+# # model.add(Dense(units=64, activation='relu'))
+# # model.add(Dropout(0.5))
+# # model.add(Dense(units=32, activation='relu'))
+# # model.add(Dropout(0.5))
+# # model.add(Dense(units=6, activation='sigmoid'))
+#
+# model.summary()
+#
+# datagen = ImageDataGenerator(rotation_range=10,
+#                              height_shift_range=0.1,
+#                              vertical_flip=True)
+#
+# model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+#               # optimizer=adam_v2.Adam(learning_rate=learning_rate),
+#               loss='mean_absolute_error',
+#               metrics=['accuracy'],
+#               run_eagerly=True)
+#
+# dt = datetime.now().strftime('%d.%m_%H.%M')
+# print(dt)
+# model_path = os.path.join(output_path, 'model_' + dt + '.hdf5')
+# checkpoint = ModelCheckpoint(filepath=model_path,
+#                              monitor='val_accuracy',
+#                              save_best_only=True)
+#
+# # history = model.fit_generator(
+# #     generator=datagen.flow(x_train, y_train, batch_size=batch_size),
+# #     validation_data=(x_test, y_test),
+# #     steps_per_epoch=len(x_train)//batch_size,
+# #     epochs=epochs,
+# #     callbacks=[checkpoint])
+#
+# history = model.fit(
+#     x=x_train,
+#     y=y_train,
+#     batch_size=batch_size,
+#     epochs=epochs,
+#     callbacks=[checkpoint],
 #     validation_data=(x_test, y_test),
 #     steps_per_epoch=len(x_train)//batch_size,
-#     epochs=epochs,
-#     callbacks=[checkpoint])
-
-history = model.fit(
-    x=x_train,
-    y=y_train,
-    batch_size=batch_size,
-    epochs=epochs,
-    callbacks=[checkpoint],
-    validation_data=(x_test, y_test),
-    steps_per_epoch=len(x_train)//batch_size,
-    validation_steps = len(x_test)//batch_size
-)
-
-report_path = os.path.join(output_path, 'report_' + dt + '.html')
-plot_hist(history, filename=report_path)
-
-model_json = model.to_json()
-json_path = os.path.join(output_path, 'model_'+ dt +'.json')
-
-with open(json_path, 'w') as json_file:
-    json_file.write(model_json)
-
-weights_path = os.path.join(output_path, 'weights_'+ dt +'.json')
-model.save_weights(weights_path)
+#     validation_steps = len(x_test)//batch_size
+# )
+#
+# report_path = os.path.join(output_path, 'report_' + dt + '.html')
+# plot_hist(history, filename=report_path)
+#
+# model_json = model.to_json()
+# json_path = os.path.join(output_path, 'model_'+ dt +'.json')
+#
+# with open(json_path, 'w') as json_file:
+#     json_file.write(model_json)
+#
+# weights_path = os.path.join(output_path, 'weights_'+ dt +'.json')
+# model.save_weights(weights_path)

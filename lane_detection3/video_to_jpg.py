@@ -5,10 +5,11 @@ import numpy as np
 from imutils import paths
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 videos_path = os.path.join(path, 'Videos')
-data_path = os.path.join(path, 'data')
+train_path = os.path.join(path, 'train')
+test_path = os.path.join(path, 'test')
 
 # if os.path.exists(folder_path):
 #     shutil.rmtree(folder_path)
@@ -19,11 +20,12 @@ x = x.lower()
 if x != 'y' and x != 'n':
     raise Exception('Invalid input')
 
-if os.path.exists(data_path) and x == 'y':
-    shutil.rmtree(data_path)
+for folder in train_path, test_path:
+    if os.path.exists(folder) and x == 'y':
+        shutil.rmtree(folder)
 
-if not os.path.exists(data_path):
-    os.mkdir(data_path)
+    if not os.path.exists(folder):
+        os.mkdir(folder)
 
 fps = 30
 interval = 30
@@ -52,6 +54,16 @@ for video in video_list:
     video_path = os.path.join(videos_path, video["name"])
     cap = cv2.VideoCapture(video_path)
 
+    frames = 0
+    for value in values:
+        diff = (value[1] - value[0]) / interval
+        frames += diff
+
+    train = int(frames * 0.8)
+    test = int(frames - train)
+
+    print(train, test)
+
     j = 0
     k = 0
     while cap.isOpened():
@@ -59,7 +71,10 @@ for video in video_list:
         cropped_img = image[260:, :, :]
         cropped_img = cv2.copyMakeBorder(cropped_img, 20, 0, 0, 0, cv2.BORDER_REPLICATE)
 
-        img_path = data_path + fr'\{i:05d}.jpg'
+        if i < train:
+            img_path = train_path + fr'\{i:05d}.jpg'
+        else:
+            img_path = test_path + fr'\{i:05d}.jpg'
 
         if values[k][0] < j <= values[k][1] and j%interval==0:
             if np.any(image):

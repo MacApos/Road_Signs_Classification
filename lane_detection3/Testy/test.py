@@ -1,9 +1,10 @@
 import numpy as np
 import cv2
+import os
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
+# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\t_data.npy'
 # data = np.load(data_npy)
 
 # print(data.shape)
@@ -21,11 +22,11 @@ def make_input(message):
 
     return x
 
-from PIL import Image
-import tensorflow as tf
-img_cv = cv2.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pictures\perspective.jpg')
-img_plt = mpimg.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pictures\perspective.jpg')
-print(type(img_plt))
+# from PIL import Image
+# import tensorflow as tf
+# img_cv = cv2.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pictures\perspective.jpg')
+# img_plt = mpimg.imread(r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pictures\perspective.jpg')
+# print(type(img_plt))
 
 # img = tf.keras.preprocessing.image.array_to_img(img_data)
 # plt.imshow(img)
@@ -38,8 +39,5 @@ print(type(img_plt))
 #
 # cv2.waitKey(0)
 
-
-zeros = np.zeros((480, 640))
-cv2.circle(zeros, (320, 240), 5, 1, -1)
-cv2.imshow('zeros', zeros)
-cv2.waitKey(0)
+root_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+print(root_path)
