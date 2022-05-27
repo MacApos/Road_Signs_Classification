@@ -39,7 +39,7 @@ ap.add_argument('-e', '--epochs', default=1, type=int, help='numbers of epochs')
 args = vars(ap.parse_args())
 
 # epochs = args['epochs']
-epochs = 2
+epochs = 4
 learning_rate = 0.001
 batch_size = 16
 input_shape = (150, 150, 3)
@@ -101,6 +101,7 @@ print(x_train.shape)
 print(x_test.shape)
 
 train_datagen = ImageDataGenerator(
+    rescale = 1./255.,
     rotation_range=30,
     width_shift_range=0.2,
     height_shift_range=0.2,
@@ -109,6 +110,9 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=True,
     fill_mode='nearest'
 )
+
+valid_datagen = ImageDataGenerator(
+    rescale = 1./255.)
 
 architecture = model.VGGnetSmall(input_shape=input_shape,
                                  num_classes=len(mlb.classes_),
@@ -139,11 +143,9 @@ checkpoint = ModelCheckpoint(filepath=filepath,
 history = model.fit(
     x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
     epochs=epochs,
-    callbacks=[checkpoint],
-    validation_data=(x_test, y_test),
+    validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
     steps_per_epoch=len(x_train) // batch_size,
-    validation_steps=len(x_test) // batch_size
-)
+    validation_steps=len(x_test) // batch_size)
 
 
 filename = os.path.join(output, 'report_' + dt + '.html')
