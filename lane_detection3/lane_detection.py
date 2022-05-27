@@ -389,19 +389,19 @@ def detect_lines(path):
     labels_path = os.path.join(path, 'labels')
     pickles_path = os.path.join(root_path, 'Pickles')
 
-    data_npy = os.path.join(pickles_path, 't_data.npy')
-    t_data_npy = os.path.join(pickles_path, 'data.npy')
+    data_npy = os.path.join(pickles_path, 'data.npy')
+    warp_data_npy = os.path.join(pickles_path, 'warp_data.npy')
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = image.shape[0]
 
-    x = make_input('Delete previous data?')
+    # x = make_input('Delete previous data?')
 
     for folder_path in frames_path, labels_path:
-        if os.path.exists(folder_path) and x == 'y':
-        # if os.path.exists(folder_path):
-            shutil.rmtree(folder_path)
+        # if os.path.exists(folder_path) and x == 'y':
+        # # if os.path.exists(folder_path):
+        #     shutil.rmtree(folder_path)
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
@@ -409,9 +409,9 @@ def detect_lines(path):
     video_list, dst = params()
 
     data = []
-    t_data = []
+    warp_data = []
     labels = []
-    t_labels = []
+    warp_labels = []
     previous_frame = []
 
     i = 0
@@ -461,21 +461,22 @@ def detect_lines(path):
             left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
             t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
 
-            curves = np.concatenate((left_curve0, right_curve0))
+            curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
-            labels.append(curves)
-            t_labels.append(t_curves)
+
+            labels.append(t_curves)
+            warp_labels.append(curves)
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
 
             image = cv2.resize(image, (int(width*scale_factor), int(height*scale_factor)))
             warp = cv2.resize(warp, (int(width*scale_factor), int(height*scale_factor)))
-            data.append(warp)
-            t_data.append(image)
+
+            data.append(image)
+            warp_data.append(warp)
 
             start = min(min(t_lefty), min(t_righty))
-            transformation = visualise(np.copy(image), t_left_curve, t_right_curve, start, show_lines=True)
-            im_show(transformation)
+            transformation = visualise(np.copy(warp), left_curve, right_curve, show_lines=True)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -499,16 +500,12 @@ def detect_lines(path):
     print('end')
 
     pickle.dump(labels, open(f'Pickles/small_labels.p', "wb"))
-    pickle.dump(t_labels, open(f'Pickles/small_t_labels.p', "wb"))
+    pickle.dump(warp_labels, open(f'Pickles/warp_small_labels.p', "wb"))
     data = np.array(data, dtype='float') / 255.
-    t_data = np.array(t_data, dtype='float') / 255.
-
-    im_show(data[0])
-    im_show(t_data[0])
-
+    warp_data = np.array(warp_data, dtype='float') / 255.
 
     np.save(data_npy, data)
-    np.save(t_data_npy, t_data)
+    np.save(warp_data_npy, warp_data)
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'

@@ -414,7 +414,7 @@ def detect_lines(path, folder):
     frames_path = os.path.join(path, folder[1])
     labels_path = os.path.join(path, folder[2])
     data_npy = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_data.npy'
-    # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\t_data.npy'
+    # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
     data_list = list(paths.list_images(data_path))
 
     x = make_input('Delete previous data?')

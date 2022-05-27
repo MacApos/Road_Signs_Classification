@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\t_data.npy'
+# data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
 # data = np.load(data_npy)
 
 # print(data.shape)
