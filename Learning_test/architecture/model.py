@@ -15,8 +15,8 @@ class VGGnetSmall():
         model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
         model.add(MaxPooling2D())
         model.add(Flatten())
-        model.add(Dense(units=128, activation='relu'))
-        model.add(Dense(units=84, activation='relu'))
+        model.add(Dense(units=32, activation='relu'))
+        model.add(Dense(units=16, activation='relu'))
         model.add(Dense(units=self.num_classes, activation=self.final_activation))
 
         # model = Sequential()

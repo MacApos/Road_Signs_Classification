@@ -21,8 +21,15 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from Learning_test.architecture import model
 
-# hist = pd.DataFrame(history.history)
-# hist['epochs'] = history.epochs
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU')
+try:
+  tf.config.experimental.set_memory_growth(physical_devices[0], True)
+  tf.config.experimental.set_memory_growth(physical_devices[1], True)
+except:
+  # Invalid device or cannot modify virtual devices once initialized.
+  pass
 
 np.random.seed(10)
 
@@ -32,7 +39,7 @@ ap.add_argument('-e', '--epochs', default=1, type=int, help='numbers of epochs')
 args = vars(ap.parse_args())
 
 # epochs = args['epochs']
-epochs = 25
+epochs = 2
 learning_rate = 0.001
 batch_size = 16
 input_shape = (150, 150, 3)
@@ -45,20 +52,20 @@ def plot_hist(history, filename):
     fig = make_subplots(rows=2, cols=1, subplot_titles=('Accuracy', 'Loss'))
     fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['accuracy'], name='train_accuracy',
                              mode='markers+lines'), row=1, col=1)
-    fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['loss'], name='train_loss',
+    fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['val_accuracy'], name='valid_accuracy',
                              mode='markers+lines'), row=1, col=1)
-    fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['accuracy'], name='valid_loss',
+    fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['loss'], name='train_loss',
                              mode='markers+lines'), row=2, col=1)
-    fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['loss'], name='valid_loss',
+    fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['val_loss'], name='valid_loss',
                              mode='markers+lines'), row=2, col=1)
 
-    fig.update_xaxes(title_text='Liczba epok', row=1, col=1)
-    fig.update_xaxes(title_text='Liczba epok', row=2, col=1)
-    fig.update_xaxes(title_text='Accuracy', row=1, col=1)
-    fig.update_xaxes(title_text='Loss', row=2, col=1)
+    fig.update_xaxes(title_text='Epoch', row=1, col=1)
+    fig.update_xaxes(title_text='Epoch', row=2, col=1)
+    fig.update_yaxes(title_text='Accuracy', row=1, col=1)
+    fig.update_yaxes(title_text='Loss', row=2, col=1)
     fig.update_layout(width=1400, height=1000, title='Metrics')
 
-    po.plot(fig, filename=filename, auto_open=False)
+    po.plot(fig, filename=filename, auto_open=True)
 
 
 # images = list(paths.list_images(args['images']))
@@ -121,13 +128,23 @@ checkpoint = ModelCheckpoint(filepath=filepath,
                              monitor='val_accuracy',
                              save_best_only=True)
 
-history = model.fit_generator(
-    generator = train_datagen.flow(x_train, y_train, batch_size=batch_size),
-    validation_data=(x_test, y_test),
-    steps_per_epoch = len(x_train) // batch_size,
+# history = model.fit_generator(
+#     generator = train_datagen.flow(x_train, y_train, batch_size=batch_size),
+#     validation_data=(x_test, y_test),
+#     steps_per_epoch = len(x_train) // batch_size,
+#     epochs=epochs,
+#     callbacks=[checkpoint]
+# )
+
+history = model.fit(
+    x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
     epochs=epochs,
-    callbacks=[checkpoint]
+    callbacks=[checkpoint],
+    validation_data=(x_test, y_test),
+    steps_per_epoch=len(x_train) // batch_size,
+    validation_steps=len(x_test) // batch_size
 )
+
 
 filename = os.path.join(output, 'report_' + dt + '.html')
 plot_hist(history, filename=filename)
