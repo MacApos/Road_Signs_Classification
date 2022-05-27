@@ -3,6 +3,7 @@ from sklearn.utils import shuffle
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.offline as po
+import matplotlib.pyplot as plt
 from datetime import datetime
 from imutils import paths
 import pandas as pd
@@ -16,6 +17,8 @@ import os
 from keras.models import Sequential
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
+from keras.utils.image_utils import load_img
+from keras.utils import img_to_array, array_to_img
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import adam_v2
@@ -57,7 +60,7 @@ def plot_hist(history, filename):
     po.plot(fig, filename=filename, auto_open=False)
 
 
-epochs = 2
+epochs = 6
 learning_rate = 0.001
 batch_size = 16
 input_shape = (60, 160, 3)
@@ -69,7 +72,7 @@ root_path = os.path.dirname(__file__)
 dt = datetime.now().strftime('%d.%m_%H.%M')
 dir_path = os.path.join(path, 'output')
 output_path = os.path.join(dir_path, f'initialized_{dt}')
-data_path = os.path.join(path, 'data')
+data_path = os.path.join(path, 'train')
 pickles_path = os.path.join(root_path, 'Pickles')
 
 for path in dir_path, output_path:
@@ -81,7 +84,7 @@ for name in perspective:
     prefix = f'{name[0]}'
 
     labels_path = os.path.join(pickles_path, f'{prefix}small_labels.p')
-    t_data_npy = os.path.join(pickles_path, f'{prefix}data.npy')
+    data_npy = os.path.join(pickles_path, f'{prefix}data.npy')
 
     data_list = list(paths.list_images(data_path))
 
@@ -90,9 +93,9 @@ for name in perspective:
 
     labels = pickle.load(open(labels_path, 'rb'))
     labels = np.array(labels)
-    data = np.load(t_data_npy)
+    data = np.load(data_npy)
 
-    # # check
+    # # load check
     # from lane_detection import im_show, visualise
     #
     # for idx, image in enumerate(data[:10]):
@@ -127,49 +130,59 @@ for name in perspective:
 
     train_datagen = ImageDataGenerator(rotation_range=5,
                                        height_shift_range=0.1,
-                                       vertical_flip=True)
+                                       horizontal_flip=True,
+                                       )
 
+    valid_datagen = ImageDataGenerator()
 
+    # generator check
+    # img = data[0]
+    # x = img.reshape((1,) + img.shape)
+    # print(x.shape)
+    #
+    # i = 1
+    # plt.figure(figsize=(16, 8))
+    # for batch in train_datagen.flow(x, batch_size=1):
+    #     plt.subplot(3, 4, i)
+    #     plt.grid(False)
+    #     imgplot = plt.imshow(array_to_img(batch[0]))
+    #     i += 1
+    #     if i % 13 == 0:
+    #         break
+    # plt.show()
 
-#     valid_datagen = ImageDataGenerator()
-#
-#     model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-#                   loss='mean_absolute_error',
-#                   metrics=['accuracy'],
-#                   run_eagerly=True)
-#
-#     dt = datetime.now().strftime('%d.%m_%H.%M')
-#     print(dt)
-#     model_path = os.path.join(output_path, 'model_' + dt + '.hdf5')
-#     checkpoint = ModelCheckpoint(filepath=model_path,
-#                                  monitor='val_accuracy',
-#                                  save_best_only=True)
-#
-#     history = model.fit(
-#         x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
-#         epochs=epochs,
-#         # callbacks=[checkpoint],
-#         validation_data=(x_test, y_test),
-#         steps_per_epoch=len(x_train) // batch_size,
-#         validation_steps=len(x_test) // batch_size)
-#
-#     report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
-#     # plot_hist(history, filename=report_path)
-#
-#     model_json = model.to_json()
-#     json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
-#
-#     with open(json_path, 'w') as json_file:
-#         json_file.write(model_json)
-#
-#     weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.json')
-#     model.save_weights(weights_path)
-#
-#     print(pd.DataFrame(history.history))
-#
-# for folder in os.listdir(dir_path):
-#     folder = os.path.join(dir_path, folder)
-#     if not os.listdir(folder):
-#         shutil.rmtree(folder)
+    model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+                  loss='mean_absolute_error',
+                  metrics=['accuracy'],
+                  run_eagerly=True)
+
+    dt = datetime.now().strftime('%d.%m_%H.%M')
+    print(dt)
+
+    history = model.fit(
+        x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
+        epochs=epochs,
+        validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
+        steps_per_epoch=len(x_train) // batch_size,
+        validation_steps=len(x_test) // batch_size)
+
+    report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
+    plot_hist(history, filename=report_path)
+
+    model_json = model.to_json()
+    json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
+
+    with open(json_path, 'w') as json_file:
+        json_file.write(model_json)
+
+    weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.json')
+    model.save_weights(weights_path)
+
+    print(pd.DataFrame(history.history))
+
+for folder in os.listdir(dir_path):
+    folder = os.path.join(dir_path, folder)
+    if not os.listdir(folder):
+        shutil.rmtree(folder)
 
 
