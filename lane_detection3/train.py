@@ -36,6 +36,7 @@ tf.data.experimental.enable_debug_mode()
 def plot_hist(history, filename):
     hist = pd.DataFrame(history.history)
     hist['epoch'] = history.epoch
+    print(hist)
 
     fig = make_subplots(rows=2, cols=1, subplot_titles=('Accuracy', 'Loss'))
     fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['accuracy'], name='train_accuracy',
@@ -56,7 +57,7 @@ def plot_hist(history, filename):
     po.plot(fig, filename=filename, auto_open=False)
 
 
-epochs = 5
+epochs = 2
 learning_rate = 0.001
 batch_size = 16
 input_shape = (60, 160, 3)
@@ -128,41 +129,47 @@ for name in perspective:
                                        height_shift_range=0.1,
                                        vertical_flip=True)
 
-    valid_datagen = ImageDataGenerator()
 
-    model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-                  loss='mean_absolute_error',
-                  metrics=['accuracy'],
-                  run_eagerly=True)
 
-    dt = datetime.now().strftime('%d.%m_%H.%M')
-    print(dt)
-    model_path = os.path.join(output_path, 'model_' + dt + '.hdf5')
-    checkpoint = ModelCheckpoint(filepath=model_path,
-                                 monitor='val_accuracy',
-                                 save_best_only=True)
+#     valid_datagen = ImageDataGenerator()
+#
+#     model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+#                   loss='mean_absolute_error',
+#                   metrics=['accuracy'],
+#                   run_eagerly=True)
+#
+#     dt = datetime.now().strftime('%d.%m_%H.%M')
+#     print(dt)
+#     model_path = os.path.join(output_path, 'model_' + dt + '.hdf5')
+#     checkpoint = ModelCheckpoint(filepath=model_path,
+#                                  monitor='val_accuracy',
+#                                  save_best_only=True)
+#
+#     history = model.fit(
+#         x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
+#         epochs=epochs,
+#         # callbacks=[checkpoint],
+#         validation_data=(x_test, y_test),
+#         steps_per_epoch=len(x_train) // batch_size,
+#         validation_steps=len(x_test) // batch_size)
+#
+#     report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
+#     # plot_hist(history, filename=report_path)
+#
+#     model_json = model.to_json()
+#     json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
+#
+#     with open(json_path, 'w') as json_file:
+#         json_file.write(model_json)
+#
+#     weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.json')
+#     model.save_weights(weights_path)
+#
+#     print(pd.DataFrame(history.history))
+#
+# for folder in os.listdir(dir_path):
+#     folder = os.path.join(dir_path, folder)
+#     if not os.listdir(folder):
+#         shutil.rmtree(folder)
 
-    history = model.fit(
-        x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
-        epochs=epochs,
-        callbacks=[checkpoint],
-        validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
-        steps_per_epoch=len(x_train)//batch_size,
-        validation_steps = len(x_test)//batch_size)
 
-    report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
-    plot_hist(history, filename=report_path)
-
-    model_json = model.to_json()
-    json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
-
-    with open(json_path, 'w') as json_file:
-        json_file.write(model_json)
-
-    weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.json')
-    model.save_weights(weights_path)
-
-for folder in os.listdir(dir_path):
-    folder = os.path.join(dir_path, folder)
-    if not os.listdir(folder):
-        shutil.rmtree(folder)
