@@ -1,3 +1,5 @@
+import time
+
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from plotly.subplots import make_subplots
@@ -20,7 +22,6 @@ from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Co
 from keras.utils.image_utils import load_img
 from keras.utils import img_to_array, array_to_img
 from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ModelCheckpoint
 from keras.optimizers import adam_v2
 
 import tensorflow as tf
@@ -60,7 +61,7 @@ def plot_hist(history, filename):
     po.plot(fig, filename=filename, auto_open=False)
 
 
-epochs = 6
+epochs = [10]
 learning_rate = 0.001
 batch_size = 16
 input_shape = (60, 160, 3)
@@ -69,116 +70,132 @@ input_shape = (60, 160, 3)
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 root_path = os.path.dirname(__file__)
 
-dt = datetime.now().strftime('%d.%m_%H.%M')
 dir_path = os.path.join(path, 'output')
-output_path = os.path.join(dir_path, f'initialized_{dt}')
 data_path = os.path.join(path, 'train')
 pickles_path = os.path.join(root_path, 'Pickles')
 
-for path in dir_path, output_path:
-    if not os.path.exists(path):
-        os.mkdir(path)
+if not os.path.exists(dir_path):
+    os.mkdir(dir_path)
 
-perspective = [['warp_', 0], ['', 2/3]]
-for name in perspective:
-    prefix = f'{name[0]}'
-
-    labels_path = os.path.join(pickles_path, f'{prefix}small_labels.p')
-    data_npy = os.path.join(pickles_path, f'{prefix}data.npy')
-
-    data_list = list(paths.list_images(data_path))
+for epoch in epochs:
+    dt = datetime.now().strftime('%d.%m_%H.%M.%S')
+    dir_path = os.path.join(path, 'output')
+    output_path = os.path.join(dir_path, f'initialized_{dt}')
+    config_path = os.path.join(output_path, 'config.txt')
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
-    labels = pickle.load(open(labels_path, 'rb'))
-    labels = np.array(labels)
-    data = np.load(data_npy)
+    config = open(config_path,'w+')
+    config.write(f'epochs = {epoch}\n')
+    config.write(f'learning_rate = {learning_rate}\n')
+    config.write(f'batch_size = {batch_size}\n')
+    config.write(f'input_shape = {input_shape}\n')
 
-    # # load check
-    # from lane_detection import im_show, visualise
-    #
-    # for idx, image in enumerate(data[:10]):
-    #     left_curve = labels[idx][:3]
-    #     right_curve = labels[idx][3:]
-    #     print(left_curve, right_curve)
-    #     warp = visualise(image, left_curve, right_curve, image.shape[0]*name[1], show_lines=True)
-    #     im_show(warp)
-    #
-    print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
+    time.sleep(1)
 
-    data, labels = shuffle(data, labels)
-    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
+    perspective = [['warp_', 0], ['', 2/3]]
+    for name in perspective:
+        prefix = f'{name[0]}'
 
-    model = Sequential()
-    # model.add(BatchNormalization(input_shape=input_shape))
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-    model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-    model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Flatten())
-    model.add(Dropout(0.5))
-    model.add(Dense(units=128, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(units=64, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(units=32, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(units=6, activation='sigmoid'))
-    model.summary()
+        labels_path = os.path.join(pickles_path, f'{prefix}small_labels.p')
+        data_npy = os.path.join(pickles_path, f'{prefix}data.npy')
 
-    train_datagen = ImageDataGenerator(rotation_range=5,
-                                       height_shift_range=0.1,
-                                       horizontal_flip=True,
-                                       )
+        data_list = list(paths.list_images(data_path))
 
-    valid_datagen = ImageDataGenerator()
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
 
-    # generator check
-    # img = data[0]
-    # x = img.reshape((1,) + img.shape)
-    # print(x.shape)
-    #
-    # i = 1
-    # plt.figure(figsize=(16, 8))
-    # for batch in train_datagen.flow(x, batch_size=1):
-    #     plt.subplot(3, 4, i)
-    #     plt.grid(False)
-    #     imgplot = plt.imshow(array_to_img(batch[0]))
-    #     i += 1
-    #     if i % 13 == 0:
-    #         break
-    # plt.show()
+        labels = pickle.load(open(labels_path, 'rb'))
+        labels = np.array(labels)
+        data = np.load(data_npy)
 
-    model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-                  loss='mean_absolute_error',
-                  metrics=['accuracy'],
-                  run_eagerly=True)
+        # # load check
+        # from lane_detection import im_show, visualise
+        #
+        # for idx, image in enumerate(data[:10]):
+        #     left_curve = labels[idx][:3]
+        #     right_curve = labels[idx][3:]
+        #     print(left_curve, right_curve)
+        #     warp = visualise(image, left_curve, right_curve, image.shape[0]*name[1], show_lines=True)
+        #     im_show(warp)
+        #
+        print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
 
-    dt = datetime.now().strftime('%d.%m_%H.%M')
-    print(dt)
+        data, labels = shuffle(data, labels)
+        x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
-    history = model.fit(
-        x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
-        epochs=epochs,
-        validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
-        steps_per_epoch=len(x_train) // batch_size,
-        validation_steps=len(x_test) // batch_size)
+        model = Sequential()
+        # model.add(BatchNormalization(input_shape=input_shape))
+        model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+        model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+        model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+        model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Flatten())
+        model.add(Dropout(0.5))
+        model.add(Dense(units=128, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(units=64, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(units=32, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(units=6, activation='sigmoid'))
+        model.summary()
 
-    report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
-    plot_hist(history, filename=report_path)
+        train_datagen = ImageDataGenerator(rotation_range=5,
+                                           height_shift_range=0.1,
+                                           horizontal_flip=True,
+                                           rescale=1./255.)
 
-    model_json = model.to_json()
-    json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
+        valid_datagen = ImageDataGenerator(rescale=1./255.)
 
-    with open(json_path, 'w') as json_file:
-        json_file.write(model_json)
+        # generator check
+        # img = data[0]
+        # x = img.reshape((1,) + img.shape)
+        # print(x.shape)
+        #
+        # i = 1
+        # plt.figure(figsize=(16, 8))
+        # for batch in train_datagen.flow(x, batch_size=1):
+        #     plt.subplot(3, 4, i)
+        #     plt.grid(False)
+        #     imgplot = plt.imshow(array_to_img(batch[0]))
+        #     i += 1
+        #     if i % 13 == 0:
+        #         break
+        # plt.show()
 
-    weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.json')
-    model.save_weights(weights_path)
+        model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+                      loss='mean_absolute_error',
+                      metrics=['accuracy'],
+                      run_eagerly=True)
 
-    print(pd.DataFrame(history.history))
+        dt = datetime.now().strftime('%d.%m_%H.%M')
+        print(dt)
+
+        history = model.fit(
+            x=x_train,
+            y=y_train,
+            batch_size=batch_size,
+            epochs=epoch,
+            validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
+            steps_per_epoch=len(x_train) // batch_size,
+            validation_steps=len(x_test) // batch_size)
+
+        report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
+        plot_hist(history, filename=report_path)
+
+        model_json = model.to_json()
+        json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
+
+        with open(json_path, 'w') as json_file:
+            json_file.write(model_json)
+
+        weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.h5')
+        model.save_weights(weights_path)
+
+        print(pd.DataFrame(history.history))
 
 for folder in os.listdir(dir_path):
     folder = os.path.join(dir_path, folder)

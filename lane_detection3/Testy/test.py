@@ -39,5 +39,24 @@ def make_input(message):
 #
 # cv2.waitKey(0)
 
-root_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-print(root_path)
+from datetime import datetime
+
+epochs = [10, 20, 30, 40]
+learning_rate = 0.001
+batch_size = 16
+input_shape = (60, 160, 3)
+
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+root_path = os.path.dirname(__file__)
+
+dt = datetime.now().strftime('%d.%m_%H.%M')
+dir_path = os.path.join(path, 'output')
+output_path = os.path.join(dir_path, f'initialized_{dt}')
+
+data_path = os.path.join(path, 'train')
+pickles_path = os.path.join(root_path, 'Pickles')
+
+if not os.path.exists(dir_path):
+    os.mkdir(dir_path)
+
