@@ -13,9 +13,9 @@ def im_show(image, name='Image'):
     cv2.waitKey(0)
 
 
-def to_csv(name, arrqy):
+def to_csv(name, array):
     array_list = []
-    for arr in arrqy:
+    for arr in array:
         if isinstance(arr, np.ndarray):
             arr = arr[0]
         arr = str(arr).replace('.', ',')
@@ -244,7 +244,7 @@ def generate_points(image, left_curve, right_curve, start=0):
     empty = []
     flipud = False
 
-    for idx, arr in enumerate([fit_left, fit_right]):
+    for arr in fit_left, fit_right:
         arr = arr.astype(int)
         con = np.concatenate((arr, y), axis=1)
 
@@ -391,17 +391,18 @@ def detect_lines(path):
 
     data_npy = os.path.join(pickles_path, 'data.npy')
     warp_data_npy = os.path.join(pickles_path, 'warp_data.npy')
+    img_labels_npy = os.path.join(pickles_path, 'img_labels.npy')
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = image.shape[0]
 
-    # x = make_input('Delete previous data?')
+    x = make_input('Delete previous data?')
 
     for folder_path in frames_path, labels_path:
-        # if os.path.exists(folder_path) and x == 'y':
-        # # if os.path.exists(folder_path):
-        #     shutil.rmtree(folder_path)
+        if os.path.exists(folder_path) and x == 'y':
+        # if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
@@ -411,6 +412,7 @@ def detect_lines(path):
     data = []
     warp_data = []
     labels = []
+    img_labels = []
     warp_labels = []
     previous_frame = []
 
@@ -449,7 +451,7 @@ def detect_lines(path):
 
             left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
 
-            scale_factor = 1 / 8
+            scale_factor = 1 / 4
             if scale_factor == 1:
                 leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
             else:
@@ -474,6 +476,8 @@ def detect_lines(path):
 
             data.append(image)
             warp_data.append(warp)
+            img_labels.append(poly)
+
 
             start = min(min(t_lefty), min(t_righty))
             transformation = visualise(np.copy(warp), left_curve, right_curve, show_lines=True)
@@ -499,14 +503,15 @@ def detect_lines(path):
         i += limit
     print('end')
 
-    pickle.dump(labels, open(f'Pickles/small_labels.p', "wb"))
-    pickle.dump(warp_labels, open(f'Pickles/warp_small_labels.p', "wb"))
+    pickle.dump(labels, open(f'Pickles/labels.p', "wb"))
+    pickle.dump(warp_labels, open(f'Pickles/warp_labels.p', "wb"))
     data = np.array(data, dtype='float') / 255.
     warp_data = np.array(warp_data, dtype='float') / 255.
+    img_labels = np.array(img_labels, dtype='float') / 255.
 
     np.save(data_npy, data)
     np.save(warp_data_npy, warp_data)
-
+    np.save(img_labels_npy, img_labels)
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
@@ -514,4 +519,4 @@ path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)

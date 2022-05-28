@@ -17,6 +17,7 @@ import cv2
 import os
 
 from keras.models import Sequential
+from keras.callbacks import CSVLogger
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
 from keras.utils.image_utils import load_img
@@ -37,10 +38,9 @@ except:
 tf.config.run_functions_eagerly(True)
 tf.data.experimental.enable_debug_mode()
 
-def plot_hist(history, filename):
+def plot_hist(history, filename, save_path):
     hist = pd.DataFrame(history.history)
     hist['epoch'] = history.epoch
-    print(hist)
 
     fig = make_subplots(rows=2, cols=1, subplot_titles=('Accuracy', 'Loss'))
     fig.add_trace(go.Scatter(x=hist['epoch'], y=hist['accuracy'], name='train_accuracy',
@@ -63,8 +63,8 @@ def plot_hist(history, filename):
 
 epochs = [10]
 learning_rate = 0.001
-batch_size = 16
-input_shape = (60, 160, 3)
+batch_size = 25
+input_shape = (120, 320, 3)
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
@@ -92,41 +92,35 @@ for epoch in epochs:
     config.write(f'batch_size = {batch_size}\n')
     config.write(f'input_shape = {input_shape}\n')
 
-    time.sleep(1)
-
     perspective = [['warp_', 0], ['', 2/3]]
     for name in perspective:
         prefix = f'{name[0]}'
 
-        labels_path = os.path.join(pickles_path, f'{prefix}small_labels.p')
+        labels_path = os.path.join(pickles_path, f'{prefix}labels.p')
         data_npy = os.path.join(pickles_path, f'{prefix}data.npy')
+        logs_path = os.path.join(output_path, f'{prefix}logs.txt')
 
         data_list = list(paths.list_images(data_path))
-
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
 
         labels = pickle.load(open(labels_path, 'rb'))
         labels = np.array(labels)
         data = np.load(data_npy)
 
-        # # load check
-        # from lane_detection import im_show, visualise
-        #
-        # for idx, image in enumerate(data[:10]):
-        #     left_curve = labels[idx][:3]
-        #     right_curve = labels[idx][3:]
-        #     print(left_curve, right_curve)
-        #     warp = visualise(image, left_curve, right_curve, image.shape[0]*name[1], show_lines=True)
-        #     im_show(warp)
-        #
-        print(f'{data.shape[0]} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
-
         data, labels = shuffle(data, labels)
         x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
+        # # load check
+        # from lane_detection import im_show, visualise
+        #
+        # for idx, image in enumerate(x_train[:2]):
+        #     left_curve = y_train[idx][:3]
+        #     right_curve = y_train[idx][3:]
+        #     print(left_curve, right_curve)
+        #     warp = visualise(image, left_curve, right_curve, image.shape[0]*name[1], show_lines=True)
+        #     im_show(warp)
+
         model = Sequential()
-        # model.add(BatchNormalization(input_shape=input_shape))
+        model.add(BatchNormalization(input_shape=input_shape))
         model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
         model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
         model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
@@ -150,7 +144,7 @@ for epoch in epochs:
 
         valid_datagen = ImageDataGenerator(rescale=1./255.)
 
-        # generator check
+        # # generator check
         # img = data[0]
         # x = img.reshape((1,) + img.shape)
         # print(x.shape)
@@ -172,11 +166,13 @@ for epoch in epochs:
                       run_eagerly=True)
 
         dt = datetime.now().strftime('%d.%m_%H.%M')
-        print(dt)
+
+        csv_logger = CSVLogger(logs_path, append=True, separator=';')
 
         history = model.fit(
             x=x_train,
             y=y_train,
+            callbacks=[csv_logger],
             batch_size=batch_size,
             epochs=epoch,
             validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
@@ -184,7 +180,7 @@ for epoch in epochs:
             validation_steps=len(x_test) // batch_size)
 
         report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
-        plot_hist(history, filename=report_path)
+        plot_hist(history, report_path, logs_path)
 
         model_json = model.to_json()
         json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
@@ -194,12 +190,3 @@ for epoch in epochs:
 
         weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.h5')
         model.save_weights(weights_path)
-
-        print(pd.DataFrame(history.history))
-
-for folder in os.listdir(dir_path):
-    folder = os.path.join(dir_path, folder)
-    if not os.listdir(folder):
-        shutil.rmtree(folder)
-
-
