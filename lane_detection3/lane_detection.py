@@ -519,4 +519,4 @@ path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-detect_lines(path)
+# detect_lines(path)

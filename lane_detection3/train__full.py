@@ -184,15 +184,15 @@ for epoch in epochs:
         validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
         steps_per_epoch=len(x_train) // batch_size,
         validation_steps=len(x_test) // batch_size)
-
-    report_path = os.path.join(output_path, f'report_' + dt + '.html')
-    plot_hist(history, report_path, logs_path)
-
-    model_json = model.to_json()
-    json_path = os.path.join(output_path, f'model_'+ dt +'.json')
-
-    with open(json_path, 'w') as json_file:
-        json_file.write(model_json)
-
-    weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
-    model.save(weights_path)
+    #
+    # report_path = os.path.join(output_path, f'report_' + dt + '.html')
+    # plot_hist(history, report_path, logs_path)
+    #
+    # model_json = model.to_json()
+    # json_path = os.path.join(output_path, f'model_'+ dt +'.json')
+    #
+    # with open(json_path, 'w') as json_file:
+    #     json_file.write(model_json)
+    #
+    # weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
+    # model.save(weights_path)

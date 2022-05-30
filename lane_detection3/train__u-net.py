@@ -106,7 +106,7 @@ for epoch in epochs:
         poly = np.dstack((label, label, label))
         poly[:, :, [0, 2]] = 0
         out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-        plt.figure(figsize=(24, 12))
+        plt.figure(figsize=(16, 8))
         for idx, img in enumerate([image, poly, out_frame]):
             plt.subplot(1, 3, idx+1)
             plt.grid(False)
@@ -114,9 +114,8 @@ for epoch in epochs:
             imgplot = plt.imshow(img[:,:,::-1])
         plt.show()
 
-    model = Sequential()
-    s = tf.keras.layers.Input(input_shape)
-    c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(s)
+    inputs = tf.keras.layers.Input(input_shape)
+    c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1 = tf.keras.layers.Dropout(0.1)(c1)
     c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
@@ -166,53 +165,56 @@ for epoch in epochs:
     c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
     outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
+
+    model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
-
-    train_datagen = ImageDataGenerator(channel_shift_range=0.2)
-
-    valid_datagen = ImageDataGenerator(rescale=1./255.)
-
-    # # generator check
-    # img = data[0]
-    # x = img.reshape((1,) + img.shape)
-    # print(x.shape)
     #
-    # i = 1
-    # plt.figure(figsize=(16, 8))
-    # for batch in train_datagen.flow(x, batch_size=1):
-    #     plt.subplot(3, 4, i)
-    #     plt.grid(False)
-    #     imgplot = plt.imshow(array_to_img(batch[0]))
-    #     i += 1
-    #     if i % 13 == 0:
-    #         break
-    # plt.show()
-
-    model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-                  loss='mean_squared_error',
-                  metrics=['accuracy'],
-                  run_eagerly=True)
-
-    dt = datetime.now().strftime('%d.%m_%H.%M')
-
-    csv_logger = CSVLogger(logs_path, append=True, separator=';')
-
-    history = model.fit(
-        x = x_train, y=y_train, batch_size=batch_size,
-        epochs=epoch,
-        callbacks=[csv_logger],
-        validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
-        steps_per_epoch=len(x_train) // batch_size,
-        validation_steps=len(x_test) // batch_size)
-
-    report_path = os.path.join(output_path, f'report_' + dt + '.html')
-    plot_hist(history, report_path, logs_path)
-
-    model_json = model.to_json()
-    json_path = os.path.join(output_path, f'model_'+ dt +'.json')
-
-    with open(json_path, 'w') as json_file:
-        json_file.write(model_json)
-
-    weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
-    model.save(weights_path)
+    # train_datagen = ImageDataGenerator(channel_shift_range=0.2)
+    #
+    # valid_datagen = ImageDataGenerator(rescale=1./255.)
+    #
+    # # # generator check
+    # # img = data[0]
+    # # x = img.reshape((1,) + img.shape)
+    # # print(x.shape)
+    # #
+    # # i = 1
+    # # plt.figure(figsize=(16, 8))
+    # # for batch in train_datagen.flow(x, batch_size=1):
+    # #     plt.subplot(3, 4, i)
+    # #     plt.grid(False)
+    # #     imgplot = plt.imshow(array_to_img(batch[0]))
+    # #     i += 1
+    # #     if i % 13 == 0:
+    # #         break
+    # # plt.show()
+    #
+    # model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+    #               loss='mean_squared_error',
+    #               metrics=['accuracy'],
+    #               run_eagerly=True)
+    #
+    # dt = datetime.now().strftime('%d.%m_%H.%M')
+    #
+    # csv_logger = CSVLogger(logs_path, append=True, separator=';')
+    #
+    # history = model.fit(
+    #     x = x_train, y=y_train, batch_size=batch_size,
+    #     epochs=epoch,
+    #     callbacks=[csv_logger],
+    #     validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
+    #     steps_per_epoch=len(x_train) // batch_size,
+    #     validation_steps=len(x_test) // batch_size)
+    #
+    # report_path = os.path.join(output_path, f'report_' + dt + '.html')
+    # plot_hist(history, report_path, logs_path)
+    #
+    # model_json = model.to_json()
+    # json_path = os.path.join(output_path, f'model_'+ dt +'.json')
+    #
+    # with open(json_path, 'w') as json_file:
+    #     json_file.write(model_json)
+    #
+    # weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
+    # model.save(weights_path)
