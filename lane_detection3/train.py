@@ -172,9 +172,9 @@ for epoch in epochs:
         history = model.fit(
             x=x_train,
             y=y_train,
-            callbacks=[csv_logger],
             batch_size=batch_size,
             epochs=epoch,
+            callbacks=[csv_logger],
             validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
             steps_per_epoch=len(x_train) // batch_size,
             validation_steps=len(x_test) // batch_size)

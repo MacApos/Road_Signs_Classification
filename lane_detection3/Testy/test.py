@@ -3,6 +3,7 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import tensorflow as tf
 
 # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\data.npy'
 # data = np.load(data_npy)
@@ -39,24 +40,30 @@ def make_input(message):
 #
 # cv2.waitKey(0)
 
-from datetime import datetime
+# from datetime import datetime
+#
+# epochs = [10, 20, 30, 40]
+# learning_rate = 0.001
+# batch_size = 16
+# input_shape = (60, 160, 3)
+#
+# # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# root_path = os.path.dirname(__file__)
+#
+# dt = datetime.now().strftime('%d.%m_%H.%M')
+# dir_path = os.path.join(path, 'output')
+# output_path = os.path.join(dir_path, f'initialized_{dt}')
+#
+# data_path = os.path.join(path, 'train')
+# pickles_path = os.path.join(root_path, 'Pickles')
+#
+# if not os.path.exists(dir_path):
+#     os.mkdir(dir_path)
 
-epochs = [10, 20, 30, 40]
-learning_rate = 0.001
-batch_size = 16
-input_shape = (60, 160, 3)
+input_shape = (2, 2, 1, 3)
+x = np.arange(np.prod(input_shape)).reshape(input_shape)
+print(x)
 
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-root_path = os.path.dirname(__file__)
-
-dt = datetime.now().strftime('%d.%m_%H.%M')
-dir_path = os.path.join(path, 'output')
-output_path = os.path.join(dir_path, f'initialized_{dt}')
-
-data_path = os.path.join(path, 'train')
-pickles_path = os.path.join(root_path, 'Pickles')
-
-if not os.path.exists(dir_path):
-    os.mkdir(dir_path)
-
+y = tf.keras.layers.UpSampling2D(size=(2, 2))(x)
+print(y)

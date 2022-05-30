@@ -59,7 +59,7 @@ def plot_hist(history, filename, save_path):
     po.plot(fig, filename=filename, auto_open=False)
 
 
-epochs = [10]
+epochs = [10, 20]
 learning_rate = 0.001
 batch_size = 25
 input_shape = (120, 320, 3)
@@ -102,87 +102,98 @@ for epoch in epochs:
     x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
     # load check
-    for idx, image in enumerate(x_train[:2]):
-        poly = y_train[idx]
-        poly = np.dstack((poly, poly, poly))
+    for idx, image in enumerate(x_train[:5]):
+        label = y_train[idx]
+        poly = np.dstack((label, label, label))
         poly[:, :, [0, 2]] = 0
         out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-        cv2.imshow('out_frame', out_frame)
-        cv2.waitKey(0)
+        plt.figure(figsize=(24, 12))
+        for idx, img in enumerate([image, poly, out_frame]):
+            plt.subplot(1, 3, idx+1)
+            plt.grid(False)
+            plt.axis(False)
+            imgplot = plt.imshow(img[:,:,::-1])
+        plt.show()
 
-    # model = Sequential()
-    # model.add(BatchNormalization(input_shape=input_shape))
-    # model.add(Conv2D(filters=64, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-    # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-    # model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-    # model.add(Conv2D(filters=8, kernel_size=(3, 3), activation='relu'))
-    # model.add(MaxPooling2D(pool_size=(2, 2)))
-    # model.add(Flatten())
-    # model.add(Dropout(0.5))
-    # model.add(Dense(units=128, activation='relu'))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(units=64, activation='relu'))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(units=32, activation='relu'))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(units=6, activation='sigmoid'))
-    # model.summary()
+    model = Sequential()
+    model.add(BatchNormalization(input_shape=input_shape))
+    model.add(Conv2D(filters=8, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+    model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D())
+    model.add(UpSampling2D())
+    model.add(Conv2DTranspose(filters=64, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv2DTranspose(filters=64, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(UpSampling2D())
+    model.add(Conv2DTranspose(filters=32, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv2DTranspose(filters=32, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Conv2DTranspose(filters=16, kernel_size=(3, 3), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(UpSampling2D())
+    model.add(Conv2DTranspose(filters=16, kernel_size=(3, 3), activation='relu'))
+    model.add(Conv2DTranspose(filters=1, kernel_size=(3, 3), activation='relu'))
+    model.summary()
+
+    train_datagen = ImageDataGenerator(channel_shift_range=0.2)
+
+    valid_datagen = ImageDataGenerator(rescale=1./255.)
+
+    # # generator check
+    # img = data[0]
+    # x = img.reshape((1,) + img.shape)
+    # print(x.shape)
     #
-    # train_datagen = ImageDataGenerator(rotation_range=5,
-    #                                    height_shift_range=0.1,
-    #                                    horizontal_flip=True,
-    #                                    rescale=1./255.)
-    #
-    # valid_datagen = ImageDataGenerator(rescale=1./255.)
-#
-#         # # generator check
-#         # img = data[0]
-#         # x = img.reshape((1,) + img.shape)
-#         # print(x.shape)
-#         #
-#         # i = 1
-#         # plt.figure(figsize=(16, 8))
-#         # for batch in train_datagen.flow(x, batch_size=1):
-#         #     plt.subplot(3, 4, i)
-#         #     plt.grid(False)
-#         #     imgplot = plt.imshow(array_to_img(batch[0]))
-#         #     i += 1
-#         #     if i % 13 == 0:
-#         #         break
-#         # plt.show()
-#
-#         model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-#                       loss='mean_absolute_error',
-#                       metrics=['accuracy'],
-#                       run_eagerly=True)
-#
-#         dt = datetime.now().strftime('%d.%m_%H.%M')
-#
-#         csv_logger = CSVLogger(logs_path, append=True, separator=';')
-#
-#         history = model.fit(
-#             x=x_train,
-#             y=y_train,
-#             callbacks=[csv_logger],
-#             batch_size=batch_size,
-#             epochs=epoch,
-#             validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
-#             steps_per_epoch=len(x_train) // batch_size,
-#             validation_steps=len(x_test) // batch_size)
-#
-#         report_path = os.path.join(output_path, f'{prefix}report_' + dt + '.html')
-#         plot_hist(history, report_path, logs_path)
-#
-#         model_json = model.to_json()
-#         json_path = os.path.join(output_path, f'{prefix}model_'+ dt +'.json')
-#
-#         with open(json_path, 'w') as json_file:
-#             json_file.write(model_json)
-#
-#         weights_path = os.path.join(output_path, f'{prefix}weights_'+ dt +'.h5')
-#         model.save_weights(weights_path)
-#
-# for folder in os.listdir(dir_path):
-#     folder = os.path.join(dir_path, folder)
-#     if not os.listdir(folder):
-#         shutil.rmtree(folder)
+    # i = 1
+    # plt.figure(figsize=(16, 8))
+    # for batch in train_datagen.flow(x, batch_size=1):
+    #     plt.subplot(3, 4, i)
+    #     plt.grid(False)
+    #     imgplot = plt.imshow(array_to_img(batch[0]))
+    #     i += 1
+    #     if i % 13 == 0:
+    #         break
+    # plt.show()
+
+    model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
+                  loss='mean_squared_error',
+                  metrics=['accuracy'],
+                  run_eagerly=True)
+
+    dt = datetime.now().strftime('%d.%m_%H.%M')
+
+    csv_logger = CSVLogger(logs_path, append=True, separator=';')
+
+    history = model.fit(
+        x = x_train, y=y_train, batch_size=batch_size,
+        epochs=epoch,
+        callbacks=[csv_logger],
+        validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
+        steps_per_epoch=len(x_train) // batch_size,
+        validation_steps=len(x_test) // batch_size)
+
+    report_path = os.path.join(output_path, f'report_' + dt + '.html')
+    plot_hist(history, report_path, logs_path)
+
+    model_json = model.to_json()
+    json_path = os.path.join(output_path, f'model_'+ dt +'.json')
+
+    with open(json_path, 'w') as json_file:
+        json_file.write(model_json)
+
+    weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
+    model.save(weights_path)
