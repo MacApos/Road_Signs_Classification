@@ -310,7 +310,7 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
 
 
 def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor):
-    poly = np.zeros_like(image) * 255
+    poly = np.zeros_like(image)
     width = poly.shape[1]
     height = poly.shape[0]
     scaled_width = int(width * scale_factor)
@@ -397,14 +397,14 @@ def detect_lines(path):
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = image.shape[0]
-    scale_factor = 1 / 8
+    scale_factor = 1 / 4
     s_width = int(width * scale_factor)
     s_height = int(s_width / 2)
 
     data_npy = os.path.join(pickles_path, f'{s_width}x{s_height}_data.npy')
     warp_data_npy = os.path.join(pickles_path, f'{s_width}x{s_height}_warp_data.npy')
     img_labels_npy = os.path.join(pickles_path, f'{s_width}x{s_height}_img_labels.npy')
-
+    print(s_width, s_height)
     x = make_input('Delete previous data?')
 
     for folder_path in frames_path, labels_path:
@@ -478,8 +478,6 @@ def detect_lines(path):
             warp_labels.append(curves)
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
-            im_show(poly)
-            print(poly)
 
             image = cv2.resize(image, (s_width, s_height))
             warp = cv2.resize(warp, (s_width, s_height))
@@ -516,13 +514,11 @@ def detect_lines(path):
     pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
     data = np.array(data, dtype='float32') / 255.
     warp_data = np.array(warp_data, dtype='float32') / 255.
-    img_labels = np.array(img_labels, dtype='uint8')
+    img_labels = np.array(img_labels, dtype='float32')
 
-
-
-    np.save(data_npy, data)
-    np.save(warp_data_npy, warp_data)
-    np.save(img_labels_npy, img_labels)
+    # np.save(data_npy, data)
+    # np.save(warp_data_npy, warp_data)
+    # np.save(img_labels_npy, img_labels)
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'

@@ -30,7 +30,7 @@ except:
 
 batch_size = 32
 epochs = 15
-input_shape = (80, 160, 3)
+input_shape = (160, 320, 3)
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
@@ -163,9 +163,11 @@ class generator(keras.utils.Sequence):
 # model = create_model(img_size, 2)
 # model.summary()
 #
-# train_datagen = generator(batch_size, img_size, x_train, y_train)
-# valid_datagen = generator(batch_size, img_size, x_test, y_test)
-#
+train_datagen = generator(batch_size, img_size, x_train, y_train)
+valid_datagen = generator(batch_size, img_size, x_test, y_test)
+print(x_test)
+print(type(y_test[0][0][0]))
+
 # # # generator check
 # # for x, y in train_datagen:
 # #     image = x[0]
