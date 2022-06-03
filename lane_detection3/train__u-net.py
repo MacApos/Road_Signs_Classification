@@ -101,7 +101,7 @@ class generator(keras.utils.Sequence):
         return x, y
 
 
-def create_model(img_size, num_classes=1):
+def create_model(img_size, num_classes):
     inputs = layers.Input(shape=img_size + (3,))
 
     # Entry layers - block 1
@@ -151,7 +151,7 @@ def create_model(img_size, num_classes=1):
         x = layers.add([x, residual])
         previous_block_activation = x
 
-    outputs = layers.Conv2D(filters=1, kernel_size=3, padding='same', activation='softmax')(x)
+    outputs = layers.Conv2D(filters=num_classes, kernel_size=3, padding='same', activation='softmax')(x)
     model = keras.Model(inputs, outputs)
 
     return model
@@ -159,7 +159,7 @@ def create_model(img_size, num_classes=1):
 
 keras.backend.clear_session()
 
-model = create_model(img_size)
+model = create_model(img_size, 2)
 #
 # inputs = layers.Input(shape=img_size + (3,))
 # c1 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
