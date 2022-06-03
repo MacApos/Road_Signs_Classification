@@ -14,6 +14,8 @@ import shutil
 import cv2
 import os
 
+import keras
+from tensorflow import keras
 from keras.models import Sequential
 from keras.callbacks import CSVLogger
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
@@ -33,6 +35,8 @@ try:
 except:
   # Invalid device or cannot modify virtual devices once initialized.
   pass
+
+keras.backend.clear_session()
 
 tf.config.run_functions_eagerly(True)
 tf.data.experimental.enable_debug_mode()
@@ -75,9 +79,9 @@ pickles_path = os.path.join(root_path, 'Pickles')
 if not os.path.exists(dir_path):
     os.mkdir(dir_path)
 
-data_npy = os.path.join(pickles_path, f'data.npy')
+data_npy = os.path.join(pickles_path, f'320x120_data.npy')
 data_list = list(paths.list_images(data_path))
-img_labels_npy = os.path.join(pickles_path, 'img_labels.npy')
+img_labels_npy = os.path.join(pickles_path, '320x120_img_labels.npy')
 
 data = np.load(data_npy)
 labels = np.load(img_labels_npy)
@@ -184,15 +188,15 @@ for epoch in epochs:
         validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
         steps_per_epoch=len(x_train) // batch_size,
         validation_steps=len(x_test) // batch_size)
-    #
-    # report_path = os.path.join(output_path, f'report_' + dt + '.html')
-    # plot_hist(history, report_path, logs_path)
-    #
-    # model_json = model.to_json()
-    # json_path = os.path.join(output_path, f'model_'+ dt +'.json')
-    #
-    # with open(json_path, 'w') as json_file:
-    #     json_file.write(model_json)
-    #
-    # weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
-    # model.save(weights_path)
+
+    report_path = os.path.join(output_path, f'report_' + dt + '.html')
+    plot_hist(history, report_path, logs_path)
+
+    model_json = model.to_json()
+    json_path = os.path.join(output_path, f'model_'+ dt +'.json')
+
+    with open(json_path, 'w') as json_file:
+        json_file.write(model_json)
+
+    weights_path = os.path.join(output_path, f'weights_'+ dt +'.h5')
+    model.save(weights_path)

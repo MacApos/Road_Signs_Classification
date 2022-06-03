@@ -14,7 +14,7 @@ import keras
 from tensorflow import keras
 from keras import layers
 from keras import callbacks
-from keras.preprocessing.image import load_img
+from keras.preprocessing.image import load_img, ImageDataGenerator
 
 import tensorflow as tf
 
@@ -46,8 +46,11 @@ logs_path = os.path.join(output_path, f'logs.txt')
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
-data = np.load('Pickles/data.npy')
-labels = np.load('Pickles/img_labels.npy')
+data = np.load('Pickles/160x60_data.npy')
+labels = np.load('Pickles/160x60_img_labels.npy')
+
+cv2.imshow('img', labels[0])
+cv2.waitKey(0)
 
 img_size = data.shape[1:-1]
 data, labels = shuffle(data, labels)
@@ -154,54 +157,46 @@ keras.backend.clear_session()
 model = create_model(img_size, num_classes)
 model.summary()
 
-for idx in range(1):
-    i = idx * batch_size
-    data_batch = data[i: i + batch_size]
-    labels_batch = labels[i: i + batch_size]
-    x = np.zeros((batch_size,) + img_size + (3,), dtype='float32')
-    y = np.zeros((batch_size,) + img_size + (1,), dtype='float32')
+# train_datagen = generator(batch_size, img_size, x_train, y_train)
+# valid_datagen = generator(batch_size, img_size, x_test, y_test)
 
-    for j, img in enumerate(data_batch):
-        x[j] = img
+train_datagen = ImageDataGenerator(channel_shift_range=0.2)
+valid_datagen = ImageDataGenerator(rescale=1. / 255.)
 
-    for j, img in enumerate(labels_batch):
-        # img.shape = (160, 160) → np.expand_dims(img, 2) → img.shape = (160, 160, 1)
-        img = np.expand_dims(img, 2)
-        y[j] = img
-
-
-train_datagen = generator(batch_size, img_size, x_train, y_train)
-valid_datagen = generator(batch_size, img_size, x_test, y_test)
-
-print(train_datagen)
+train_datagen = train_datagen.flow(x=x_train, y=y_train, batch_size=batch_size)
+valid_datagen = valid_datagen.flow(x=x_test, y=y_test, batch_size=batch_size)
 
 # # generator check
-# img = data[0]
-# x = img.reshape((1,) + img.shape)
-# print(x.shape)
+# for x, y in train_datagen:
+#     image = x[0]
+#     label = y[0]
+#     cv2.imshow('x', label)
+#     cv2.waitKey(0)
 #
-# i = 1
-# plt.figure(figsize=(16, 8))
-# for batch in train_datagen.flow(x, batch_size=1):
-#     plt.subplot(3, 4, i)
-#     plt.grid(False)
-#     imgplot = plt.imshow(array_to_img(batch[0]))
-#     i += 1
-#     if i % 13 == 0:
-#         break
+#     poly = np.dstack((label, label, label))
+#     poly[:, :, [0, 2]] = 0
+#     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
+#     plt.figure(figsize=(16, 8))
+#     for idx, img in enumerate([image, poly, out_frame]):
+#         plt.subplot(1, 3, idx + 1)
+#         plt.grid(False)
+#         plt.axis(False)
+#         imgplot = plt.imshow(img[:, :, ::-1])
+#     break
 # plt.show()
 
-# model.compile(optimizer='rmsprop',
-#               loss = 'sparse_categorical_crossentropy')
-#
-# checkpoint_path = os.path.join(output_path, 'checkpoint.h5')
-# callback = [callbacks.ModelCheckpoint(filepath=checkpoint_path,
-#                                       save_best_only=True)]
-# csv_logger = callbacks.CSVLogger(logs_path, append=True, separator=';')
-# model.fit(train_datagen,
-#           epochs=epochs,
-#           validation_data=valid_datagen,
-#           callbacks=csv_logger)
-# #
-# weights_path = os.path.join(output_path, 'weights.h5')
-# model.save(weights_path)
+model.compile(optimizer='rmsprop',
+              loss = 'sparse_categorical_crossentropy')
+
+checkpoint_path = os.path.join(output_path, 'checkpoint.h5')
+callback = [callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                      save_best_only=True)]
+csv_logger = callbacks.CSVLogger(logs_path, append=True, separator=';')
+
+model.fit(train_datagen,
+          epochs=epochs,
+          validation_data=valid_datagen,
+          callbacks=csv_logger)
+
+weights_path = os.path.join(output_path, 'weights.h5')
+model.save(weights_path)
