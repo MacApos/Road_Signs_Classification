@@ -23,7 +23,7 @@ except:
   pass
 
 batch_size = 32
-img_size = (160, 60)
+img_size = (160, 160)
 num_classes = 3
 epochs = 2
 
@@ -134,7 +134,7 @@ def create_model(img_size, num_classes=1):
         x = layers.UpSampling2D(2)(x)
 
         residual = layers.UpSampling2D(2)(previous_block_activation)
-        residual = layers.Conv2D(filters=filters, kernel_size=1, padding='same')(residual)
+        residual = layers.Conv2D(filters=filters, kernel_size=1, padding='same', activation='softmax')(residual)
         x = layers.add([x, residual])
         previous_block_activation = x
 
