@@ -20,9 +20,9 @@ from keras.models import Sequential
 from keras.callbacks import CSVLogger
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
-# from keras.utils.image_utils import load_img
-# from keras.utils import img_to_array, array_to_img
-from keras.preprocessing.image import load_img, img_to_array, img_to_array
+from keras.utils.image_utils import load_img
+from keras.utils import img_to_array, array_to_img
+# from keras.preprocessing.image import load_img, img_to_array, img_to_array
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import adam_v2
 
@@ -68,8 +68,8 @@ learning_rate = 0.001
 batch_size = 25
 input_shape = (120, 320, 3)
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 root_path = os.path.dirname(__file__)
 
 dir_path = os.path.join(path, 'output')
@@ -79,9 +79,9 @@ pickles_path = os.path.join(root_path, 'Pickles')
 if not os.path.exists(dir_path):
     os.mkdir(dir_path)
 
-data_npy = os.path.join(pickles_path, f'320x120_data.npy')
+data_npy = os.path.join(pickles_path, f'data.npy')
 data_list = list(paths.list_images(data_path))
-img_labels_npy = os.path.join(pickles_path, '320x120_img_labels.npy')
+img_labels_npy = os.path.join(pickles_path, 'img_labels.npy')
 
 data = np.load(data_npy)
 labels = np.load(img_labels_npy)

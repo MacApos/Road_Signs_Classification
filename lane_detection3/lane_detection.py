@@ -390,7 +390,7 @@ def detect_lines(path):
     pickles_path = os.path.join(root_path, 'Pickles')
 
     data_npy = os.path.join(pickles_path, '160x60_data.npy')
-    warp_data_npy = os.path.join(pickles_path, 'warp_data.npy')
+    warp_data_npy = os.path.join(pickles_path, '160x60_warp_data.npy')
     img_labels_npy = os.path.join(pickles_path, '160x60_img_labels.npy')
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])

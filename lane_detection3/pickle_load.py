@@ -11,7 +11,7 @@ path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 labels_path = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\labels.p'
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\small_labels.p'
+# labels_path = r'C:\Users\macie\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\160x60_labels.p'
 
 data_path = os.path.join(path, 'data')
 data_list = list(paths.list_images(data_path))

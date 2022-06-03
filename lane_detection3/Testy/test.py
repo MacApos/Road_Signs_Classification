@@ -73,3 +73,13 @@ x = np.array([[4,2,3],
 index_array_x = np.argmax(x, axis=0) # wiersz o największej wartości w każdej kolumnie
 index_array_y = np.argmax(x, axis=1) # kolumna o największej wartości w każdym wierszu
 print(index_array_x, index_array_y)
+
+num_filters = 3
+start = 16
+block2 = [start * 2 ** i for i in range(num_filters)]
+block3 = [block2[-1] // 2 ** i for i in range(num_filters + 1)]
+
+# for i in range(num_filters + 1):
+#     print(block3)
+
+print(block2, block3)

@@ -23,7 +23,7 @@ except:
   pass
 
 batch_size = 32
-img_size = (160, 160)
+img_size = (160, 60)
 num_classes = 3
 epochs = 2
 
@@ -113,7 +113,7 @@ def create_model(img_size, num_classes=1):
 
         x = layers.MaxPool2D(pool_size=3, strides=2, padding='same')(x)
 
-        residual = layers.Conv2D(filters=filters, kernel_size=1, strides=2, padding="same", activation='softmax')\
+        residual = layers.Conv2D(filters=filters, kernel_size=1, strides=2, padding='same')\
             (previous_block_activation)
         x = layers.add([x, residual])
 
@@ -138,7 +138,7 @@ def create_model(img_size, num_classes=1):
         x = layers.add([x, residual])
         previous_block_activation = x
 
-    outputs = layers.Conv2D(filters=num_classes, kernel_size=3, padding='same')(x)
+    outputs = layers.Conv2D(filters=num_classes, kernel_size=3, padding='same', activation='softmax')(x)
     model = keras.Model(inputs, outputs)
 
     return model
