@@ -40,9 +40,6 @@ logs_path = os.path.join(output_path, f'logs.txt')
 random.Random(1337).shuffle(data_list)
 random.Random(1337).shuffle(labels_list)
 
-import pandas as pd
-
-
 def img_csv(name, array):
     array_list = []
     for arr in array:
@@ -57,7 +54,7 @@ def img_csv(name, array):
 
 test = labels_list[0]
 img = img_to_array(load_img(test))
-print(type(img[0][0][0]))
+
 
 # # shuffle check
 # for data, labels in zip(data_list[:10], labels_list[:10]):
@@ -68,43 +65,43 @@ print(type(img[0][0][0]))
 # img.show()
 #
 #
-# class generator(keras.utils.Sequence):
-#     """All classes have a function called __init__(), which is always executed when the class is being initiated.
-#     Use the __init__() function to assign values to object properties, or other operations that are necessary to do when
-#     the object is being created."""
-#
-#     def __init__(self, batch_size, img_size, data_list, labels_list):
-#         """The self parameter is a reference to the current instance of the class, and is used to access variables that
-#         belong to the class."""
-#         self.batch_size = batch_size
-#         self.img_size = img_size
-#         self.data_list = data_list
-#         self.labels_list = labels_list
-#
-#     def __len__(self):
-#         return len(self.labels_list) // self.batch_size
-#
-#     def __getitem__(self, idx):
-#         """Returns tuple (input, target) correspond to batch #idx."""
-#         i = idx * self.batch_size
-#         batch_data_paths = self.data_list[i: i + self.batch_size]
-#         batch_labels_paths = self.labels_list[i: i + self.batch_size]
-#         x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype='float32')
-#         y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype='uint8')
-#
-#         for j, fname in enumerate(batch_data_paths):
-#             img = load_img(fname, target_size=img_size)
-#             x[j] = img
-#
-#         for j, fname in enumerate(batch_labels_paths):
-#             img = load_img(fname, target_size=img_size, color_mode='grayscale')
-#             img = np.expand_dims(img, 2)
-#             # img.shape = (160, 160) → np.expand_dims(img, 2) → img.shape = (160, 160, 1)
-#             y[j] = img
-#             # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
-#             y[j] -= 1
-#
-#         return x, y
+class generator(keras.utils.Sequence):
+    """All classes have a function called __init__(), which is always executed when the class is being initiated.
+    Use the __init__() function to assign values to object properties, or other operations that are necessary to do when
+    the object is being created."""
+
+    def __init__(self, batch_size, img_size, data_list, labels_list):
+        """The self parameter is a reference to the current instance of the class, and is used to access variables that
+        belong to the class."""
+        self.batch_size = batch_size
+        self.img_size = img_size
+        self.data_list = data_list
+        self.labels_list = labels_list
+
+    def __len__(self):
+        return len(self.labels_list) // self.batch_size
+
+    def __getitem__(self, idx):
+        """Returns tuple (input, target) correspond to batch #idx."""
+        i = idx * self.batch_size
+        batch_data_paths = self.data_list[i: i + self.batch_size]
+        batch_labels_paths = self.labels_list[i: i + self.batch_size]
+        x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype='float32')
+        y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype='uint8')
+
+        for j, fname in enumerate(batch_data_paths):
+            img = load_img(fname, target_size=img_size)
+            x[j] = img
+
+        for j, fname in enumerate(batch_labels_paths):
+            img = load_img(fname, target_size=img_size, color_mode='grayscale')
+            img = np.expand_dims(img, 2)
+            # img.shape = (160, 160) → np.expand_dims(img, 2) → img.shape = (160, 160, 1)
+            y[j] = img
+            # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
+            y[j] -= 1
+
+        return x, y
 #
 #
 # def create_model(img_size, num_classes=1):
@@ -168,19 +165,20 @@ print(type(img[0][0][0]))
 # model = create_model(img_size, num_classes)
 # model.summary()
 #
-# valid_samples = 1000
-#
-# train_data_list = data_list[:-valid_samples]
-# train_labels_list = labels_list[:-valid_samples]
-# valid_data_list = data_list[-valid_samples:]
-# valid_labels_list = labels_list[-valid_samples:]
-#
-# pickle.dump(valid_data_list, open(f'Pickles/valid_data_list.p', 'wb'))
-# pickle.dump(valid_labels_list, open(f'Pickles/valid_labels_list.p', 'wb'))
-#
-# train_datagen = generator(batch_size, img_size, train_data_list, train_labels_list)
-# valid_datagen = generator(batch_size, img_size, valid_data_list, valid_labels_list)
-#
+valid_samples = 1000
+
+train_data_list = data_list[:-valid_samples]
+train_labels_list = labels_list[:-valid_samples]
+valid_data_list = data_list[-valid_samples:]
+valid_labels_list = labels_list[-valid_samples:]
+
+pickle.dump(valid_data_list, open(f'Pickles/valid_data_list.p', 'wb'))
+pickle.dump(valid_labels_list, open(f'Pickles/valid_labels_list.p', 'wb'))
+
+train_datagen = generator(batch_size, img_size, train_data_list, train_labels_list)
+valid_datagen = generator(batch_size, img_size, valid_data_list, valid_labels_list)
+print(type(valid_datagen[0][1][0][0][0][0]))
+
 # """sparse_categorical_crossentropy - use this crossentropy loss function when there are two or more label classes.
 # We expect labels to be provided as integers."""
 # model.compile(optimizer='rmsprop',
