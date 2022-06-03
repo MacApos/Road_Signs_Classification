@@ -165,7 +165,7 @@ valid_datagen = generator(batch_size, img_size, valid_data_list, valid_labels_li
 """sparse_categorical_crossentropy - use this crossentropy loss function when there are two or more label classes. 
 We expect labels to be provided as integers."""
 model.compile(optimizer='rmsprop',
-              loss = 'sparse_categorical_crossentropy')
+              loss = 'mean_squared_error')
 
 checkpoint_path = os.path.join(output_path, 'checkpoint.h5')
 callback = [callbacks.ModelCheckpoint(filepath=checkpoint_path,
