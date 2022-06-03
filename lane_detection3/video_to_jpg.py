@@ -5,8 +5,8 @@ import numpy as np
 from imutils import paths
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 videos_path = os.path.join(path, 'Videos')
 train_path = os.path.join(path, 'train')
 test_path = os.path.join(path, 'test')

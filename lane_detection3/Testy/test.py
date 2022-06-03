@@ -61,9 +61,15 @@ def make_input(message):
 # if not os.path.exists(dir_path):
 #     os.mkdir(dir_path)
 
-input_shape = (2, 2, 1, 3)
-x = np.arange(np.prod(input_shape)).reshape(input_shape)
-print(x)
+# input_shape = (2, 2, 1, 3)
+# x = np.arange(np.prod(input_shape)).reshape(input_shape)
+# print(x)
+#
+# y = tf.keras.layers.UpSampling2D(size=(2, 2))(x)
+# print(y)
 
-y = tf.keras.layers.UpSampling2D(size=(2, 2))(x)
-print(y)
+x = np.array([[4,2,3],
+              [1,0,3]])
+index_array_x = np.argmax(x, axis=0) # wiersz o największej wartości w każdej kolumnie
+index_array_y = np.argmax(x, axis=1) # kolumna o największej wartości w każdym wierszu
+print(index_array_x, index_array_y)

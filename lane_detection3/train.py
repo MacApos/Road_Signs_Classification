@@ -10,7 +10,6 @@ from datetime import datetime
 from imutils import paths
 import pandas as pd
 import numpy as np
-import argparse
 import pickle
 import shutil
 import cv2

@@ -18,8 +18,9 @@ from keras.models import Sequential
 from keras.callbacks import CSVLogger
 from keras.layers import BatchNormalization, Flatten, Dense, Conv2DTranspose, Conv2D, MaxPooling2D,\
     Dropout, UpSampling2D, Activation
-from keras.utils.image_utils import load_img
-from keras.utils import img_to_array, array_to_img
+# from keras.utils.image_utils import load_img
+# from keras.utils import img_to_array, array_to_img
+from keras.preprocessing.image import load_img, img_to_array, img_to_array
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import adam_v2
 
@@ -63,8 +64,8 @@ learning_rate = 0.001
 batch_size = 25
 input_shape = (120, 320, 3)
 
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 root_path = os.path.dirname(__file__)
 
 dir_path = os.path.join(path, 'output')
@@ -149,7 +150,6 @@ for epoch in epochs:
     model.summary()
 
     train_datagen = ImageDataGenerator(channel_shift_range=0.2)
-
     valid_datagen = ImageDataGenerator(rescale=1./255.)
 
     # # generator check

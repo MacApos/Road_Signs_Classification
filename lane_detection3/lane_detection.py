@@ -478,7 +478,6 @@ def detect_lines(path):
             warp_data.append(warp)
             img_labels.append(poly)
 
-
             start = min(min(t_lefty), min(t_righty))
             transformation = visualise(np.copy(warp), left_curve, right_curve, show_lines=True)
 
@@ -503,8 +502,8 @@ def detect_lines(path):
         i += limit
     print('end')
 
-    pickle.dump(labels, open(f'Pickles/labels.p', "wb"))
-    pickle.dump(warp_labels, open(f'Pickles/warp_labels.p', "wb"))
+    pickle.dump(labels, open('Pickles/labels.p', 'wb'))
+    pickle.dump(warp_labels, open('Pickles/warp_labels.p', 'wb'))
     data = np.array(data, dtype='float') / 255.
     warp_data = np.array(warp_data, dtype='float') / 255.
     img_labels = np.array(img_labels, dtype='float') / 255.
@@ -514,9 +513,9 @@ def detect_lines(path):
     np.save(img_labels_npy, img_labels)
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)
