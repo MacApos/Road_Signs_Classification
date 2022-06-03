@@ -43,6 +43,6 @@ for test in test_list[:1]:
     # # img = PIL.ImageOps.autocontrast(array_to_img(mask))
     # # img.show()
     # #
-    cv2.imshow('mask', img[:-1])
-    cv2.waitKey(0)
+    # cv2.imshow('mask', img[:-1])
+    # cv2.waitKey(0)
 

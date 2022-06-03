@@ -478,6 +478,8 @@ def detect_lines(path):
             warp_labels.append(curves)
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
+            im_show(poly)
+            print(poly)
 
             image = cv2.resize(image, (s_width, s_height))
             warp = cv2.resize(warp, (s_width, s_height))
@@ -514,7 +516,9 @@ def detect_lines(path):
     pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
     data = np.array(data, dtype='float32') / 255.
     warp_data = np.array(warp_data, dtype='float32') / 255.
-    img_labels = np.array(img_labels, dtype='float32') / 255.
+    img_labels = np.array(img_labels, dtype='uint8')
+
+
 
     np.save(data_npy, data)
     np.save(warp_data_npy, warp_data)
