@@ -277,6 +277,8 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
 def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor, perspective=False):
     width = image.shape[1]
     height = image.shape[0]
+    scaled_width = int(width * scale_factor)
+    scaled_height = int(scaled_width / 2)
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
@@ -288,7 +290,7 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
         side = cv2.polylines(side, [arr], isClosed=False, color=1, thickness=20)
         if perspective:
             side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-        side = cv2.resize(side, (int(width*scale_factor), int(height*scale_factor)))
+        side = cv2.resize(side, (scaled_width, scaled_height))
         nonzerox = side.nonzero()[1]
         nonzeroy = side.nonzero()[0]
         nonzero.append(nonzerox)
@@ -311,6 +313,8 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor
     poly = np.zeros_like(image) * 255
     width = poly.shape[1]
     height = poly.shape[0]
+    scaled_width = int(width * scale_factor)
+    scaled_height = int(scaled_width / 2)
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
@@ -321,8 +325,8 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
     poly = poly[:, :, 1]
 
-    poly = cv2.resize(poly, (int(width*scale_factor), int(height*scale_factor)))
-    out_frame = cv2.resize(out_frame, (int(width*scale_factor), int(height*scale_factor)))
+    poly = cv2.resize(poly, (scaled_width, scaled_height))
+    out_frame = cv2.resize(out_frame, (scaled_width, scaled_height))
 
     return poly, out_frame
 
@@ -389,13 +393,17 @@ def detect_lines(path):
     labels_path = os.path.join(path, 'labels')
     pickles_path = os.path.join(root_path, 'Pickles')
 
-    data_npy = os.path.join(pickles_path, '160x60_data.npy')
-    warp_data_npy = os.path.join(pickles_path, '160x60_warp_data.npy')
-    img_labels_npy = os.path.join(pickles_path, '160x60_img_labels.npy')
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = image.shape[0]
+    scale_factor = 1 / 8
+    s_width = int(width * scale_factor)
+    s_height = int(s_width / 2)
+
+    data_npy = os.path.join(pickles_path, f'{s_width}x{s_height}_data.npy')
+    warp_data_npy = os.path.join(pickles_path, f'{s_width}x{s_height}_warp_data.npy')
+    img_labels_npy = os.path.join(pickles_path, f'{s_width}x{s_height}_img_labels.npy')
 
     x = make_input('Delete previous data?')
 
@@ -451,7 +459,7 @@ def detect_lines(path):
 
             left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
 
-            scale_factor = 1 / 8
+
             if scale_factor == 1:
                 leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
             else:
@@ -471,8 +479,8 @@ def detect_lines(path):
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
 
-            image = cv2.resize(image, (int(width*scale_factor), int(height*scale_factor)))
-            warp = cv2.resize(warp, (int(width*scale_factor), int(height*scale_factor)))
+            image = cv2.resize(image, (s_width, s_height))
+            warp = cv2.resize(warp, (s_width, s_height))
 
             data.append(image)
             warp_data.append(warp)
@@ -502,19 +510,19 @@ def detect_lines(path):
         i += limit
     print('end')
 
-    pickle.dump(labels, open('Pickles/labels.p', 'wb'))
-    pickle.dump(warp_labels, open('Pickles/warp_labels.p', 'wb'))
-    data = np.array(data, dtype='float') / 255.
-    warp_data = np.array(warp_data, dtype='float') / 255.
-    img_labels = np.array(img_labels, dtype='float') / 255.
+    pickle.dump(labels, open(f'Pickles/{s_width}x{s_height}_labels.p', 'wb'))
+    pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
+    data = np.array(data, dtype='float32') / 255.
+    warp_data = np.array(warp_data, dtype='float32') / 255.
+    img_labels = np.array(img_labels, dtype='float32') / 255.
 
     np.save(data_npy, data)
     np.save(warp_data_npy, warp_data)
     np.save(img_labels_npy, img_labels)
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':

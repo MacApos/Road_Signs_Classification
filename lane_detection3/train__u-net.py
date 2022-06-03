@@ -28,8 +28,9 @@ except:
   # Invalid device or cannot modify virtual devices once initialized.
   pass
 
-batch_size = 16
-epochs = 2
+batch_size = 32
+epochs = 15
+input_shape = (160, 320, 3)
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
@@ -47,11 +48,8 @@ logs_path = os.path.join(output_path, f'logs.txt')
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
-original_data = np.load('Pickles/data.npy')
-original_labels = np.load('Pickles/img_labels.npy')
-
-data = np.array([cv2.resize(image, (320, 160)) for image in original_data])
-labels = np.array([cv2.resize(image, (320, 160)) for image in original_labels])
+data = np.load(f'Pickles/{input_shape[1]}x{input_shape[0]}_data.npy')
+labels = np.load(f'Pickles/{input_shape[1]}x{input_shape[0]}_img_labels.npy')
 
 cv2.imshow('img', labels[0])
 cv2.waitKey(600)
@@ -62,21 +60,18 @@ data, labels = shuffle(data, labels)
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
 # load check
-# for img, label in zip(x_train[:1], y_train[:1]):
-#     poly = np.dstack((label, label, label))
-#     poly[:, :, [0, 2]] = 0
-#     out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
-#     plt.figure(figsize=(16, 8))
-#     for idx, img in enumerate([img, poly, out_frame]):
-#         plt.subplot(1, 3, idx+1)
-#         plt.grid(False)
-#         plt.axis(False)
-#         imgplot = plt.imshow(img[:,:,::-1])
-#     plt.show()
+for img, img_label in zip(x_train[:1], y_train[:1]):
+    poly = np.dstack((img_label, img_label, img_label))
+    poly[:, :, [0, 2]] = 0
+    out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
+    plt.figure(figsize=(16, 8))
+    for idx, img in enumerate([img, poly, out_frame]):
+        plt.subplot(1, 3, idx+1)
+        plt.grid(False)
+        plt.axis(False)
+        imgplot = plt.imshow(img[:,:,::-1])
+    plt.show()
 
-# random_idx = random.randint(0, len(labels_list))
-# img = PIL.ImageOps.autocontrast(load_img(labels_list[random_idx], color_mode='grayscale'))
-# img.show()
 
 class generator(keras.utils.Sequence):
     def __init__(self, batch_size, img_size, data_list, labels_list):
@@ -117,8 +112,8 @@ def create_model(img_size, num_classes=1):
     previous_block_activation = x
 
     # Downsampling - block 2
-    num_filters = 4
-    start = 16
+    num_filters = 3
+    start = 64
     block2 = [start * 2 ** i for i in range(num_filters)]
     for filters in block2:
         x = layers.Activation('relu')(x)
@@ -164,60 +159,60 @@ def create_model(img_size, num_classes=1):
 
 keras.backend.clear_session()
 
-# model = create_model(img_size)
-
-inputs = layers.Input(shape=img_size + (3,))
-c1 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
-c1 = keras.layers.Dropout(0.1)(c1)
-c1 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
-p1 = keras.layers.MaxPooling2D((2, 2))(c1)
-
-c2 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
-c2 = keras.layers.Dropout(0.1)(c2)
-c2 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
-p2 = keras.layers.MaxPooling2D((2, 2))(c2)
-
-c3 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
-c3 = keras.layers.Dropout(0.2)(c3)
-c3 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
-p3 = keras.layers.MaxPooling2D((2, 2))(c3)
-
-c4 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
-c4 = keras.layers.Dropout(0.2)(c4)
-c4 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
-p4 = keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
-
-c5 = keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
-c5 = keras.layers.Dropout(0.3)(c5)
-c5 = keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
-
-# Expansive path
-u6 = keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
-u6 = keras.layers.concatenate([u6, c4])
-c6 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
-c6 = keras.layers.Dropout(0.2)(c6)
-c6 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
-
-u7 = keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
-u7 = keras.layers.concatenate([u7, c3])
-c7 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
-c7 = keras.layers.Dropout(0.2)(c7)
-c7 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
-
-u8 = keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
-u8 = keras.layers.concatenate([u8, c2])
-c8 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
-c8 = keras.layers.Dropout(0.1)(c8)
-c8 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
-
-u9 = keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
-u9 = keras.layers.concatenate([u9, c1], axis=3)
-c9 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
-c9 = keras.layers.Dropout(0.1)(c9)
-c9 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
-
-outputs = keras.layers.Conv2DTranspose(1, (1, 1), activation='sigmoid')(u6)
-model = keras.Model(inputs, outputs)
+model = create_model(img_size)
+#
+# inputs = layers.Input(shape=img_size + (3,))
+# c1 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
+# c1 = keras.layers.Dropout(0.1)(c1)
+# c1 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+# p1 = keras.layers.MaxPooling2D((2, 2))(c1)
+#
+# c2 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+# c2 = keras.layers.Dropout(0.1)(c2)
+# c2 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+# p2 = keras.layers.MaxPooling2D((2, 2))(c2)
+#
+# c3 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+# c3 = keras.layers.Dropout(0.2)(c3)
+# c3 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+# p3 = keras.layers.MaxPooling2D((2, 2))(c3)
+#
+# c4 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+# c4 = keras.layers.Dropout(0.2)(c4)
+# c4 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+# p4 = keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
+#
+# c5 = keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
+# c5 = keras.layers.Dropout(0.3)(c5)
+# c5 = keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+#
+# # Expansive path
+# u6 = keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+# u6 = keras.layers.concatenate([u6, c4])
+# c6 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+# c6 = keras.layers.Dropout(0.2)(c6)
+# c6 = keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
+#
+# u7 = keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
+# u7 = keras.layers.concatenate([u7, c3])
+# c7 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+# c7 = keras.layers.Dropout(0.2)(c7)
+# c7 = keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
+#
+# u8 = keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
+# u8 = keras.layers.concatenate([u8, c2])
+# c8 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+# c8 = keras.layers.Dropout(0.1)(c8)
+# c8 = keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
+#
+# u9 = keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
+# u9 = keras.layers.concatenate([u9, c1], axis=3)
+# c9 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+# c9 = keras.layers.Dropout(0.1)(c9)
+# c9 = keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+#
+# outputs = keras.layers.Conv2DTranspose(1, (1, 1), activation='sigmoid')(u6)
+# model = keras.Model(inputs, outputs)
 #
 # # model.add(BatchNormalization(input_shape=img_size+(3,)))
 # # model.add(Conv2D(filters=8, kernel_size=(3, 3), input_shape=img_size+(3,), activation='relu'))
