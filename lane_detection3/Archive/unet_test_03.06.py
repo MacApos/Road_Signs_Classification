@@ -30,7 +30,7 @@ epochs = 2
 path = r'C:\Nowy folder\10\Praca\Datasets\unet'
 data_path = os.path.join(path, 'images')
 labels_path = os.path.join(path, r'annotations\trimaps')
-output_path = os.path.join(path, 'output')
+output_path = os.path.join(path, '../Output')
 correct_labels = [label.replace('._', '') for label in os.listdir(labels_path) if label.startswith('._')]
 
 data_list = sorted([os.path.join(data_path, fname) for fname in os.listdir(data_path) if fname.endswith('.jpg')])
@@ -40,34 +40,6 @@ logs_path = os.path.join(output_path, f'logs.txt')
 random.Random(1337).shuffle(data_list)
 random.Random(1337).shuffle(labels_list)
 
-
-def img_csv(name, array):
-    array_list = []
-    for arr in array:
-        if isinstance(arr, np.ndarray):
-            arr = arr[0]
-        arr = str(arr).replace('.', ',')
-        array_list.append(arr)
-
-    df = pd.DataFrame(array_list)
-    path = os.path.join('Arrays', name)
-    df.to_csv(path, sep='\t', index=False, header=False)
-
-test = labels_list[0]
-# image = img_to_array(load_img(test))
-# print(image[:, :, 1])
-
-# # shuffle check
-# for data, labels in zip(data_list[:10], labels_list[:10]):
-#     print(data, '|', labels)
-
-# random_idx = random.randint(0, len(labels_list))
-img = PIL.ImageOps.autocontrast(load_img(test, color_mode='grayscale'))
-image = img_to_array(img)
-image[image > 0] = 1
-print(image)
-cv2.imshow('image', image)
-cv2.waitKey(0)
 
 class generator(keras.utils.Sequence):
     """All classes have a function called __init__(), which is always executed when the class is being initiated.
@@ -176,8 +148,8 @@ train_labels_list = labels_list[:-valid_samples]
 valid_data_list = data_list[-valid_samples:]
 valid_labels_list = labels_list[-valid_samples:]
 
-pickle.dump(valid_data_list, open(f'Pickles/valid_data_list.p', 'wb'))
-pickle.dump(valid_labels_list, open(f'Pickles/valid_labels_list.p', 'wb'))
+pickle.dump(valid_data_list, open(f'../Pickles/valid_data_list.p', 'wb'))
+pickle.dump(valid_labels_list, open(f'../Pickles/valid_labels_list.p', 'wb'))
 
 train_datagen = generator(batch_size, img_size, train_data_list, train_labels_list)
 valid_datagen = generator(batch_size, img_size, valid_data_list, valid_labels_list)
