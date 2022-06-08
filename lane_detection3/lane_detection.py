@@ -479,9 +479,9 @@ def detect_lines(path):
             image = cv2.resize(image, (s_width, s_height))
             warp = cv2.resize(warp, (s_width, s_height))
 
-            data.append(image)
-            warp_data.append(warp)
-            img_labels.append(poly)
+            data.append(image / 255)
+            warp_data.append(warp / 255)
+            img_labels.append(poly / 255)
 
             start = min(min(t_lefty), min(t_righty))
             transformation = visualise(np.copy(warp), left_curve, right_curve, show_lines=True)
@@ -515,8 +515,8 @@ def detect_lines(path):
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':

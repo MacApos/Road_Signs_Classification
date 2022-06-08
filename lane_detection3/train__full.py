@@ -63,29 +63,29 @@ def plot_hist(history, filename, save_path):
 
     po.plot(fig, filename=filename, auto_open=False)
 
-epochs = [10, 20]
-learning_rate = 0.001
-batch_size = 25
-input_shape = (160, 320, 3)
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 root_path = os.path.dirname(__file__)
 
 dir_path = os.path.join(path, 'output')
-data_path = os.path.join(path, 'train')
-pickles_path = os.path.join(root_path, 'Pickles')
-
 if not os.path.exists(dir_path):
     os.mkdir(dir_path)
 
-data_list = list(paths.list_images(data_path))
-data = np.load(f'Pickles/{input_shape[1]}x{input_shape[0]}_data.npy')
-labels = np.load(f'Pickles/{input_shape[1]}x{input_shape[0]}_img_labels.npy')
+data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
+labels = pickle.load(open('Pickles/160x80_img_labels.p', 'rb'))
 
+# data = [d / 255 for d in data]
+# labels = [l / 255 for l in labels]
+
+epochs = [10]
+learning_rate = 0.001
+batch_size = 16
+input_shape = data[0].shape
+
+print(input_shape)
 for epoch in epochs:
     dt = datetime.now().strftime('%d.%m_%H.%M')
-    dir_path = os.path.join(path, 'output')
     output_path = os.path.join(dir_path, f'initialized_{dt}')
     config_path = os.path.join(output_path, 'config.txt')
     logs_path = os.path.join(output_path, f'logs.txt')
@@ -116,58 +116,117 @@ for epoch in epochs:
             imgplot = plt.imshow(img[:,:,::-1])
         plt.show()
 
-    model = Sequential()
-    model.add(BatchNormalization(input_shape=input_shape))
-    model.add(Conv2D(filters=8, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-    model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D())
-    model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(MaxPooling2D())
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(MaxPooling2D())
-    model.add(UpSampling2D())
-    model.add(Conv2DTranspose(filters=64, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv2DTranspose(filters=64, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(UpSampling2D())
-    model.add(Conv2DTranspose(filters=32, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv2DTranspose(filters=32, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Conv2DTranspose(filters=16, kernel_size=(3, 3), activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(UpSampling2D())
-    model.add(Conv2DTranspose(filters=16, kernel_size=(3, 3), activation='relu'))
-    model.add(Conv2D(filters=1, kernel_size=(3, 3), activation='sigmoid'))
-    model.summary()
-
-    train_datagen = ImageDataGenerator(channel_shift_range=0.2)
-    valid_datagen = ImageDataGenerator(rescale=1./255.)
-
-    # generator check
-    img = data[0]
-    x = img.reshape((1,) + img.shape)
-    print(x.shape)
-
-    i = 1
-    plt.figure(figsize=(16, 8))
-    for batch in valid_datagen.flow(x, batch_size=1):
-        plt.subplot(3, 4, i)
-        plt.grid(False)
-        imgplot = plt.imshow(array_to_img(batch[0]))
-        i += 1
-        if i % 13 == 0:
-            break
-    plt.show()
+    # model = Sequential()
+    # model.add(BatchNormalization(input_shape=input_shape))
+    # model.add(Conv2D(filters=8, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+    # model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+    # model.add(MaxPooling2D())
+    # model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(MaxPooling2D())
+    # model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(MaxPooling2D())
+    # model.add(UpSampling2D())
+    # model.add(Conv2DTranspose(filters=64, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(Conv2DTranspose(filters=64, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(UpSampling2D())
+    # model.add(Conv2DTranspose(filters=32, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(Conv2DTranspose(filters=32, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(Conv2DTranspose(filters=16, kernel_size=(3, 3), activation='relu'))
+    # model.add(Dropout(0.2))
+    # model.add(UpSampling2D())
+    # model.add(Conv2DTranspose(filters=16, kernel_size=(3, 3), activation='relu'))
+    # model.add(Conv2D(filters=1, kernel_size=(3, 3), activation='sigmoid'))
+    # model.summary()
+    #
+    # inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    # s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
+    #
+    # # Contraction path
+    # c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(s)
+    # c1 = tf.keras.layers.Dropout(0.1)(c1)
+    # c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+    # p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
+    #
+    # c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+    # c2 = tf.keras.layers.Dropout(0.1)(c2)
+    # c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+    # p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2)
+    #
+    # c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+    # c3 = tf.keras.layers.Dropout(0.2)(c3)
+    # c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+    # p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
+    #
+    # c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+    # c4 = tf.keras.layers.Dropout(0.2)(c4)
+    # c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+    # p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
+    #
+    # c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
+    # c5 = tf.keras.layers.Dropout(0.3)(c5)
+    # c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+    #
+    # # Expansive path
+    # u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+    # u6 = tf.keras.layers.concatenate([u6, c4])
+    # c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+    # c6 = tf.keras.layers.Dropout(0.2)(c6)
+    # c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
+    #
+    # u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
+    # u7 = tf.keras.layers.concatenate([u7, c3])
+    # c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+    # c7 = tf.keras.layers.Dropout(0.2)(c7)
+    # c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
+    #
+    # u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
+    # u8 = tf.keras.layers.concatenate([u8, c2])
+    # c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+    # c8 = tf.keras.layers.Dropout(0.1)(c8)
+    # c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
+    #
+    # u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
+    # u9 = tf.keras.layers.concatenate([u9, c1], axis=3)
+    # c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+    # c9 = tf.keras.layers.Dropout(0.1)(c9)
+    # c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+    #
+    # outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
+    #
+    # model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+    # model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    # model.summary()
+    #
+    # train_datagen = ImageDataGenerator(channel_shift_range=0.2)
+    # valid_datagen = ImageDataGenerator(rescale=1./255.)
+    #
+    # # generator check
+    # img = data[0]
+    # x = img.reshape((1,) + img.shape)
+    # print(x.shape)
+    #
+    # i = 1
+    # plt.figure(figsize=(16, 8))
+    # for batch in valid_datagen.flow(x, batch_size=1):
+    #     plt.subplot(3, 4, i)
+    #     plt.grid(False)
+    #     imgplot = plt.imshow(array_to_img(batch[0]))
+    #     i += 1
+    #     if i % 13 == 0:
+    #         break
+    # plt.show()
     #
     # model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
     #               loss='mean_squared_error',
