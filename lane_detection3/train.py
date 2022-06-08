@@ -108,15 +108,15 @@ for epoch in epochs:
         data, labels = shuffle(data, labels)
         x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
-        # load check
-        from lane_detection import im_show, visualise
-
-        for idx, image in enumerate(x_train[:2]):
-            left_curve = y_train[idx][:3]
-            right_curve = y_train[idx][3:]
-            print(left_curve, right_curve)
-            warp = visualise(image, left_curve, right_curve, image.shape[0]*name[1], show_lines=True)
-            im_show(warp)
+        # # load check
+        # from lane_detection import im_show, visualise
+        #
+        # for idx, image in enumerate(x_train[:2]):
+        #     left_curve = y_train[idx][:3]
+        #     right_curve = y_train[idx][3:]
+        #     print(left_curve, right_curve)
+        #     warp = visualise(image, left_curve, right_curve, image.shape[0]*name[1], show_lines=True)
+        #     im_show(warp)
         #
         # model = Sequential()
         # model.add(BatchNormalization(input_shape=input_shape))
