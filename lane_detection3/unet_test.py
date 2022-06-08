@@ -3,6 +3,7 @@ import cv2
 import random
 import pickle
 import numpy as np
+import pandas as pd
 import PIL
 from PIL import ImageOps
 
@@ -40,19 +41,6 @@ logs_path = os.path.join(output_path, f'logs.txt')
 random.Random(1337).shuffle(data_list)
 random.Random(1337).shuffle(labels_list)
 
-
-def img_csv(name, array):
-    array_list = []
-    for arr in array:
-        if isinstance(arr, np.ndarray):
-            arr = arr[0]
-        arr = str(arr).replace('.', ',')
-        array_list.append(arr)
-
-    df = pd.DataFrame(array_list)
-    path = os.path.join('Arrays', name)
-    df.to_csv(path, sep='\t', index=False, header=False)
-
 test = labels_list[0]
 # image = img_to_array(load_img(test))
 # print(image[:, :, 1])
@@ -62,11 +50,11 @@ test = labels_list[0]
 #     print(data, '|', labels)
 
 # random_idx = random.randint(0, len(labels_list))
-img = PIL.ImageOps.autocontrast(load_img(test, color_mode='grayscale'))
-image = img_to_array(img)
-image[image > 0] = 1
-print(image)
-cv2.imshow('image', image)
+check = PIL.ImageOps.autocontrast(load_img(test, color_mode='grayscale'))
+# img = img_to_array(check)
+# img[img > 0] = 1
+img = cv2.imread(test)
+cv2.imshow('img', img)
 cv2.waitKey(0)
 
 class generator(keras.utils.Sequence):
@@ -181,7 +169,7 @@ pickle.dump(valid_labels_list, open(f'Pickles/valid_labels_list.p', 'wb'))
 
 train_datagen = generator(batch_size, img_size, train_data_list, train_labels_list)
 valid_datagen = generator(batch_size, img_size, valid_data_list, valid_labels_list)
-print(type(valid_datagen[0][1][0][0][0][0]))
+print(valid_datagen[0][0][0][0][0][0])
 
 # """sparse_categorical_crossentropy - use this crossentropy loss function when there are two or more label classes.
 # We expect labels to be provided as integers."""

@@ -456,7 +456,6 @@ def detect_lines(path):
 
             left_curve0, right_curve0 = fit_poly(leftx0, lefty0, rightx0, righty0)
 
-
             if scale_factor == 1:
                 leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
             else:
@@ -476,8 +475,21 @@ def detect_lines(path):
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
 
-            image = cv2.resize(image, (s_width, s_height))
-            warp = cv2.resize(warp, (s_width, s_height))
+            poly = poly / 255
+            poly = poly.astype('uint8')
+            # import PIL
+            # from PIL import ImageOps
+            # from keras.preprocessing.image import array_to_img, img_to_array
+            # test = np.expand_dims(poly, 2)
+            # test = PIL.ImageOps.autocontrast(array_to_img(test))
+            # test = img_to_array(test)
+            # im_show(test)
+
+            image = cv2.resize(image, (s_width, s_height)) / 255
+            image = image.astype('float32')
+
+            warp = cv2.resize(warp, (s_width, s_height)) / 255
+            warp = warp.astype('float32')
 
             data.append(image)
             warp_data.append(warp)
