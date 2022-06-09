@@ -66,7 +66,6 @@ def plot_hist(history, filename, save_path):
 
 # path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
-root_path = os.path.dirname(__file__)
 
 dir_path = os.path.join(path, 'output')
 if not os.path.exists(dir_path):
@@ -75,8 +74,6 @@ if not os.path.exists(dir_path):
 data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_img_labels.p', 'rb'))
 
-# data = [d / 255 for d in data]
-# labels = [l / 255 for l in labels]
 
 epochs = [10]
 learning_rate = 0.001

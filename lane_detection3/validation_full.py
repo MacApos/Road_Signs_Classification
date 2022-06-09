@@ -8,7 +8,8 @@ import PIL
 from PIL import Image, ImageOps
 from tensorflow import keras
 from keras.utils.image_utils import load_img
-from keras.utils import img_to_array, array_to_img
+# from keras.utils import img_to_array, array_to_img
+from keras.preprocessing.image import ImageDataGenerator, img_to_array, array_to_img
 
 
 def find_file(path, ext):

@@ -419,6 +419,7 @@ def detect_lines(path):
     labels = []
     img_labels = []
     warp_labels = []
+    unet_labels = []
     previous_frame = []
 
     i = 0
@@ -476,7 +477,8 @@ def detect_lines(path):
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
 
             poly = poly / 255
-            poly = poly.astype('uint8')
+            unet = poly.astype('uint8')
+            unet_labels.append(unet)
             # import PIL
             # from PIL import ImageOps
             # from keras.preprocessing.image import array_to_img, img_to_array
@@ -486,14 +488,15 @@ def detect_lines(path):
             # im_show(test)
 
             image = cv2.resize(image, (s_width, s_height)) / 255
-            image = image.astype('float32')
-
             warp = cv2.resize(warp, (s_width, s_height)) / 255
+
+            poly = poly.astype('float32')
+            image = image.astype('float32')
             warp = warp.astype('float32')
 
-            data.append(image / 255)
-            warp_data.append(warp / 255)
-            img_labels.append(poly / 255)
+            data.append(image)
+            warp_data.append(warp)
+            img_labels.append(poly)
 
             start = min(min(t_lefty), min(t_righty))
             transformation = visualise(np.copy(warp), left_curve, right_curve, show_lines=True)
@@ -524,11 +527,13 @@ def detect_lines(path):
     pickle.dump(data, open(f'Pickles/{s_width}x{s_height}_data.p', 'wb'))
     pickle.dump(warp_data, open(f'Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
     pickle.dump(img_labels, open(f'Pickles/{s_width}x{s_height}_img_labels.p', 'wb'))
+    pickle.dump(img_labels, open(f'Pickles/{s_width}x{s_height}_unet_labels.p', 'wb'))
+
 
 
 # path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
