@@ -114,7 +114,7 @@ def main():
     labels = np.array(labels)
 
     # Normalize labels - training images get normalized to start in the network
-    labels = labels / 255
+    labels = labels
 
     # Shuffle images along with their labels, then split into training/validation sets
     train_images, labels = shuffle(train_images, labels)

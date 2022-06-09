@@ -198,27 +198,21 @@ loss = 'sparse_categorical_crossentropy'
 model.compile(optimizer = 'rmsprop',
               loss = loss)
 
-print(os.path.join(dir_path, os.listdir(dir_path)[-1]))
+csv_logger = callbacks.CSVLogger(logs_path, append=True, separator='\t')
+model.fit(train_datagen,
+          epochs=epochs,
+          validation_data=valid_datagen,
+          callbacks=csv_logger
+          )
 
-if not os.path.exists(model_path):
-    print('training')
-    csv_logger = callbacks.CSVLogger(logs_path, append=True, separator='\t')
-    model.fit(train_datagen,
-              epochs=epochs,
-              validation_data=valid_datagen,
-              callbacks=csv_logger
-              )
+logs = open(logs_path, 'a')
+logs.write(f'\nepochs = {epochs}\n')
+logs.write(f'batch_size = {batch_size}\n')
+logs.write(f'input_shape = {img_size}\n')
+logs.write(f'loss = {loss}\n')
+logs.close()
 
-    logs = open(logs_path, 'a')
-    logs.write(f'\nepochs = {epochs}\n')
-    logs.write(f'batch_size = {batch_size}\n')
-    logs.write(f'input_shape = {img_size}\n')
-    logs.write(f'loss = {loss}\n')
-    logs.close()
-
-    model.save(model_path)
-
-model = load_model(model_path)
+model.save(model_path)
 predictions = model.predict(valid_datagen)
 
 def display_mask(i):
@@ -230,48 +224,5 @@ def display_mask(i):
     cv2.imshow('predictions', img)
     cv2.waitKey(500)
 
-# for i in range(2):
-#     display_mask(i)
-
-
-import pickle
-test_path = os.path.join(path, 'test')
-test_list = list(paths.list_images(test_path))
-test_pickle = 'Pickles/test.p'
-print(img_size[1], img_size[0])
-if not os.path.exists(test_pickle):
-    test = [cv2.resize(cv2.imread(path), (img_size[1], img_size[0])) for path in test_list]
-    pickle.dump(test, open(test_pickle, 'wb'))
-else:
-    test = pickle.load(open(test_pickle, 'rb' ))
-
-# valid = x_test[0]
-valid = cv2.imread(r'C:\Nowy folder\10\Praca\Datasets\Video_data\test\00000.jpg')
-valid = cv2.resize(valid, (160, 80)) / 255
-cv2.imshow('valid', valid)
-cv2.waitKey(0)
-valid = valid[None, ...]
-print(valid.shape)
-
-val_preds = model.predict(valid)[0]
-mask = np.argmax(val_preds, axis=-1)
-mask = np.expand_dims(mask, axis=-1)
-img = PIL.ImageOps.autocontrast(array_to_img(mask))
-img = img_to_array(img)
-cv2.imshow('predictions', img)
-cv2.waitKey(0)
-
-# for image in [test[-2]]:
-#     cv2.imshow('image', image)
-#     cv2.waitKey(500)
-#     image = image[None, ...]
-#     print(image.shape)
-#
-#     val_preds = model.predict(image)[0]
-#
-#     mask = np.argmax(val_preds, axis=-1)
-#     mask = np.expand_dims(mask, axis=-1)
-#     img = PIL.ImageOps.autocontrast(array_to_img(mask))
-#     img = img_to_array(img)
-#     cv2.imshow('predictions', img)
-#     cv2.waitKey(0)
+for i in range(2):
+    display_mask(i)
