@@ -226,6 +226,8 @@ def find_lanes(image):
     if len(leftx) <= minpix or len(rightx) <= minpix:
         leftx, lefty, rightx, righty = leftx1, lefty1, rightx1, righty1
 
+    print(leftx.shape)
+
     return leftx, lefty, rightx, righty, out_img
 
 

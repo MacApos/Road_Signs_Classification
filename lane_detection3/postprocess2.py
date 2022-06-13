@@ -17,33 +17,61 @@ def to_csv(name, arr):
 frames = pickle.load(open('Pickles/160x80_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_unet_labels.p', 'rb'))
 
-i = 120
+i = 150
 img_size = (460, 1280)
 frame = cv2.resize(frames[i], img_size[::-1])
 label = cv2.resize(labels[i], img_size[::-1])
 label = cv2.blur(label, (5, 5))
 
-nonzero = np.nonzero(label)
-nonzeroy = np.array(nonzero[0])
-nonzerox = np.array(nonzero[1])
+def draw_lines(mask, image):
+    nonzero = np.nonzero(mask)
+    y = np.linspace(min(nonzero[0]), max(nonzero[0]), 15).astype(int)
 
-down = min(nonzeroy)
-up = max(nonzeroy)
-y = np.linspace(min(nonzero[0]), max(nonzero[0]), 5).astype('int')
+    leftx = np.zeros_like(y).astype(int)
+    rightx = np.zeros_like(y).astype(int)
 
-left = np.zeros((y.shape[0], 2)).astype('int')
-right = np.zeros((y.shape[0], 2)).astype('int')
+    for idx, val in enumerate(y):
+        nonzerox = np.nonzero(mask[val, :])[0]
+        leftx[idx] = np.array([nonzerox[0]])
+        rightx[idx] = np.array([nonzerox[-1]])
 
-for idx, val in enumerate(y):
-    nonzerox = np.nonzero(label[val, :])[0]
-    left[idx] = np.array([nonzerox[0], val])
-    right[idx] = np.array([nonzerox[-1], val])
+    left_curve = np.polyfit(y, leftx, 2)
+    right_curve = np.polyfit(y, rightx, 2)
 
-empty = []
-empty.append(left)
-empty.append(right)
-points = np.array(empty)
+    y = y.reshape((-1,1))
+    left_fit = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
+    right_fit = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
-cv2.polylines(frame, points, isClosed=False, color=(0, 0, 255), thickness=4)
-cv2.imshow('frame', frame)
-cv2.waitKey(0)
+    leftx_start = int(left_fit[np.argmax(y)][0])
+    rightx_start = int(right_fit[np.argmax(y)][0])
+
+    print(type(np.amax(y)), np.amax(y))
+    cv2.circle(image, (leftx_start, np.max(y)), 10, (255, 0, 0), -1)
+    cv2.circle(image, (rightx_start, np.max(y)), 10, (255, 0, 0), -1)
+
+    center = image.shape[1] // 2
+    print(type(leftx_start), leftx_start)
+    offset = (rightx_start - center) - (center - leftx_start)
+    print(offset)
+
+    empty = []
+    flipud = False
+
+    for arr in left_fit, right_fit:
+        arr = arr.astype(int)
+        con = np.concatenate((arr, y), axis=1)
+
+        if flipud:
+            con = np.flipud(con)
+
+        flipud = True
+        empty.append(con)
+
+    points = np.array(empty)
+
+    cv2.polylines(image, points, isClosed=False, color=(0, 0, 255), thickness=4)
+    cv2.imshow('image', image)
+    cv2.waitKey(0)
+
+lines = draw_lines(label, frame)
+

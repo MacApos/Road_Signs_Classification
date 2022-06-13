@@ -1,5 +1,5 @@
 import pickle
-
+import os
 import numpy as np
 import cv2
 # from moviepy.editor import VideoFileClip
@@ -54,10 +54,8 @@ def road_lines(image):
 
     # Merge the lane drawing onto the original image
     result = cv2.addWeighted(image, 1, lane_image, 1, 0)
-    cv2.imshow('result', result)
-    cv2.waitKey(0)
 
-    # return result
+    return result
 
 
 if __name__ == '__main__':
@@ -66,18 +64,27 @@ if __name__ == '__main__':
     # Create lanes object
     lanes = Lanes()
 
-    test_list = list(paths.list_images(r'C:\Nowy folder\10\Praca\Datasets\Video_data\test'))
+    path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+    test_list = list(paths.list_images(os.path.join(path, 'test')))
     test = [cv2.imread(i) for i in test_list]
+    dir_path = os.path.join(path, 'output')
 
-    for i in test:
-        res = road_lines(i)
+    output = []
+    idx = 0
+    for i in test[:60]:
+        img = road_lines(i)
+        if idx < 3:
+            cv2.imwrite(os.path.join(dir_path, f'original{idx}.jpg'), img)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        output.append(img)
+        idx += 1
 
+    save_path = os.path.join(dir_path, 'original.gif')
+    print(save_path)
 
-    #
-    # # Where to save the output video
-    # vid_output = 'proj_reg_vid.mp4'
-    # # Location of the input video
-    # clip1 = VideoFileClip("project_video.mp4")
-    # # Create the clip
-    # vid_clip = clip1.fl_image(road_lines)
-    # vid_clip.write_videofile(vid_output, audio=False)
+    import imageio
+
+    with imageio.get_writer(save_path, mode='I', fps=3) as writer:
+        for image in output:
+            print('saving')
+            writer.append_data(image)

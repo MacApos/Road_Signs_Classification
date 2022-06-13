@@ -60,21 +60,36 @@ train_datagen = generator(batch_size, img_size, test_list)
 predictions = model.predict(train_datagen)
 
 
-def display_mask(i):
+def create_mask(i):
     mask = np.argmax(predictions[i], axis=-1)
     mask = np.expand_dims(mask, axis=-1)
     image = PIL.ImageOps.autocontrast(array_to_img(mask))
     img = img_to_array(image)
     img = cv2.resize(img, input_size[::-1])
-    blur = cv2.blur(img, (5, 5))
-
-    zeros = np.zeros_like(blur)
-    poly = np.dstack((zeros, blur, zeros)).astype('uint8')
-    test = cv2.imread(test_list[i])
-    output = cv2.addWeighted(test, 1, poly, 0.5, 0)
-    cv2.imshow('output', output)
-    cv2.waitKey(500)
+    mask = cv2.blur(img, (5, 5))
+    image = cv2.imread(test_list[i])
+    return mask, image
 
 
-for i in range(50, 100):
-    display_mask(i)
+def display_mask(mask, image):
+    zeros = np.zeros_like(mask)
+    poly = np.dstack((zeros, mask, zeros)).astype('uint8')
+    return cv2.addWeighted(image, 1, poly, 0.5, 0)
+
+output = []
+for i in range(60):
+    mask, image = create_mask(i)
+    mask = display_mask(mask, image)
+    if i < 3:
+        cv2.imwrite(os.path.join(dir_path, f'unet{i}.jpg'), mask)
+    img = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
+    output.append(img)
+
+save_path = os.path.join(dir_path, 'unet.gif')
+print(save_path)
+
+import imageio
+with imageio.get_writer(save_path, mode='I', fps=3) as writer:
+    for image in output:
+        print('saving')
+        writer.append_data(image)
