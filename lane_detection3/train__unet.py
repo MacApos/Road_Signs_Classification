@@ -48,10 +48,10 @@ if not os.path.exists(output_path):
 
 data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_unet_labels.p', 'rb'))
-print(len(data))
 batch_size = 32
 epochs = 15
 img_size = data[0].shape[:-1]
+print(img_size)
 data, labels = shuffle(data, labels)
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
