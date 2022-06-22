@@ -277,8 +277,8 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
 def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor, perspective=False):
     width = image.shape[1]
     height = image.shape[0]
-    s_width = int(width * scale_factor)
-    s_height = int(height * scale_factor)
+    scaled_width = int(width * scale_factor)
+    scaled_height = int(scaled_width / 2)
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
@@ -292,7 +292,7 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
             side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
             zeros = cv2.polylines(zeros, [arr], isClosed=False, color=1, thickness=20)
 
-        side = cv2.resize(side, (s_width, s_height))
+        side = cv2.resize(side, (scaled_width, scaled_height))
         nonzerox = side.nonzero()[1]
         nonzeroy = side.nonzero()[0]
         nonzero.append(nonzerox)
@@ -317,8 +317,8 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor
     poly = np.zeros_like(image)
     width = poly.shape[1]
     height = poly.shape[0]
-    s_width = int(width * scale_factor)
-    s_height = int(height * scale_factor)
+    scaled_width = int(width * scale_factor)
+    scaled_height = int(scaled_width / 2)
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
@@ -329,17 +329,17 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
     poly = poly[:, :, 1]
 
-    poly = cv2.resize(poly, (s_width, s_height))
-    out_frame = cv2.resize(out_frame, (s_width, s_height))
+    poly = cv2.resize(poly, (scaled_width, scaled_height))
+    out_frame = cv2.resize(out_frame, (scaled_width, scaled_height))
 
     return poly, out_frame
 
 
 def params():
     width = 1280
-    height = width/2
+    height = 480
     video1 = {'name': 'video1',
-              'src': np.float32([[290, 410*4/3], [550, 285*4/3]]),
+              'src': np.float32([[290, 410], [550, 285]]),
               'thresh': 0.65,
               'limit': 2548}
 
@@ -395,16 +395,17 @@ def detect_lines(path):
     data_path = os.path.join(path, 'train')
     frames_path = os.path.join(path, 'frames')
     labels_path = os.path.join(path, 'labels')
-    pickles_path = os.path.join(root_path, 'Pickles')
+    pickles_path = os.path.join(os.path.dirname(root_path), 'Pickles')
 
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])
     width = image.shape[1]
-    height = width // 2
-    scale_factor = 1 / 8
+    height = image.shape[0]
+    scale_factor = 1 / 1
     s_width = int(width * scale_factor)
-    s_height = int(height * scale_factor)
+    s_height = int(s_width / 2)
 
+    print(s_width, s_height)
     x = make_input('Delete previous data?')
 
     for folder_path in frames_path, labels_path:
@@ -450,7 +451,6 @@ def detect_lines(path):
             label_exists = os.path.exists(save_frame)
 
             image = cv2.imread(path)
-            image = cv2.resize(image, (width, height))
             frame = np.copy(image)
             warp, img = prepare(image, src, dst)
 
@@ -510,13 +510,13 @@ def detect_lines(path):
             image = cv2.resize(image, (s_width, s_height)) / 255
             warp = cv2.resize(warp, (s_width, s_height)) / 255
 
-            # start = min(min(t_lefty), min(t_righty))
-            # transformation = visualise(np.copy(warp), left_curve, right_curve, start, show_lines=True)
-            # im_show(transformation)
-
             poly = poly.astype('float32')
             image = image.astype('float32')
             warp = warp.astype('float32')
+
+            start = min(min(t_lefty), min(t_righty))
+            transformation = visualise(np.copy(image), t_left_curve, t_right_curve, start, show_lines=True)
+            im_show(transformation)
 
             data.append(image)
             warp_data.append(warp)
@@ -545,4 +545,4 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)

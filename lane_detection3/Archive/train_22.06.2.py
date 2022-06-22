@@ -58,7 +58,7 @@ batch_size = 25
 input_shape = (80, 160, 3)
 
 path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-dir_path = os.path.join(path, 'output')
+dir_path = os.path.join(path, '../Output')
 data_path = os.path.join(path, 'train')
 dt = datetime.now().strftime('%d.%m_%H.%M')
 output_path = os.path.join(dir_path, f'initialized_{dt}')
@@ -68,8 +68,8 @@ if not os.path.exists(output_path):
 logs_path = os.path.join(output_path, f'logs.txt')
 model_path = os.path.join(output_path, 'model.h5')
 
-data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
-labels = pickle.load(open('Pickles/160x80_warp_labels.p', 'rb'))
+data = pickle.load(open('../Pickles/160x80_data.p', 'rb'))
+labels = pickle.load(open('../Pickles/160x80_warp_labels.p', 'rb'))
 
 data = np.array(data)
 labels = np.array(labels)

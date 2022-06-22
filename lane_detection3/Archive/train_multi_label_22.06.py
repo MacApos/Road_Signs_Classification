@@ -17,9 +17,9 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, array_to_img
-from keras.callbacks import ModelCheckpoint
+from tensorflow.keras import callbacks
 from Learning_test.architecture import model
-from keras.optimizers import adam_v2
+from keras.optimizers.adam_v2 import Adam
 
 
 import tensorflow as tf
@@ -43,7 +43,7 @@ args = vars(ap.parse_args())
 epochs = 4
 learning_rate = 0.001
 batch_size = 16
-input_shape = (80, 160, 3)
+input_shape = (150, 150, 3)
 
 
 def plot_hist(history, filename):
@@ -85,48 +85,51 @@ def plot_hist(history, filename):
 # #     label = image_path.split('\\')[-2].split('_')
 # #     labels.append(label)
 
-data = pickle.load(open('../../lane_detection3/Pickles/160x80_data.p', 'rb'))
-labels = pickle.load(open('../../lane_detection3/Pickles/160x80_warp_labels.p', 'rb'))
+data = pickle.load(open('Pickles/160x80_warp_data.p', 'rb'))
+labels = pickle.load(open('Pickles/160x80_warp_labels.p', 'rb'))
 
-data = np.array(data)
-labels = np.array(labels)
+print(f'{len(data)} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
+print(f'Kształt danych: {data.shape}')
 
-# print(f'{len(data)} obrazów o rozmiarze: {data.nbytes / (1024 * 1000.0):.2f} MB')
-# print(f'Kształt danych: {data.shape}')
+mlb = MultiLabelBinarizer()
+labels = mlb.fit_transform(labels)
 
-# mlb = MultiLabelBinarizer()
-# labels = mlb.fit_transform(labels)
-
-# pickle.dump(mlb, open(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\Learning_test\output\mlb.p', 'wb'))
+pickle.dump(mlb, open(r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\Learning_test\output\mlb.p', 'wb'))
 
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=10)
 
-train_generator = ImageDataGenerator()
-valid_generator = ImageDataGenerator()
+print(x_train.shape)
+print(x_test.shape)
 
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, Dense
+train_datagen = ImageDataGenerator(
+    rescale = 1./255.,
+    rotation_range=30,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest'
+)
 
-model = Sequential()
-model.add(Conv2D(filters=6, kernel_size=(3, 3), input_shape=input_shape,
-                 activation='relu'))
-model.add(MaxPooling2D())
-model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D())
-model.add(Flatten())
-model.add(Dense(units=32, activation='relu'))
-model.add(Dense(units=16, activation='relu'))
-model.add(Dense(units=6, activation='softmax'))
+valid_datagen = ImageDataGenerator(
+    rescale = 1./255.)
+
+architecture = model.VGGnetSmall(input_shape=input_shape,
+                                 num_classes=len(mlb.classes_),
+                                 final_activation='sigmoid')
+
+model = architecture.build()
 model.summary()
 
-model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              loss='mean_absolute_error',
+model.compile(optimizer=Adam(learning_rate=learning_rate),
+              loss='binary_crossentropy',
               metrics=['accuracy'])
 
 dt = datetime.now().strftime('%d_%m_%Y_%H_%M')
 output = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\Learning_test\output'
 filepath = os.path.join(output, 'model_'+dt+'.hdf5')
-checkpoint = ModelCheckpoint(filepath=filepath,
+checkpoint = callbacks.ModelCheckpoint(filepath=filepath,
                              monitor='val_accuracy',
                              save_best_only=True)
 
@@ -139,9 +142,9 @@ checkpoint = ModelCheckpoint(filepath=filepath,
 # )
 
 history = model.fit(
-    x=train_generator.flow(x_train, y_train, batch_size=batch_size),
+    x=train_datagen.flow(x_train, y_train, batch_size=batch_size),
     epochs=epochs,
-    validation_data=valid_generator.flow(x_test, y_test, batch_size=batch_size),
+    validation_data=valid_datagen.flow(x_test, y_test, batch_size=batch_size),
     steps_per_epoch=len(x_train) // batch_size,
     validation_steps=len(x_test) // batch_size)
 

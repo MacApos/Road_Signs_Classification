@@ -168,6 +168,13 @@ keras.backend.clear_session()
 model = create_model(img_size, 2)
 model.summary()
 
+# y_train = [np.expand_dims(y, 2) for y in y_train]
+# x_train = np.array(x_train)
+# y_train = np.array(y_train)
+# print(x_train.shape, y_train.shape)
+#
+# train_generator = ImageDataGenerator()
+# train_datagen = train_generator.flow(x=x_train, y=y_train, batch_size=batch_size)
 train_datagen = generator(batch_size, img_size, x_train, y_train)
 valid_datagen = generator(batch_size, img_size, x_test, y_test)
 
