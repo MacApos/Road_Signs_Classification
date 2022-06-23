@@ -441,7 +441,7 @@ def detect_lines(path):
         np.save(M_path, M)
         np.save(M_inv_path, M_inv)
 
-        for path in data_list[i: i+limit]:
+        for path in data_list[i: i+10]:
             save_frame = frames_path + fr'\{os.path.basename(path)}'
             save_label = labels_path + fr'\{os.path.basename(path)}'
 
@@ -526,12 +526,12 @@ def detect_lines(path):
         i += limit
     print('end')
 
-    pickle.dump(labels, open(f'Pickles/{s_width}x{s_height}_labels.p', 'wb'))
-    pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
-    pickle.dump(data, open(f'Pickles/{s_width}x{s_height}_data.p', 'wb'))
-    pickle.dump(warp_data, open(f'Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
-    pickle.dump(img_labels, open(f'Pickles/{s_width}x{s_height}_img_labels.p', 'wb'))
-    pickle.dump(img_labels, open(f'Pickles/{s_width}x{s_height}_unet_labels.p', 'wb'))
+    pickle.dump(labels, open(f'../Pickles/{s_width}x{s_height}_labels.p', 'wb'))
+    pickle.dump(warp_labels, open(f'../Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
+    pickle.dump(data, open(f'../Pickles/{s_width}x{s_height}_data.p', 'wb'))
+    pickle.dump(warp_data, open(f'../Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
+    pickle.dump(img_labels, open(f'../Pickles/{s_width}x{s_height}_img_labels.p', 'wb'))
+    pickle.dump(img_labels, open(f'../Pickles/{s_width}x{s_height}_unet_labels.p', 'wb'))
 
 '''Do zmiany: wygenerować zdjecia treningowe w orginalnym rozmiarze (1280x460), przeskalować je na samym początku do
 width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spróbować połączyć scale_and_perspective z 
@@ -544,4 +544,4 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)
