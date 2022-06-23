@@ -68,27 +68,41 @@ model_path = os.path.join(output_path, 'model.h5')
 
 data = pickle.load(open('Pickles/160x80_warp_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_warp_labels.p', 'rb'))
+coefficients = pickle.load(open('Pickles/160x80_warp_coefficients.p', 'rb'))
 
 data = np.array(data)
 labels = np.array(labels)
 
-epochs = 2
+height = data[0].shape[0]
+
+# load check
+from lane_detection3.lane_detection import im_show, visualise
+
+y = np.linspace(0, height, 3).astype(int)
+for i, image in enumerate(data[:1]):
+    left_points = labels[i][:3]
+    right_points = labels[i][3:]
+    print(left_points, right_points)
+
+    left_curve = coefficients[i][:3]
+    right_curve = coefficients[i][3:]
+
+    warp = visualise(image, left_curve, right_curve, show_lines=True)
+    im_show(warp)
+    for j, y_ in enumerate(y):
+        cv2.circle(warp, (left_points[j], y_), 2, (0, 255, 0), -1)
+        cv2.circle(warp, (right_points[j], y_), 2, (0, 255, 0), -1)
+
+    im_show(warp)
+
+epochs = 10
 learning_rate = 0.001
-batch_size = 25
+batch_size = 16
 input_shape = data[0].shape
 loss = 'mean_absolute_error'
 
 data, labels = shuffle(data, labels)
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=10)
-
-# load check
-from lane_detection3.lane_detection import im_show, visualise
-
-for idx, image in enumerate(x_train[:2]):
-    left_curve = y_train[idx][:3]
-    right_curve = y_train[idx][3:]
-    warp = visualise(image, left_curve, right_curve, image.shape[0]*1/3, show_lines=True)
-    im_show(warp)
 
 train_generator = ImageDataGenerator()
 valid_generator = ImageDataGenerator()
@@ -134,7 +148,7 @@ logs.write(f'batch_size = {batch_size}\n')
 logs.write(f'input_shape = {input_shape}\n')
 logs.write(f'loss = {loss}\n')
 logs.close()
-#
+
 #     model.save(model_path)
 #     plot_hist(history, output_path, logs_path)
 #

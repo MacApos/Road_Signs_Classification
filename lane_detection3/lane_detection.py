@@ -181,6 +181,8 @@ def find_lanes(image):
     except AttributeError:
         pass
 
+
+
     leftx1 = nonzerox[left_idx]
     lefty1 = nonzeroy[left_idx]
     rightx1 = nonzerox[right_idx]
@@ -205,7 +207,7 @@ def find_lanes(image):
         rightx1 = width - leftx1
         righty1 = lefty1
 
-    # print(len(leftx1), len(rightx1))
+
 
     left_curve1 = np.polyfit(lefty1, leftx1, 2)
     right_curve1 = np.polyfit(righty1, rightx1, 2)
@@ -225,6 +227,8 @@ def find_lanes(image):
 
     if len(leftx) <= minpix or len(rightx) <= minpix:
         leftx, lefty, rightx, righty = leftx1, lefty1, rightx1, righty1
+
+    # print(len(leftx), len(rightx))
 
     return leftx, lefty, rightx, righty, out_img
 
@@ -295,7 +299,7 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     nonzero = []
     for arr in points_arr:
         side = np.zeros((height, width))
-        side = cv2.polylines(side, [arr], isClosed=False, color=1, thickness=5)
+        side = cv2.polylines(side, [arr], isClosed=False, color=1, thickness=20)
         if perspective:
             side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
 
@@ -314,6 +318,8 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     if len(rightx) == 0:
         rightx = width - leftx
         righty = lefty
+
+    # print(len(leftx), len(rightx))
 
     return leftx, lefty, rightx, righty
 
@@ -445,7 +451,7 @@ def detect_lines(path):
         np.save(M_path, M)
         np.save(M_inv_path, M_inv)
 
-        for image_path in data_list[i: i+10]:
+        for image_path in data_list[i: i+limit]:
             save_frame = frames_path + fr'\{os.path.basename(image_path)}'
             save_label = labels_path + fr'\{os.path.basename(image_path)}'
 
@@ -477,8 +483,6 @@ def detect_lines(path):
 
             curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
-
-
 
             coefficients.append(t_curves)
             warp_coefficients.append(curves)
@@ -540,8 +544,6 @@ def detect_lines(path):
             labels.append(t_curves_points)
             warp_labels.append(curves_points)
 
-
-
             j += 1
 
         i += limit
@@ -571,5 +573,4 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-detect_lines(path)
-coefficients = pickle.load(open('Pickles/160x80_coefficients.p'))
+# detect_lines(path)
