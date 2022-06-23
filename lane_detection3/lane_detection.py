@@ -207,8 +207,6 @@ def find_lanes(image):
         rightx1 = width - leftx1
         righty1 = lefty1
 
-
-
     left_curve1 = np.polyfit(lefty1, leftx1, 2)
     right_curve1 = np.polyfit(righty1, rightx1, 2)
 
@@ -241,9 +239,11 @@ def fit_poly(leftx, lefty, rightx, righty):
 
 
 def label_points(image, left_curve, right_curve, start = 0):
-    y = np.linspace(start, image.shape[0], 3).astype(int)
-    fit_left = np.array(left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]).astype(int)
-    fit_right = np.array(right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]).astype(int)
+    width = image.shape[1]
+    height = image.shape[0]
+    y = np.linspace(start, height-1, 3).astype(int)
+    fit_left = np.array(left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]) / width
+    fit_right = np.array(right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]) / width
 
     return y, np.concatenate((fit_left, fit_right))
 
@@ -408,7 +408,7 @@ def detect_lines(path):
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = width // 2
-    scale_factor = 1 / 8
+    scale_factor = 1 / 1
     s_width = int(width * scale_factor)
     s_height = int(height * scale_factor)
 
@@ -502,8 +502,11 @@ def detect_lines(path):
             y_t, t_curves_points = label_points(image, t_left_curve, t_right_curve, start)
 
             for k, y_ in enumerate(y_t):
-                cv2.circle(visualiztion, (t_curves_points[k], y_), 4, (0, 255, 0), -1)
-                cv2.circle(visualiztion, (t_curves_points[k + 3], y_), 4, (0, 255, 0), -1)
+                cv2.circle(visualiztion, (int(t_curves_points[k] * s_width), y_), 4, (0, 255, 0), -1)
+                cv2.circle(visualiztion, (int(t_curves_points[k + 3] * s_width), y_), 4, (0, 255, 0), -1)
+
+            cv2.imshow('visualiztion', visualiztion)
+            cv2.waitKey(0)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -573,4 +576,4 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)

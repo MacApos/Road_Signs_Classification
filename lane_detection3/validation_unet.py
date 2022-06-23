@@ -20,13 +20,14 @@ def find_file(path, ext):
 path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
-test_path = os.path.join(path, 'test')
 dir_path = os.path.join(path, 'output')
 # validation_path = [os.path.join(dir_path, folder) for folder in os.listdir(dir_path)][-1]
 validation_path = os.path.join(dir_path, 'initialized_3')
-model_path = find_file(validation_path, 'h5')
 
+test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
+
+model_path = find_file(validation_path, 'h5')
 model = keras.models.load_model(model_path)
 
 batch_size = 32
