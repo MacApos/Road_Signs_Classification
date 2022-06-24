@@ -149,6 +149,6 @@ logs.write(f'input_shape = {input_shape}\n')
 logs.write(f'loss = {loss}\n')
 logs.close()
 
-#     model.save(model_path)
-#     plot_hist(history, output_path, logs_path)
-#
+model.save(model_path)
+plot_hist(history, output_path)
+

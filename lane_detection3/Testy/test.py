@@ -84,13 +84,39 @@ def make_input(message):
 #
 # print(block2, block3)
 
-arr = np.array([[ 95],
-                [127],
-                [159]])
+# arr = np.array([[ 95],
+#                 [127],
+#                 [159]])
+#
+#
+# image = cv2.imread('../Pictures/original.jpg')
+# cv2.circle(image, (image.shape[1]//2, image.shape[0]//2), 50, (0, 255, 0), -2)
+# # cv2.imshow('circle', circle)
+# # cv2.waitKey(0)
+# cv2.imwrite('../Pictures/original_with_circle.jpg', image)
 
+import plotly.graph_objects as go
+import numpy as np
+np.random.seed(1)
 
-image = cv2.imread('../Pictures/original.jpg')
-cv2.circle(image, (image.shape[1]//2, image.shape[0]//2), 50, (0, 255, 0), -2)
-# cv2.imshow('circle', circle)
-# cv2.waitKey(0)
-cv2.imwrite('../Pictures/original_with_circle.jpg', image)
+N = 100
+x = np.random.rand(N)
+y = np.random.rand(N)
+colors = np.random.rand(N)
+sz = np.random.rand(N) * 30
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=x,
+    y=y,
+    mode="markers",
+    marker=go.scatter.Marker(
+        size=sz,
+        color=colors,
+        opacity=0.6,
+        colorscale="Viridis"
+    )
+))
+
+fig.show()
+fig.write_image('../Pictures/fig1.svg')

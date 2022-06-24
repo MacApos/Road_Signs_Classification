@@ -53,7 +53,8 @@ def plot_hist(history, filename):
     fig.update_yaxes(title_text='Loss', row=2, col=1)
     fig.update_layout(width=1400, height=1000, title='Metrics')
 
-    po.plot(fig, filename=filename, auto_open=True)
+    po.plot(fig, filename=os.path.join(filename, 'report.html'), auto_open=True)
+    fig.write_image(os.path.join(filename, 'report.png'))
 
 
 path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
@@ -66,6 +67,7 @@ if not os.path.exists(output_path):
 
 logs_path = os.path.join(output_path, 'logs.txt')
 model_path = os.path.join(output_path, 'model.h5')
+report_path = os.path.join(output_path, 'report.html')
 
 data = pickle.load(open('Pickles/160x80_warp_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_warp_labels.p', 'rb'))
@@ -99,7 +101,7 @@ print(labels)
 #
 #     im_show(warp)
 
-epochs = 10
+epochs = 2
 learning_rate = 0.001
 batch_size = 32
 height = data[0].shape[0]
@@ -146,7 +148,7 @@ model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(units=512   , activation='relu'))
-model.add(Dense(units=6, activation='linear'))
+model.add(Dense(units=6, activation='softmax'))
 model.summary()
 
 model.compile(loss=loss,
@@ -170,5 +172,5 @@ logs.write(f'loss = {loss}\n')
 logs.close()
 
 model.save(model_path)
-# # plot_hist(history, output_path, logs_path)
-#
+plot_hist(history, filename=output_path)
+

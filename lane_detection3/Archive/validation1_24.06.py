@@ -9,6 +9,28 @@ import re
 import os
 
 
+def get_digits0(s):
+    head = s.rstrip('0123456789')
+    return s[len(head):]
+
+
+def get_digits1(text):
+    alpha = text.strip('0123456789')
+    print(alpha)
+    return text.split(alpha)
+
+
+def get_digits2(text):
+    digits = ''
+    for t in text:
+        if not digits:
+            if t.isdigit():
+                digits += t
+        elif t.isdigit() and len(digits):
+            digits += t
+    return digits
+
+
 def natural_keys(text):
     return [int(t) if t.isdigit() else t for t in re.split(r'(\d+)', text)]
 
@@ -22,7 +44,7 @@ def find_file(path, ext):
 path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
-dir_path = os.path.join(path, 'output')
+dir_path = os.path.join(path, '../Output')
 dir_list = os.listdir(dir_path)
 dir_list.sort(key=natural_keys)
 validation_path = [os.path.join(dir_path, folder) for folder in dir_list if folder.startswith('init')][-1]
@@ -33,8 +55,8 @@ test_list = list(paths.list_images(test_path))
 model_path = find_file(validation_path, 'h5')
 model = keras.models.load_model(model_path)
 
-M = np.load('Pickles/M_video1.npy')
-M_inv = np.load('Pickles/M_inv_video1.npy')
+M = np.load('../Pickles/M_video1.npy')
+M_inv = np.load('../Pickles/M_inv_video1.npy')
 
 batch_size = 32
 s_width = 160
@@ -57,7 +79,7 @@ if not os.path.exists(save_path):
         test.append(img)
         pickle.dump(test, open(save_path, 'wb'))
 else:
-    test = pickle.load(open('Pickles/160x80_warp_data.p', 'rb'))
+    test = pickle.load(open('../Pickles/160x80_warp_data.p', 'rb'))
 
 test = np.array(test)
 test_generator = ImageDataGenerator()
