@@ -284,7 +284,7 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
 
     for idx, arr in enumerate(points_arr):
         if show_lines:
-            cv2.polylines(image, [arr], isClosed=False, color=colors[idx], thickness=5)
+            cv2.polylines(image, [arr], isClosed=False, color=colors[idx], thickness=20)
 
         if show_points:
             for point in arr:
@@ -469,6 +469,8 @@ def detect_lines(path):
             frame = np.copy(image)
             warp, img = prepare(image, src, dst)
 
+            im_show(img)
+
             leftx0, lefty0, rightx0, righty0, out_img = find_lanes(img)
 
             previous_frame = []
@@ -495,23 +497,25 @@ def detect_lines(path):
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
 
+            start = min(min(t_lefty), min(t_righty))
+            poly2 = visualise(np.zeros((height, width)), t_left_curve, t_right_curve, start,
+                                     show_lines=True)
+
+            im_show(poly2)
+
             image = cv2.resize(image, (s_width, s_height)) / 255
             warp = cv2.resize(warp, (s_width, s_height)) / 255
             poly = cv2.resize(poly, (s_width, s_height))
             frame = cv2.resize(frame, (s_width, s_height))
 
-            start = min(min(t_lefty), min(t_righty))
-            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start,
-                                     show_lines=True)
-
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
             for k, y_ in enumerate(y_t):
-                visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4, (0, 255, 0), -1)
-                visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4, (0, 255, 0), -1)
+                visualization = cv2.circle(image, (int(t_curves_points[k] * s_width), y_[0]), 4, (0, 255, 0), -1)
+                visualization = cv2.circle(image, (int(t_curves_points[k + 3] * s_width), y_[0]), 4, (0, 255, 0), -1)
 
-            # im_show(visualization)
+            im_show(visualization)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -574,11 +578,10 @@ width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spr
 visualise_perspective, usunąć instrukcje if/elif z find_lanes - jak lista dla jednej linii będzie pusta to i tak można
 ją dodać do globalnej listy, a counter będzie się dodawał niezależnie od tego w find_single_lane.'''
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
-
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)
