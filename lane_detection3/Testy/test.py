@@ -95,28 +95,34 @@ def make_input(message):
 # # cv2.waitKey(0)
 # cv2.imwrite('../Pictures/original_with_circle.jpg', image)
 
-import plotly.graph_objects as go
-import numpy as np
-np.random.seed(1)
+# import plotly.graph_objects as go
+# import numpy as np
+# np.random.seed(1)
+#
+# N = 100
+# x = np.random.rand(N)
+# y = np.random.rand(N)
+# colors = np.random.rand(N)
+# sz = np.random.rand(N) * 30
+#
+# fig = go.Figure()
+# fig.add_trace(go.Scatter(
+#     x=x,
+#     y=y,
+#     mode="markers",
+#     marker=go.scatter.Marker(
+#         size=sz,
+#         color=colors,
+#         opacity=0.6,
+#         colorscale="Viridis"
+#     )
+# ))
+#
+# fig.show()
+# fig.write_image('../Pictures/fig1.svg')
 
-N = 100
-x = np.random.rand(N)
-y = np.random.rand(N)
-colors = np.random.rand(N)
-sz = np.random.rand(N) * 30
+x1 = np.ones((16,2)) * 20
+r_offset= np.copy(x1)[:, 0] + 10
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(
-    x=x,
-    y=y,
-    mode="markers",
-    marker=go.scatter.Marker(
-        size=sz,
-        color=colors,
-        opacity=0.6,
-        colorscale="Viridis"
-    )
-))
-
-fig.show()
-fig.write_image('../Pictures/fig1.svg')
+# x2 = np.concatenate(x1[:, 0], x1[:, 1] + 10, axis=1)
+print(r_offset)
