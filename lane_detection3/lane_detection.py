@@ -70,6 +70,7 @@ def prepare(image, src, dst):
     height = image.shape[0]
     box = draw_lines(image, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
+    im_show(box)
     warp, _ = warp_perspective(image, src, dst, width, height)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
@@ -248,11 +249,16 @@ def label_points(image, left_curve, right_curve, start = 0):
     return y, np.concatenate((fit_left, fit_right))
 
 
-def generate_points(image, left_curve, right_curve, start=0):
+def generate_points(image, left_curve, right_curve, start=0, num=16, labels=False):
+    width = image.shape[1]
     height = image.shape[0]
-    y = np.linspace(start, height - 1, 16).astype(int).reshape((-1, 1))
+    y = np.linspace(start, height - 1, num).astype(int).reshape((-1, 1))
     fit_left = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
     fit_right = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
+
+    if labels:
+        labels_points = np.concatenate((fit_left, fit_right)) / width
+        return y, labels_points
 
     empty = []
     flipud = False
@@ -267,9 +273,9 @@ def generate_points(image, left_curve, right_curve, start=0):
         flipud = True
         empty.append(con)
 
-    points = np.array(empty)
+    visualise_points = np.array(empty)
 
-    return points
+    return visualise_points
 
 
 def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_points=False):
@@ -291,7 +297,7 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     width = image.shape[1]
     height = image.shape[0]
     s_width = int(width * scale_factor)
-    s_height = int(height * scale_factor)
+    s_height = int(s_width // 2)
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
@@ -451,7 +457,7 @@ def detect_lines(path):
         np.save(M_path, M)
         np.save(M_inv_path, M_inv)
 
-        for image_path in data_list[i: i+limit]:
+        for image_path in data_list[i: i+10]:
             save_frame = frames_path + fr'\{os.path.basename(image_path)}'
             save_label = labels_path + fr'\{os.path.basename(image_path)}'
 
@@ -495,18 +501,17 @@ def detect_lines(path):
             frame = cv2.resize(frame, (s_width, s_height))
 
             start = min(min(t_lefty), min(t_righty))
-            visualiztion = visualise(np.copy(image), t_left_curve, t_right_curve, start,
+            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start,
                                      show_lines=True)
 
-            y, curves_points = label_points(warp, left_curve, right_curve)
-            y_t, t_curves_points = label_points(image, t_left_curve, t_right_curve, start)
+            y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
+            y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
             for k, y_ in enumerate(y_t):
-                cv2.circle(visualiztion, (int(t_curves_points[k] * s_width), y_), 4, (0, 255, 0), -1)
-                cv2.circle(visualiztion, (int(t_curves_points[k + 3] * s_width), y_), 4, (0, 255, 0), -1)
+                visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4, (0, 255, 0), -1)
+                visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4, (0, 255, 0), -1)
 
-            cv2.imshow('visualiztion', visualiztion)
-            cv2.waitKey(0)
+            # im_show(visualization)
 
             if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
@@ -518,7 +523,7 @@ def detect_lines(path):
                 print(name, j, image_path, 'saving frame')
 
             elif frame_exists and not label_exists:
-                cv2.imwrite(save_label, poly)
+                cv2.imwrite(save_frame, poly)
                 print(name, j, image_path, 'saving label')
 
             else:
@@ -576,4 +581,4 @@ path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-detect_lines(path)
+# detect_lines(path)

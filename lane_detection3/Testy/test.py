@@ -68,18 +68,29 @@ def make_input(message):
 # y = tf.keras.layers.UpSampling2D(size=(2, 2))(x)
 # print(y)
 
-x = np.array([[4,2,3],
-              [1,0,3]])
-index_array_x = np.argmax(x, axis=0) # wiersz o największej wartości w każdej kolumnie
-index_array_y = np.argmax(x, axis=1) # kolumna o największej wartości w każdym wierszu
-print(index_array_x, index_array_y)
+# x = np.array([[4,2,3],
+#               [1,0,3]])
+# index_array_x = np.argmax(x, axis=0) # wiersz o największej wartości w każdej kolumnie
+# index_array_y = np.argmax(x, axis=1) # kolumna o największej wartości w każdym wierszu
+# print(index_array_x, index_array_y)
+#
+# num_filters = 3
+# start = 16
+# block2 = [start * 2 ** i for i in range(num_filters)]
+# block3 = [block2[-1] // 2 ** i for i in range(num_filters + 1)]
+#
+# # for i in range(num_filters + 1):
+# #     print(block3)
+#
+# print(block2, block3)
 
-num_filters = 3
-start = 16
-block2 = [start * 2 ** i for i in range(num_filters)]
-block3 = [block2[-1] // 2 ** i for i in range(num_filters + 1)]
+arr = np.array([[ 95],
+                [127],
+                [159]])
 
-# for i in range(num_filters + 1):
-#     print(block3)
 
-print(block2, block3)
+image = cv2.imread('../Pictures/original.jpg')
+cv2.circle(image, (image.shape[1]//2, image.shape[0]//2), 50, (0, 255, 0), -2)
+# cv2.imshow('circle', circle)
+# cv2.waitKey(0)
+cv2.imwrite('../Pictures/original_with_circle.jpg', image)

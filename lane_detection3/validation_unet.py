@@ -77,20 +77,27 @@ def display_mask(mask, image):
     poly = np.dstack((zeros, mask, zeros)).astype('uint8')
     return cv2.addWeighted(image, 1, poly, 0.5, 0)
 
-output = []
-for i in range(60):
-    mask, image = create_mask(i)
-    mask = display_mask(mask, image)
-    if i < 3:
-        cv2.imwrite(os.path.join(dir_path, f'unet{i}.jpg'), mask)
-    img = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
-    output.append(img)
 
-save_path = os.path.join(dir_path, 'unet.gif')
-print(save_path)
+mask, image = create_mask(1)
+mask = display_mask(mask, image)
 
-import imageio
-with imageio.get_writer(save_path, mode='I', fps=3) as writer:
-    for image in output:
-        print('saving')
-        writer.append_data(image)
+cv2.imshow('mask', mask)
+cv2.waitKey(0)
+
+# output = []
+# for i in range(60):
+#     mask, image = create_mask(i)
+#     mask = display_mask(mask, image)
+#     if i < 3:
+#         cv2.imwrite(os.path.join(dir_path, f'unet{i}.jpg'), mask)
+#     img = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
+#     output.append(img)
+#
+# save_path = os.path.join(dir_path, 'unet.gif')
+# print(save_path)
+#
+# import imageio
+# with imageio.get_writer(save_path, mode='I', fps=3) as writer:
+#     for image in output:
+#         print('saving')
+#         writer.append_data(image)
