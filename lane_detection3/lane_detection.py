@@ -280,7 +280,7 @@ def generate_points(image, left_curve, right_curve, start=0, num=16, labels=Fals
 
 def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_points=False):
     points_arr = generate_points(image, left_curve, right_curve, start)
-    colors = [(0, 0, 255), (255, 0, 0)]
+    colors = [(255, 0, 0), (255, 0, 0)]
 
     for idx, arr in enumerate(points_arr):
         if show_lines:
@@ -330,29 +330,30 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     return leftx, lefty, rightx, righty
 
 
-def visualise_perspective(image, left_curve, right_curve, src, dst, lane_label=False):
+def visualise_perspective(image, left_curve, right_curve, src, dst, start=0, lane_label=False):
     poly = np.zeros_like(image)
 
     width = poly.shape[1]
     height = poly.shape[0]
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
-    points_arr = generate_points(image, left_curve, right_curve)
+    points_arr = generate_points(image, left_curve, right_curve, start)
 
     if lane_label:
         for arr in points_arr:
             l_offset = np.copy(arr)
             r_offset = np.copy(arr)
-            l_offset[:, 0] += 20
-            r_offset[:, 0] -= 20
+            l_offset[:, 0] += 50
+            r_offset[:, 0] -= 50
             points = np.vstack((l_offset, np.flipud(r_offset)))
             poly = cv2.fillPoly(poly, [points], (0, 255, 0))
+            im_show(poly)
 
     else:
         points = np.vstack((points_arr[0], points_arr[1]))
         poly = cv2.fillPoly(poly, [points], (0, 255, 0))
+        # poly = cv2.warpPerspective(poly, M_inv, (width, height), flags=cv2.INTER_LINEAR)
 
-    poly = cv2.warpPerspective(poly, M_inv, (width, height), flags=cv2.INTER_LINEAR)
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
     poly = poly[:, :, 1]
 
@@ -506,16 +507,17 @@ def detect_lines(path):
             coefficients.append(t_curves)
             warp_coefficients.append(curves)
 
-            poly, out_frame1 = visualise_perspective(frame, left_curve0, right_curve0, src, dst)
-            poly2, out_frame2 = visualise_perspective(frame, left_curve0, right_curve0, src, dst, True)
+            start = min(min(t_lefty), min(t_righty))
+            poly, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, src, dst, start)
+            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, src, dst, start, True)
 
-            im_show(poly2)
+            im_show(poly)
 
             start = min(min(t_lefty), min(t_righty))
-            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start,
+            visualization = visualise(np.zeros((height, width)), t_left_curve, t_right_curve, start,
                                      show_lines=True)
 
-            im_show(poly2)
+            im_show(visualization)
 
             image = cv2.resize(image, (s_width, s_height)) / 255
             warp = cv2.resize(warp, (s_width, s_height)) / 255
@@ -592,8 +594,8 @@ width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spr
 visualise_perspective, usunąć instrukcje if/elif z find_lanes - jak lista dla jednej linii będzie pusta to i tak można
 ją dodać do globalnej listy, a counter będzie się dodawał niezależnie od tego w find_single_lane.'''
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
