@@ -70,6 +70,7 @@ def prepare(image, src, dst):
     height = image.shape[0]
     box = draw_lines(image, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
+    im_show(box)
     warp, _ = warp_perspective(image, src, dst, width, height)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
@@ -296,7 +297,7 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     width = image.shape[1]
     height = image.shape[0]
     s_width = int(width * scale_factor)
-    s_height = int(height * scale_factor)
+    s_height = int(s_width // 2)
 
     M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve)
@@ -309,7 +310,6 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
             side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
 
         side = cv2.resize(side, (s_width, s_height))
-
         nonzerox = side.nonzero()[1]
         nonzeroy = side.nonzero()[0]
         nonzero.append(nonzerox)
@@ -325,32 +325,37 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
         rightx = width - leftx
         righty = lefty
 
+    # print(len(leftx), len(rightx))
+
     return leftx, lefty, rightx, righty
 
 
-def visualise_perspective(image, left_curve, right_curve, start=0, lane_label=False):
+def visualise_perspective(image, left_curve, right_curve, src, dst, start=0, lane_label=False):
     poly = np.zeros_like(image)
 
+    width = poly.shape[1]
+    height = poly.shape[0]
+
+    M_inv = cv2.getPerspectiveTransform(dst, src)
     points_arr = generate_points(image, left_curve, right_curve, start)
-    colors = (255, 255, 255)
 
     if lane_label:
-        channel = 0
         for arr in points_arr:
             l_offset = np.copy(arr)
             r_offset = np.copy(arr)
-            l_offset[:, 0] += 5
-            r_offset[:, 0] -= 5
+            l_offset[:, 0] += 10
+            r_offset[:, 0] -= 10
             points = np.vstack((l_offset, np.flipud(r_offset)))
-            poly = cv2.fillPoly(poly, [points], colors[channel])
+            poly = cv2.fillPoly(poly, [points], (0, 255, 0))
+            im_show(poly)
 
     else:
-        channel = 1
         points = np.vstack((points_arr[0], points_arr[1]))
-        poly = cv2.fillPoly(poly, [points], colors[channel])
+        poly = cv2.fillPoly(poly, [points], (0, 255, 0))
+        # poly = cv2.warpPerspective(poly, M_inv, (width, height), flags=cv2.INTER_LINEAR)
 
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-    poly = poly[:, :, channel]
+    poly = poly[:, :, 1]
 
     return poly, out_frame
 
@@ -421,7 +426,7 @@ def detect_lines(path):
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = width // 2
-    scale_factor = 1 / 2
+    scale_factor = 1 / 1
     s_width = int(width * scale_factor)
     s_height = int(height * scale_factor)
 
@@ -439,8 +444,7 @@ def detect_lines(path):
 
     data = []
     warp_data = []
-    img_labels1 = []
-    img_labels2 = []
+    img_labels = []
     labels = []
     warp_labels = []
     coefficients = []
@@ -467,17 +471,17 @@ def detect_lines(path):
 
         for image_path in data_list[i: i+10]:
             save_frame = frames_path + fr'\{os.path.basename(image_path)}'
-            save_label1 = labels_path + fr'\{os.path.basename(image_path)}'
-            save_label2 = labels_path + fr'\{os.path.basename(image_path)}'
+            save_label = labels_path + fr'\{os.path.basename(image_path)}'
 
             frame_exists = os.path.exists(save_frame)
-            label1_exists = os.path.exists(save_label1)
-            label2_exists = os.path.exists(save_label2)
+            label_exists = os.path.exists(save_label)
 
             image = cv2.imread(image_path)
             image = cv2.resize(image, (width, height))
             frame = np.copy(image)
             warp, img = prepare(image, src, dst)
+
+            im_show(img)
 
             leftx0, lefty0, rightx0, righty0, out_img = find_lanes(img)
 
@@ -504,15 +508,21 @@ def detect_lines(path):
             warp_coefficients.append(curves)
 
             start = min(min(t_lefty), min(t_righty))
-            frame = cv2.resize(frame, (s_width, s_height))
-            poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start)
-            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, True)
+            poly, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, src, dst, start)
+            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, src, dst, start, True)
 
-            visualization = visualise(np.zeros((s_height, s_width)), t_left_curve, t_right_curve, start, True)
-            im_show(out_frame1)
+            im_show(poly)
+
+            start = min(min(t_lefty), min(t_righty))
+            visualization = visualise(np.zeros((height, width)), t_left_curve, t_right_curve, start,
+                                     show_lines=True)
+
+            im_show(visualization)
 
             image = cv2.resize(image, (s_width, s_height)) / 255
             warp = cv2.resize(warp, (s_width, s_height)) / 255
+            poly = cv2.resize(poly, (s_width, s_height))
+            frame = cv2.resize(frame, (s_width, s_height))
 
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
@@ -521,18 +531,27 @@ def detect_lines(path):
                 visualization = cv2.circle(image, (int(t_curves_points[k] * s_width), y_[0]), 4, (0, 255, 0), -1)
                 visualization = cv2.circle(image, (int(t_curves_points[k + 3] * s_width), y_[0]), 4, (0, 255, 0), -1)
 
-            if not frame_exists and not label1_exists and not label2_exists:
+            im_show(visualization)
+
+            if not frame_exists and not label_exists:
                 cv2.imwrite(save_frame, frame)
-                cv2.imwrite(save_label1, poly1)
-                cv2.imwrite(save_label2, poly2)
+                cv2.imwrite(save_label, poly)
                 print(name, j, image_path, 'saving frame and label')
 
-            poly1 = poly1 / 255
-            poly2 = poly2 / 255
+            elif not frame_exists and label_exists:
+                cv2.imwrite(save_label, poly)
+                print(name, j, image_path, 'saving frame')
 
-            unet1 = poly1.astype('uint8')
-            unet2 = poly2.astype('uint8')
-            unet_labels.append(unet1)
+            elif frame_exists and not label_exists:
+                cv2.imwrite(save_frame, poly)
+                print(name, j, image_path, 'saving label')
+
+            else:
+                print(name, j, image_path, 'already processed')
+
+            poly = poly / 255
+            unet = poly.astype('uint8')
+            unet_labels.append(unet)
 
             # import PIL
             # from PIL import ImageOps
@@ -542,15 +561,13 @@ def detect_lines(path):
             # test = img_to_array(test)
             # im_show(test)
 
-            poly1 = poly2.astype('float32')
-            poly2 = poly2.astype('float32')
+            poly = poly.astype('float32')
             image = image.astype('float32')
             warp = warp.astype('float32')
 
             data.append(image)
             warp_data.append(warp)
-            img_labels1.append(poly1)
-            img_labels2.append(poly2)
+            img_labels.append(poly)
 
             labels.append(t_curves_points)
             warp_labels.append(curves_points)
@@ -562,9 +579,7 @@ def detect_lines(path):
 
     pickle.dump(data, open(f'Pickles/{s_width}x{s_height}_data.p', 'wb'))
     pickle.dump(warp_data, open(f'Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
-    pickle.dump(img_labels1, open(f'Pickles/{s_width}x{s_height}_img_labels1.p', 'wb'))
-    pickle.dump(img_labels2, open(f'Pickles/{s_width}x{s_height}_img_labels2.p', 'wb'))
-
+    pickle.dump(img_labels, open(f'Pickles/{s_width}x{s_height}_img_labels.p', 'wb'))
 
     pickle.dump(labels, open(f'Pickles/{s_width}x{s_height}_labels.p', 'wb'))
     pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
@@ -572,7 +587,7 @@ def detect_lines(path):
     pickle.dump(coefficients, open(f'Pickles/{s_width}x{s_height}_coefficients.p', 'wb'))
     pickle.dump(warp_coefficients, open(f'Pickles/{s_width}x{s_height}_warp_coefficients.p', 'wb'))
 
-    pickle.dump(img_labels1, open(f'Pickles/{s_width}x{s_height}_unet_labels.p', 'wb'))
+    pickle.dump(img_labels, open(f'Pickles/{s_width}x{s_height}_unet_labels.p', 'wb'))
 
 '''Do zmiany: wygenerować zdjecia treningowe w orginalnym rozmiarze (1280x460), przeskalować je na samym początku do
 width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spróbować połączyć scale_and_perspective z
