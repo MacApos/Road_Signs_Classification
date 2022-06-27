@@ -427,7 +427,7 @@ def detect_lines(path):
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = width // 2
-    scale_factor = 1 / 8
+    scale_factor = 1 / 1
     s_width = int(width * scale_factor)
     s_height = int(height * scale_factor)
 
@@ -508,6 +508,7 @@ def detect_lines(path):
             t_curves = np.concatenate((t_left_curve, t_right_curve))
 
             start = min(min(t_lefty), min(t_righty))
+            print(start)
             frame = cv2.resize(image, (s_width, s_height))
             poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start)
             poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, True)
@@ -518,12 +519,13 @@ def detect_lines(path):
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
-            visualization = visualise(np.zeros((s_height, s_width)), t_left_curve, t_right_curve, start, True)
+            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start, True)
             for k, y_ in enumerate(y_t):
                 visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
                 visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
+            im_show(visualization)
 
             if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
                 cv2.imwrite(save_frame1, out_frame1)
@@ -537,10 +539,6 @@ def detect_lines(path):
 
             poly1 = poly1 / 255
             poly2 = poly2 / 255
-
-            unet1 = poly1.astype('uint8')
-            unet2 = poly2.astype('uint8')
-            unet_labels.append(unet1)
 
             # import PIL
             # from PIL import ImageOps
@@ -582,7 +580,6 @@ def detect_lines(path):
 
     pickle.dump(coefficients, open(f'Pickles/{s_width}x{s_height}_coefficients.p', 'wb'))
     pickle.dump(warp_coefficients, open(f'Pickles/{s_width}x{s_height}_warp_coefficients.p', 'wb'))
-    pickle.dump(img_labels1, open(f'Pickles/{s_width}x{s_height}_unet_labels.p', 'wb'))
 
 '''Do zmiany: wygenerować zdjecia treningowe w orginalnym rozmiarze (1280x460), przeskalować je na samym początku do
 width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spróbować połączyć scale_and_perspective z

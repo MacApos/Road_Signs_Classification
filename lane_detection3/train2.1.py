@@ -1,3 +1,5 @@
+import shutil
+
 import keras
 from sklearn.model_selection import train_test_split
 from plotly.subplots import make_subplots
@@ -62,19 +64,20 @@ dir_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'train')
 dt = datetime.now().strftime('%d.%m_%H.%M')
 # output_path = os.path.join(dir_path, f'initialized_{dt}')
-output_path = os.path.join(dir_path, f'initialized_1')
+output_path = os.path.join(dir_path, f'initialized_2')
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
 logs_path = os.path.join(output_path, 'logs.txt')
 model_path = os.path.join(output_path, 'model.h5')
 report_path = os.path.join(output_path, 'report.html')
-if not os.path.exists(output_path):
-    os.mkdir(output_path)
 
-data = pickle.load(open('Pickles/160x80_warp_data.p', 'rb'))
-labels = pickle.load(open('Pickles/160x80_warp_labels.p', 'rb'))
-coefficients = pickle.load(open('Pickles/160x80_warp_coefficients.p', 'rb'))
+if os.path.exists(logs_path):
+    os.remove(logs_path)
+
+data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
+labels = pickle.load(open('Pickles/160x80_labels.p', 'rb'))
+coefficients = pickle.load(open('Pickles/160x80_coefficients.p', 'rb'))
 
 data = np.array(data)
 labels = np.array(labels)
@@ -84,24 +87,25 @@ width = data[0].shape[1]
 # # load check
 from lane_detection3.lane_detection import im_show, visualise
 #
-# y = np.linspace(0, height, 3).astype(int)
-# for i, image in enumerate(data[:1]):
-#     left_points = np.array(labels[0][:3] * width).astype(int)
-#     right_points = np.array(labels[0][3:] * width).astype(int)
-# #
+start = height * 0.6
+y_range = np.linspace(start, height - 1, 3).astype(int)
+# for i, image in enumerate(data[:5]):
+#     left_points = np.array(labels[i][:3] * width).astype(int)
+#     right_points = np.array(labels[i][3:] * width).astype(int)
+#
 #     left_curve = coefficients[i][:3]
 #     right_curve = coefficients[i][3:]
 #
-#     warp = visualise(image, left_curve, right_curve, show_lines=True)
+#     warp = visualise(image, left_curve, right_curve, start, show_lines=True)
 #     for j, y_ in enumerate(y):
 #         cv2.circle(warp, (int(left_points[j]), y_), 2, (0, 255, 0), -1)
 #         cv2.circle(warp, (int(right_points[j]), y_), 2, (0, 255, 0), -1)
 #
 #     im_show(warp)
 
-epochs = 7
+epochs = 40
 learning_rate = 0.001
-batch_size = 32
+batch_size = 100
 input_shape = (height, width, 3)
 
 loss = 'mean_squared_error'
@@ -116,8 +120,6 @@ train_datagen = train_generator.flow(x_train, y_train, batch_size=batch_size)
 valid_datagen = valid_generator.flow(x_test, y_test, batch_size=batch_size)
 
 # # generator check
-y_range = np.linspace(0, height - 1, 3).astype(int)
-print(y_range)
 # for i, (x, y) in enumerate(train_datagen):
 #     left_points = np.array(y[0][:3] * width).astype(int)
 #     right_points = np.array(y[0][3:] * width).astype(int)
@@ -127,7 +129,7 @@ print(y_range)
 #     left_curve = coefficients[index][:3]
 #     right_curve = coefficients[index][3:]
 #
-#     warp = visualise(x[0], left_curve, right_curve, show_lines=True)
+#     warp = visualise(x[0], left_curve, right_curve, start, show_lines=True)
 #
 #     for j, y_ in enumerate(y_range):
 #         cv2.circle(warp, (left_points[j][0], y_), 2, (0, 255, 0), -1)
@@ -145,7 +147,7 @@ model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(units=512   , activation='relu'))
-model.add(Dense(units=6, activation='softmax'))
+model.add(Dense(units=6, activation='linear'))
 model.summary()
 
 model.compile(loss=loss,

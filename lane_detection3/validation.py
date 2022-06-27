@@ -47,7 +47,7 @@ width = original_image.shape[1]
 height = width // 2
 y = np.linspace(0, s_height - 1, 3).astype(int)
 
-save_path = f'Pickles/{s_width}x{s_height}_test.p'
+save_path = f'Pickles/{s_width}x{s_height}_warp_test.p'
 
 if not os.path.exists(save_path):
     test = []
