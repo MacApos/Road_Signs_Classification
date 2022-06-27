@@ -8,6 +8,7 @@ from imutils import paths
 import matplotlib.pyplot as plt
 
 
+
 def im_show(image, name='Image'):
     cv2.imshow(name, image)
     cv2.waitKey(0)
@@ -558,6 +559,9 @@ def detect_lines(path):
 
             img_labels1.append(poly1)
             img_labels2.append(poly2)
+
+            im_show(poly2)
+
             labels.append(t_curves_points)
             warp_labels.append(curves_points)
 
