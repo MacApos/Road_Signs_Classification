@@ -48,6 +48,12 @@ if not os.path.exists(output_path):
 
 data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_img_labels2.p', 'rb'))
+
+
+data = np.array(data)
+labels = [np.expand_dims(y, 2) for y in labels]
+labels = np.array(labels)
+
 batch_size = 32
 epochs = 15
 img_size = data[0].shape[:-1]
@@ -66,8 +72,8 @@ x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 # cv2.destroyAllWindows()
 
 # for img, img_label in zip(x_train[:1], y_train[:1]):
-#     poly = np.dstack((img_label, np.zeros(img_size), np.zeros(img_size)))
-#     poly = poly.astype('float32')
+#     poly = np.zeros_like(img).astype('float32')
+#     poly[:, :, 1] = img_label[:, :, 0]
 #     out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
 #     cv2.imshow('img', out_frame)
 #     cv2.waitKey(0)
@@ -169,68 +175,70 @@ keras.backend.clear_session()
 model = create_model(img_size, 2)
 model.summary()
 
-y_train = [np.expand_dims(y, 2) for y in y_train]
-x_train = np.array(x_train)
-y_train = np.array(y_train)
-# print(x_train.shape, y_train.shape)
+
+print(x_train.shape, y_train.shape)
 
 train_generator = ImageDataGenerator()
+valid_generator = ImageDataGenerator()
+
 train_datagen = train_generator.flow(x=x_train, y=y_train, batch_size=batch_size)
+valid_datagen = valid_generator.flow(x=x_test, y=y_test, batch_size=batch_size)
+
 # train_datagen = generator(batch_size, img_size, x_train, y_train)
 # valid_datagen = generator(batch_size, img_size, x_test, y_test)
 
-# generator check
-for x, y in train_datagen:
-    image = x[0]
+# # generator check
+# for x, y in train_datagen:
+#     image = x[0]
+#
+#     label = PIL.ImageOps.autocontrast(array_to_img(y[0]))
+#     label = img_to_array(label)
+#
+#     cv2.imshow('x', image)
+#     cv2.imshow('y', label)
+#     cv2.waitKey(1200)
+#
+#     poly = np.dstack((label, label, label))
+#     poly[:, :, [0, 2]] = 0
+#     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
+#     plt.figure(figsize=(16, 8))
+#     for idx, img in enumerate([image, poly, out_frame]):
+#         plt.subplot(1, 3, idx + 1)
+#         plt.grid(False)
+#         plt.axis(False)
+#         imgplot = plt.imshow(img[:, :, ::-1])
+#     break
+# plt.show()
 
-    label = PIL.ImageOps.autocontrast(array_to_img(y[0]))
-    label = img_to_array(label)
+loss = 'sparse_categorical_crossentropy'
+model.compile(optimizer = 'rmsprop',
+              loss = loss)
 
-    cv2.imshow('x', image)
-    cv2.imshow('y', label)
-    cv2.waitKey(1200)
+csv_logger = callbacks.CSVLogger(logs_path, append=True, separator='\t')
+model.fit(train_datagen,
+          epochs=epochs,
+          validation_data=valid_datagen,
+          callbacks=csv_logger
+          )
 
-    poly = np.dstack((label, label, label))
-    poly[:, :, [0, 2]] = 0
-    out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-    plt.figure(figsize=(16, 8))
-    for idx, img in enumerate([image, poly, out_frame]):
-        plt.subplot(1, 3, idx + 1)
-        plt.grid(False)
-        plt.axis(False)
-        imgplot = plt.imshow(img[:, :, ::-1])
-    break
-plt.show()
+logs = open(logs_path, 'a')
+logs.write(f'\nepochs = {epochs}\n')
+logs.write(f'batch_size = {batch_size}\n')
+logs.write(f'input_shape = {img_size}\n')
+logs.write(f'loss = {loss}\n')
+logs.close()
 
-# loss = 'sparse_categorical_crossentropy'
-# model.compile(optimizer = 'rmsprop',
-#               loss = loss)
-#
-# csv_logger = callbacks.CSVLogger(logs_path, append=True, separator='\t')
-# model.fit(train_datagen,
-#           epochs=epochs,
-#           validation_data=valid_datagen,
-#           callbacks=csv_logger
-#           )
-#
-# logs = open(logs_path, 'a')
-# logs.write(f'\nepochs = {epochs}\n')
-# logs.write(f'batch_size = {batch_size}\n')
-# logs.write(f'input_shape = {img_size}\n')
-# logs.write(f'loss = {loss}\n')
-# logs.close()
-#
-# model.save(model_path)
-# predictions = model.predict(valid_datagen)
-#
-# def display_mask(i):
-#     mask = np.argmax(predictions[i], axis=-1)
-#     mask = np.expand_dims(mask, axis=-1)
-#     image = PIL.ImageOps.autocontrast(array_to_img(mask))
-#     # image.show()
-#     img = img_to_array(image)
-#     cv2.imshow('predictions', img)
-#     cv2.waitKey(500)
-#
-# for i in range(2):
-#     display_mask(i)
+model.save(model_path)
+predictions = model.predict(valid_datagen)
+
+def display_mask(i):
+    mask = np.argmax(predictions[i], axis=-1)
+    mask = np.expand_dims(mask, axis=-1)
+    image = PIL.ImageOps.autocontrast(array_to_img(mask))
+    # image.show()
+    img = img_to_array(image)
+    cv2.imshow('predictions', img)
+    cv2.waitKey(500)
+
+for i in range(2):
+    display_mask(i)

@@ -23,7 +23,7 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 
 dir_path = os.path.join(path, 'output')
 # validation_path = [os.path.join(dir_path, folder) for folder in os.listdir(dir_path)][-1]
-validation_path = os.path.join(dir_path, 'initialized_3')
+validation_path = os.path.join(dir_path, 'initialized_4')
 
 test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
@@ -68,9 +68,9 @@ def create_mask(i):
     image = PIL.ImageOps.autocontrast(array_to_img(mask))
     img = img_to_array(image)
     img = cv2.resize(img, input_size[::-1])
-    blur = cv2.blur(img, (5, 5))
+    # blur = cv2.blur(img, (5, 5))
     image = cv2.imread(test_list[i])
-    return blur, image
+    return img, image
 
 
 def display_mask(mask, image):
@@ -84,7 +84,6 @@ for i in range(len(test_list)):
     out_img = display_mask(mask, image)
     cv2.imshow(f'out_img', out_img)
     cv2.waitKey(1000//60)
-
 
 # output = []
 # for i in range(60):

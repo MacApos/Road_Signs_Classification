@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
-import os
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+# import os
+# import matplotlib.pyplot as plt
+# import matplotlib.image as mpimg
 import tensorflow as tf
 
 # data_npy = r'F:\krzysztof\PycharmProjects\Road_Signs_Classification\lane_detection3\Pickles\320x120_data.npy'
@@ -124,5 +124,6 @@ def make_input(message):
 x1 = np.ones((16,2)) * 20
 r_offset= np.copy(x1)[:, 0] + 10
 
-# x2 = np.concatenate(x1[:, 0], x1[:, 1] + 10, axis=1)
+cv2.imshow('x1', x1)
+cv2.waitKey(0)
 print(r_offset)

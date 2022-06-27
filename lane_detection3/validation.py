@@ -19,13 +19,15 @@ def find_file(path, ext):
             return os.path.join(path, file)
 
 
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
-dir_list = os.listdir(dir_path)
-dir_list.sort(key=natural_keys)
-validation_path = [os.path.join(dir_path, folder) for folder in dir_list if folder.startswith('init')][-1]
+validation_path = os.path.join(dir_path, 'initialized_1')
+# dir_list = os.listdir(dir_path)
+# dir_list.sort(key=natural_keys)
+# validation_path = [os.path.join(dir_path, folder) for folder in dir_list if folder.startswith('init')][-1]
 
 test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
@@ -88,6 +90,7 @@ def create_points(i):
 
         side = cv2.polylines(side, [con], isClosed=False, color=1, thickness=5)
         side = cv2.resize(side, (width, height))
+        im_show(side)
         side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
 
         nonzerox = side.nonzero()[1]

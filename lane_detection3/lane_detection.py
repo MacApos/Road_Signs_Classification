@@ -8,7 +8,6 @@ from imutils import paths
 import matplotlib.pyplot as plt
 
 
-
 def im_show(image, name='Image'):
     cv2.imshow(name, image)
     cv2.waitKey(0)
@@ -282,15 +281,16 @@ def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_po
     points_arr = generate_points(image, left_curve, right_curve, start)
     colors = [(255, 0, 0), (255, 0, 0)]
 
+    visualization = np.copy(image)
     for idx, arr in enumerate(points_arr):
         if show_lines:
-            cv2.polylines(image, [arr], isClosed=False, color=colors[idx], thickness=20)
+            cv2.polylines(visualization, [arr], isClosed=False, color=colors[idx], thickness=image.shape[1] // 64)
 
         if show_points:
             for point in arr:
-                cv2.circle(image, tuple(point), 5, colors[idx], -1)
+                cv2.circle(visualization, tuple(point), 5, colors[idx], -1)
 
-    return image
+    return visualization
 
 
 def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor, perspective=False):
@@ -477,14 +477,13 @@ def detect_lines(path):
             save_label1 = labels_path1 + fr'\{os.path.basename(image_path)}'
             save_label2 = labels_path2 + fr'\{os.path.basename(image_path)}'
 
-            frame_exists = os.path.exists(save_frame1)
-            frame_exists = os.path.exists(save_frame2)
-            label1_exists = os.path.exists(save_label1)
-            label2_exists = os.path.exists(save_label2)
+            frame_exists1 = os.path.exists(save_frame1)
+            frame_exists2 = os.path.exists(save_frame2)
+            label_exists1 = os.path.exists(save_label1)
+            label_exists2 = os.path.exists(save_label2)
 
             image = cv2.imread(image_path)
             image = cv2.resize(image, (width, height))
-            frame = np.copy(image)
             warp, img = prepare(image, src, dst)
 
             leftx0, lefty0, rightx0, righty0, out_img = find_lanes(img)
@@ -508,8 +507,8 @@ def detect_lines(path):
             curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
 
-            start = min(min(t_lefty), min(t_righty)) * 1.05
-            frame = cv2.resize(frame, (s_width, s_height))
+            start = min(min(t_lefty), min(t_righty))
+            frame = cv2.resize(image, (s_width, s_height))
             poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start)
             poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, True)
 
@@ -521,10 +520,12 @@ def detect_lines(path):
 
             visualization = visualise(np.zeros((s_height, s_width)), t_left_curve, t_right_curve, start, True)
             for k, y_ in enumerate(y_t):
-                visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4, (0, 255, 0), -1)
-                visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4, (0, 255, 0), -1)
+                visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4,
+                                           (0, 255, 0), -1)
+                visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4,
+                                           (0, 255, 0), -1)
 
-            if not frame_exists and not label1_exists and not label2_exists:
+            if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
                 cv2.imwrite(save_frame1, out_frame1)
                 cv2.imwrite(save_frame2, out_frame2)
                 cv2.imwrite(save_label1, poly1)
@@ -549,7 +550,7 @@ def detect_lines(path):
             # test = img_to_array(test)
             # im_show(test)
 
-            poly1 = poly2.astype('float32')
+            poly1 = poly1.astype('float32')
             poly2 = poly2.astype('float32')
             image = image.astype('float32')
             warp = warp.astype('float32')
@@ -559,8 +560,6 @@ def detect_lines(path):
 
             img_labels1.append(poly1)
             img_labels2.append(poly2)
-
-            im_show(poly2)
 
             labels.append(t_curves_points)
             warp_labels.append(curves_points)
@@ -596,4 +595,4 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-detect_lines(path)
+# detect_lines(path)

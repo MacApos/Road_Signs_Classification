@@ -56,12 +56,13 @@ def plot_hist(history, filename):
     po.plot(fig, filename=os.path.join(filename, 'report.html'), auto_open=True)
     fig.write_image(os.path.join(filename, 'report.png'))
 
-
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 dir_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'train')
 dt = datetime.now().strftime('%d.%m_%H.%M')
-output_path = os.path.join(dir_path, f'initialized_{dt}')
+# output_path = os.path.join(dir_path, f'initialized_{dt}')
+output_path = os.path.join(dir_path, f'initialized_1')
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
@@ -75,22 +76,17 @@ coefficients = pickle.load(open('Pickles/160x80_warp_coefficients.p', 'rb'))
 
 data = np.array(data)
 labels = np.array(labels)
-
 height = data[0].shape[0]
 width = data[0].shape[1]
 
-labels = labels / width
-print(labels)
-
 # # load check
-# from lane_detection3.lane_detection import im_show, visualise
+from lane_detection3.lane_detection import im_show, visualise
 #
 # y = np.linspace(0, height, 3).astype(int)
 # for i, image in enumerate(data[:1]):
-#     left_points = labels[i][:3] * width
-#     right_points = labels[i][3:] * width
-#     print(left_points, right_points)
-#
+#     left_points = np.array(labels[0][:3] * width).astype(int)
+#     right_points = np.array(labels[0][3:] * width).astype(int)
+# #
 #     left_curve = coefficients[i][:3]
 #     right_curve = coefficients[i][3:]
 #
@@ -101,18 +97,15 @@ print(labels)
 #
 #     im_show(warp)
 
-epochs = 2
+epochs = 7
 learning_rate = 0.001
 batch_size = 32
-height = data[0].shape[0]
-width = data[0].shape[1]
-
 input_shape = (height, width, 3)
 
 loss = 'mean_squared_error'
 
-data, labels = shuffle(data, labels)
-x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=10)
+shuffled_data, shuffled_labels = shuffle(data, labels)
+x_train, x_test, y_train, y_test = train_test_split(shuffled_data, shuffled_labels, test_size=0.2, random_state=10)
 
 train_generator = ImageDataGenerator()
 valid_generator = ImageDataGenerator()
@@ -120,23 +113,24 @@ valid_generator = ImageDataGenerator()
 train_datagen = train_generator.flow(x_train, y_train, batch_size=batch_size)
 valid_datagen = valid_generator.flow(x_test, y_test, batch_size=batch_size)
 
-# generator check
+# # generator check
 # y_range = np.linspace(0, height, 3).astype(int)
 # for i, (x, y) in enumerate(train_datagen):
-#     left_points = y[0][:3]
-#     right_points = y[0][3:]
+#     left_points = np.array(y[0][:3] * width).astype(int)
+#     right_points = np.array(y[0][3:] * width).astype(int)
 #
 #     index = np.where(np.all(labels == y[0], axis=1))[0][0]
-#     print(index)
 #
 #     left_curve = coefficients[index][:3]
 #     right_curve = coefficients[index][3:]
 #
-#     for j, y_ in enumerate(y_range):
-#         cv2.circle(x[0], (left_points[j], y_), 2, (0, 255, 0), -1)
-#         cv2.circle(x[0], (right_points[j], y_), 2, (0, 255, 0), -1)
+#     warp = visualise(x[0], left_curve, right_curve, show_lines=True)
 #
-#     im_show(x[0])
+#     for j, y_ in enumerate(y_range):
+#         cv2.circle(warp, (left_points[j][0], y_), 2, (0, 255, 0), -1)
+#         cv2.circle(warp, (right_points[j][0], y_), 2, (0, 255, 0), -1)
+#
+#     im_show(warp)
 
 model = Sequential()
 model.add(BatchNormalization(input_shape=input_shape))
@@ -148,7 +142,7 @@ model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(units=512   , activation='relu'))
-model.add(Dense(units=6, activation='softmax'))
+model.add(Dense(units=6, activation='linear'))
 model.summary()
 
 model.compile(loss=loss,
