@@ -323,6 +323,7 @@ def visualise_perspective(image, left_curve, right_curve, src, dst, scale_factor
 
     points = np.vstack((points_arr[0], points_arr[1]))
     cv2.fillPoly(poly, [points], (0, 255, 0))
+    im_show(poly)
     poly = cv2.warpPerspective(poly, M_inv, (width, height), flags=cv2.INTER_LINEAR)
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
     poly = poly[:, :, 1]
@@ -393,7 +394,7 @@ def detect_lines(path):
     data_path = os.path.join(path, 'train')
     frames_path = os.path.join(path, 'frames')
     labels_path = os.path.join(path, 'labels')
-    pickles_path = os.path.join(root_path, 'Pickles')
+    pickles_path = '../Pickles'
 
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])
@@ -477,6 +478,7 @@ def detect_lines(path):
             warp_labels.append(curves)
 
             poly, frame = visualise_perspective(frame, left_curve0, right_curve0, src, dst, scale_factor)
+            im_show(frame)
 
             poly = poly / 255
             unet = poly.astype('uint8')

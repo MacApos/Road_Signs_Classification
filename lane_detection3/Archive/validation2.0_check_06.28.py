@@ -24,7 +24,7 @@ def find_file(path, ext):
 path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
-dir_path = os.path.join(path, 'output')
+dir_path = os.path.join(path, '../Output')
 validation_path = os.path.join(dir_path, 'train_1')
 # dir_list = os.listdir(dir_path)
 # dir_list.sort(key=natural_keys)
@@ -36,8 +36,8 @@ test_list = list(paths.list_images(test_path))
 model_path = find_file(validation_path, 'h5')
 model = keras.models.load_model(model_path)
 
-M = np.load('Pickles/M_video1.npy')
-M_inv = np.load('Pickles/M_inv_video1.npy')
+M = np.load('../Pickles/M_video1.npy')
+M_inv = np.load('../Pickles/M_inv_video1.npy')
 
 batch_size = 32
 s_width = 160

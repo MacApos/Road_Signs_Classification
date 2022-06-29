@@ -121,9 +121,14 @@ def make_input(message):
 # fig.show()
 # fig.write_image('../Pictures/fig1.svg')
 
-x1 = np.ones((16,2)) * 20
-r_offset= np.copy(x1)[:, 0] + 10
+a = np.ones((3, 1))
+a = np.resize(a, (a.shape[0], 10))
+print(a)
 
-cv2.imshow('x1', x1)
-cv2.waitKey(0)
-print(r_offset)
+b = np.ones((3,2))
+b.resize((b.shape[0], 10))
+print(b)
+
+# c = np.ones((3,2))
+# d = np.c_[c, np.zeros((c.shape[0], 10))]
+# print(d)

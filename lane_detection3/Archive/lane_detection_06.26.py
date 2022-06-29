@@ -594,8 +594,8 @@ width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spr
 visualise_perspective, usunąć instrukcje if/elif z find_lanes - jak lista dla jednej linii będzie pusta to i tak można
 ją dodać do globalnej listy, a counter będzie się dodawał niezależnie od tego w find_single_lane.'''
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')

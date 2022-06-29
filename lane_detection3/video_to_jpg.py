@@ -1,4 +1,6 @@
 import os
+import pickle
+
 import cv2
 import shutil
 import numpy as np
@@ -48,6 +50,9 @@ video4 = {"name": "Video4.mp4",
 
 video_list = [video1]
 
+mtx = pickle.load(open('Pickles/mtx.p', 'rb'))
+dist = pickle.load(open('Pickles/dist.p', 'rb'))
+
 i = 0
 for video in video_list:
     values = list(video.values())[1:]
@@ -69,7 +74,7 @@ for video in video_list:
     while cap.isOpened():
         _, image = cap.read()
         cropped_img = image[260:, :, :]
-        cropped_img = cv2.copyMakeBorder(cropped_img, 20, 0, 0, 0, cv2.BORDER_REPLICATE)
+        # cropped_img = cv2.copyMakeBorder(cropped_img, 20, 0, 0, 0, cv2.BORDER_REPLICATE)
 
         if i < train:
             img_path = train_path + fr'\{i:05d}.jpg'

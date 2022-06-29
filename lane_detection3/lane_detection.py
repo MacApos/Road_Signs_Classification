@@ -68,9 +68,19 @@ def to_jpg(name, image):
 def prepare(image, src, dst):
     width = image.shape[1]
     height = image.shape[0]
-    box = draw_lines(image, src)
+    undistorted = cv2.undistort(image, mtx, dist, None, mtx)
+    # plt.figure(figsize=(16, 8))
+    # titles = ['original', 'undistorted']
+    # for idx, img in enumerate([image, undistorted]):
+    #     plt.subplot(2, 1, idx+1)
+    #     plt.title(titles[idx])
+    #     plt.grid(False)
+    #     plt.axis(False)
+    #     plt.imshow(img[:,:,::-1])
+    # plt.show()
+    box = draw_lines(undistorted, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
-    warp, _ = warp_perspective(image, src, dst, width, height)
+    warp, _ = warp_perspective(undistorted, src, dst, width, height)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
     thresh = color_mask(warp, (max_val * 0.65, max_val))
@@ -181,8 +191,6 @@ def find_lanes(image):
     except AttributeError:
         pass
 
-
-
     leftx1 = nonzerox[left_idx]
     lefty1 = nonzeroy[left_idx]
     rightx1 = nonzerox[right_idx]
@@ -248,10 +256,16 @@ def label_points(image, left_curve, right_curve, start = 0):
     return y, np.concatenate((fit_left, fit_right))
 
 
-def generate_points(image, left_curve, right_curve, start=0, num=16, labels=False):
+def generate_points(image, left_curve, right_curve, start=0.0, stop=0.0, num=16, labels=False):
     width = image.shape[1]
     height = image.shape[0]
-    y = np.linspace(start, height - 1, num).astype(int).reshape((-1, 1))
+
+    if stop:
+        end = stop
+    else:
+        end = height-1
+
+    y = np.linspace(start, end, num).astype(int).reshape((-1, 1))
     fit_left = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
     fit_right = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
@@ -277,14 +291,14 @@ def generate_points(image, left_curve, right_curve, start=0, num=16, labels=Fals
     return visualise_points
 
 
-def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_points=False):
-    points_arr = generate_points(image, left_curve, right_curve, start)
-    colors = [(255, 0, 0), (255, 0, 0)]
+def visualise(image, left_curve, right_curve, start=0.0, stop=0.0, show_lines=True, show_points=False):
+    points_arr = generate_points(image, left_curve, right_curve, start, stop)
+    colors = [(255, 0, 0), (0, 0, 255)]
 
     visualization = np.copy(image)
     for idx, arr in enumerate(points_arr):
         if show_lines:
-            cv2.polylines(visualization, [arr], isClosed=False, color=colors[idx], thickness=image.shape[1] // 64)
+            cv2.polylines(visualization, [arr], isClosed=False, color=colors[idx], thickness=4)
 
         if show_points:
             for point in arr:
@@ -329,11 +343,11 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     return leftx, lefty, rightx, righty
 
 
-def visualise_perspective(image, left_curve, right_curve, start=0, line_label=False):
+def visualise_perspective(image, left_curve, right_curve, start=0, stop=0.0, line_label=False):
     poly = np.zeros_like(image)
     width = poly.shape[1]
 
-    points_arr = generate_points(image, left_curve, right_curve, start)
+    points_arr = generate_points(image, left_curve, right_curve, start, stop)
     colors = [0, 0, 0]
 
     if line_label:
@@ -363,7 +377,7 @@ def params():
     width = 1280
     height = width/2
     video1 = {'name': 'video1',
-              'src': np.float32([[290, 410*4/3], [550, 285*4/3]]),
+              'src': np.float32([[290, (410-20)*640/460], [550, (285-20)*640/460]]),
               'thresh': 0.65,
               'limit': 2548}
 
@@ -414,6 +428,7 @@ def detect_lines(path):
     global width, height
     global previous_frame
     global M_inv
+    global mtx, dist
 
     root_path = os.path.dirname(__file__)
     data_path = os.path.join(path, 'train')
@@ -427,7 +442,7 @@ def detect_lines(path):
     image = cv2.imread(data_list[0])
     width = image.shape[1]
     height = width // 2
-    scale_factor = 1 / 1
+    scale_factor = 1 / 8
     s_width = int(width * scale_factor)
     s_height = int(height * scale_factor)
 
@@ -468,6 +483,9 @@ def detect_lines(path):
         M_path = os.path.join(pickles_path, f'M_{name}.npy')
         M_inv_path = os.path.join(pickles_path, f'M_inv_{name}.npy')
 
+        mtx = pickle.load(open('Pickles/mtx.p', 'rb'))
+        dist = pickle.load(open('Pickles/dist.p', 'rb'))
+
         np.save(M_path, M)
         np.save(M_inv_path, M_inv)
 
@@ -496,10 +514,10 @@ def detect_lines(path):
             if scale_factor == 1:
                 leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
             else:
-                leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0,
-                                                                     src, dst, scale_factor, perspective=False)
-            t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0,
-                                                                         src, dst, scale_factor, perspective=True)
+                leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0, src, dst,
+                                                                     scale_factor, perspective=False)
+            t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0, src, dst,
+                                                                         scale_factor, perspective=True)
 
             left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
             t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
@@ -508,10 +526,13 @@ def detect_lines(path):
             t_curves = np.concatenate((t_left_curve, t_right_curve))
 
             start = min(min(t_lefty), min(t_righty))
-            print(start)
+            stop = scale_factor * src[0][1]
             frame = cv2.resize(image, (s_width, s_height))
-            poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start)
-            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, True)
+            poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop)
+            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop, True)
+
+            cv2.imshow('out_frame2', out_frame2)
+            cv2.waitKey(100)
 
             image = cv2.resize(image, (s_width, s_height)) / 255
             warp = cv2.resize(warp, (s_width, s_height)) / 255
@@ -519,20 +540,19 @@ def detect_lines(path):
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
-            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start, True)
+            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start)
             for k, y_ in enumerate(y_t):
                 visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
                 visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
-            im_show(visualization)
 
             if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
                 cv2.imwrite(save_frame1, out_frame1)
                 cv2.imwrite(save_frame2, out_frame2)
                 cv2.imwrite(save_label1, poly1)
                 cv2.imwrite(save_label2, poly2)
-                print(name, j, image_path, 'saving frame and labels')
+                print(name, j, image_path, 'saving frames and labels')
 
             else:
                 print(name, j, image_path, 'already processed')
@@ -586,8 +606,8 @@ width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spr
 visualise_perspective, usunąć instrukcje if/elif z find_lanes - jak lista dla jednej linii będzie pusta to i tak można
 ją dodać do globalnej listy, a counter będzie się dodawał niezależnie od tego w find_single_lane.'''
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')

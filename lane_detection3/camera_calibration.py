@@ -63,5 +63,5 @@ plt.subplot(1,2,2)
 plt.imshow(dst)
 plt.show()
 
-pickle.dump(mtx, open(r'..\\lane_detection3\Pickles\mtx.p', 'wb'))
-pickle.dump(dist, open(r'..\lane_detection3\Pickles\dist.p', 'wb'))
+pickle.dump(mtx, open(r'Pickles\mtx.p', 'wb'))
+pickle.dump(dist, open(r'Pickles\dist.p', 'wb'))

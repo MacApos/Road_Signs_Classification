@@ -58,13 +58,13 @@ def plot_hist(history, filename):
     po.plot(fig, filename=os.path.join(filename, 'report.html'), auto_open=True)
     fig.write_image(os.path.join(filename, 'report.png'))
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 dir_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'train')
 dt = datetime.now().strftime('%d.%m_%H.%M')
 # output_path = os.path.join(dir_path, f'initialized_{dt}')
-output_path = os.path.join(dir_path, f'initialized_2')
+output_path = os.path.join(dir_path, f'train_2')
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
@@ -103,7 +103,7 @@ y_range = np.linspace(start, height - 1, 3).astype(int)
 #
 #     im_show(warp)
 
-epochs = 40
+epochs = 20
 learning_rate = 0.001
 batch_size = 100
 input_shape = (height, width, 3)

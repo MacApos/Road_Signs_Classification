@@ -1,5 +1,6 @@
 from lane_detection3.lane_detection import im_show, fit_poly, visualise
 from keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
 from tensorflow import keras
 from imutils import paths
 import numpy as np
@@ -19,15 +20,12 @@ def find_file(path, ext):
             return os.path.join(path, file)
 
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
-validation_path = os.path.join(dir_path, 'initialized_2')
-# dir_list = os.listdir(dir_path)
-# dir_list.sort(key=natural_keys)
-# validation_path = [os.path.join(dir_path, folder) for folder in dir_list if folder.startswith('init')][-1]
+validation_path = os.path.join(dir_path, 'train_2')
 
 test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
@@ -41,10 +39,10 @@ s_height = 80
 img_size = (s_height, s_width)
 original_image = cv2.imread(test_list[0])
 width = original_image.shape[1]
-height = width // 2
+height = original_image.shape[0]
+print(width, height)
 input_size = cv2.imread(test_list[0]).shape[:-1]
-y = np.linspace(s_height * 0.6, s_height - 1, 3).astype(int)
-
+y_range = np.linspace(s_height * 0.6, s_height - 1, 3).astype(int)
 
 
 class generator(keras.utils.Sequence):
@@ -72,50 +70,26 @@ class generator(keras.utils.Sequence):
 train_datagen = generator(batch_size, img_size, test_list)
 predictions = model.predict(train_datagen)
 
+for i in range(len(test_list)):
+    points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
 
-def create_points(i):
-    # points_arr = np.array(predictions[i] * width).astype(int).reshape((2, -1))
-    print(predictions[i] * s_width)
+    nonzero = []
+    for arr in points_arr:
+        side = np.zeros((s_height, s_width))
+        for j in zip(arr, y_range):
+            cv2.circle(side, (j), 4, (255, 0, 0), -1)
 
-    # nonzero = []
-    # for arr in points_arr:
-    #     # coefficients = np.polyfit(y, arr, 2)
-    #     # for j in zip(arr, y):
-    #     #     points = cv2.circle(test[i], (j), 4, 1, -1)
-    #
-    #     side = np.zeros((s_height, s_width))
-    #     a1, a2 = [j.reshape((-1, 1)) for j in (arr, y)]
-    #     con = np.concatenate((a1, a2), axis=1)
-    #
-    #     side = cv2.polylines(side, [con], isClosed=False, color=1, thickness=5)
-    #     side = cv2.resize(side, (width, height))
-    #     im_show(side)
-    #     side = cv2.warpPerspective(side, M_inv, (width, height), flags=cv2.INTER_LINEAR)
-    #
-    #     nonzerox = side.nonzero()[1]
-    #     nonzeroy = side.nonzero()[0]
-    #     nonzero.append(nonzerox)
-    #     nonzero.append(nonzeroy)
-    #
-    # leftx, lefty, rightx, righty = nonzero
-    #
-    # return leftx, lefty, rightx, righty
+        side = cv2.resize(side, (width, height))
+        nonzerox = side.nonzero()[1]
+        nonzeroy = side.nonzero()[0]
+        nonzero.append(nonzerox)
+        nonzero.append(nonzeroy)
 
+    leftx, lefty, rightx, righty = nonzero
+    left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
 
-# def display_lines(i):
-    # leftx, lefty, rightx, righty = create_points(i)
-    #
-    # left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
-    #
-    # image = cv2.imread(test_list[i])
-    # image = cv2.resize(image, (width, height))
-    #
-    # start = min(min(lefty), min(righty))
-    # visualization = visualise(image, left_curve, right_curve, start, show_lines=True)
-    # visualization = cv2.resize(visualization, (width, original_image.shape[0]))
-    #
-    # im_show(visualization)
+    start = min(min(lefty), min(righty))
+    zeros = np.zeros((height, width, 3))
+    visualization = visualise(zeros, left_curve, right_curve, start, show_lines=True)
+    im_show(visualization)
 
-
-for i in range(len(test_list[:1])):
-    create_points(i)

@@ -8,7 +8,7 @@ import PIL
 from PIL import Image, ImageOps
 from tensorflow import keras
 # from keras.utils import img_to_array, array_to_img
-from keras.preprocessing.image import img_to_array, array_to_img
+from keras.preprocessing.image import ImageDataGenerator, img_to_array, array_to_img
 
 
 def find_file(path, ext):
@@ -62,46 +62,44 @@ train_datagen = generator(batch_size, img_size, test_list)
 predictions = model.predict(train_datagen)
 
 
-def predict(i):
-    global start, stop
-
+def create_mask(i):
     mask = np.argmax(predictions[i], axis=-1)
     mask = np.expand_dims(mask, axis=-1)
     image = PIL.ImageOps.autocontrast(array_to_img(mask))
     img = img_to_array(image)
     img = cv2.resize(img, input_size[::-1])
     blur = cv2.blur(img, (5, 5))
-
-    # zeros = np.zeros_like(blur)
-    # poly = np.dstack((zeros, mask, zeros)).astype('uint8')
-    # test_image = cv2.imread(test_list[i])
-    # prediction = cv2.addWeighted(image, 1, poly, 0.5, 0)
-
-    nonzero = np.nonzero(blur)
-    start = min(nonzero[0])
-    stop = max(nonzero[0])
-    y = np.linspace(start, stop, 16).astype(int)
-
-    leftx = np.zeros_like(y)
-    rightx = np.zeros_like(y)
-
-    for idx, val in enumerate(y):
-        nonzerox = np.nonzero(blur[val, :])[0]
-        if nonzerox.shape[0] == 0:
-            continue
-        leftx[idx] = nonzerox[0]
-        rightx[idx] = nonzerox[-1]
-
-    left_curve = np.polyfit(y, leftx, 2)
-    right_curve = np.polyfit(y, rightx, 2)
-
-    return left_curve, right_curve
+    image = cv2.imread(test_list[i])
+    return blur, image
 
 
-from lane_detection3.lane_detection import visualise
+def display_mask(mask, image):
+    zeros = np.zeros_like(mask)
+    poly = np.dstack((zeros, mask, zeros)).astype('uint8')
+    return cv2.addWeighted(image, 1, poly, 0.5, 0)
+
+
 for i in range(len(test_list)):
-    test_image = cv2.imread(test_list[i])
-    left_curve, right_curve = predict(i)
-    out_img = visualise(test_image, left_curve, right_curve, start, stop)
-    cv2.imshow('out_img', out_img)
-    cv2.waitKey(0)
+    mask, image = create_mask(i)
+    out_img = display_mask(mask, image)
+    cv2.imshow(f'out_img', out_img)
+    cv2.waitKey(1000//60)
+
+
+# output = []
+# for i in range(60):
+#     mask, image = create_mask(i)
+#     mask = display_mask(mask, image)
+#     if i < 3:
+#         cv2.imwrite(os.path.join(dir_path, f'unet{i}.jpg'), mask)
+#     img = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
+#     output.append(img)
+#
+# save_path = os.path.join(dir_path, 'unet.gif')
+# print(save_path)
+#
+# import imageio
+# with imageio.get_writer(save_path, mode='I', fps=3) as writer:
+#     for image in output:
+#         print('saving')
+#         writer.append_data(image)

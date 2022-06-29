@@ -33,26 +33,28 @@ except:
 path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
-dir_path = os.path.join(path, 'output')
+dir_path = os.path.join(path, '../Output')
 if not os.path.exists(dir_path):
     os.mkdir(dir_path)
 
 dt = datetime.now().strftime('%d.%m_%H.%M')
 # output_path = os.path.join(dir_path, f'initialized_{dt}')
-output_path = os.path.join(dir_path, f'train_4')
+output_path = os.path.join(dir_path, f'train_3')
 logs_path = os.path.join(output_path, f'logs.txt')
 model_path = os.path.join(output_path, 'unet_model.h5')
 
 if not os.path.exists(output_path):
     os.mkdir(output_path)
 
-data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
-labels = pickle.load(open('Pickles/160x80_img_labels2.p', 'rb'))
+data = pickle.load(open('../Pickles/160x80_data.p', 'rb'))
+labels = pickle.load(open('../Pickles/160x80_img_labels1.p', 'rb'))
 
 
 data = np.array(data)
 labels = [np.expand_dims(y, 2) for y in labels]
 labels = np.array(labels)
+print(labels.shape)
+
 
 batch_size = 32
 epochs = 15
@@ -71,19 +73,19 @@ x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 # cv2.waitKey(1200)
 # cv2.destroyAllWindows()
 
-# for img, img_label in zip(x_train[:1], y_train[:1]):
-#     poly = np.zeros_like(img).astype('float32')
-#     poly[:, :, 1] = img_label[:, :, 0]
-#     out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
-#     cv2.imshow('img', out_frame)
-#     cv2.waitKey(0)
-#     plt.figure(figsize=(16, 8))
-#     for idx, img in enumerate([img, poly, out_frame]):
-#         plt.subplot(1, 3, idx+1)
-#         plt.grid(False)
-#         plt.axis(False)
-#         imgplot = plt.imshow(img[:,:,::-1])
-#     plt.show()
+for img, img_label in zip(x_train[:1], y_train[:1]):
+    poly = np.zeros_like(img).astype('float32')
+    poly[:, :, 1] = img_label[:, :, 0]
+    out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
+    cv2.imshow('img', out_frame)
+    cv2.waitKey(0)
+    plt.figure(figsize=(16, 8))
+    for idx, img in enumerate([img, poly, out_frame]):
+        plt.subplot(1, 3, idx+1)
+        plt.grid(False)
+        plt.axis(False)
+        imgplot = plt.imshow(img[:,:,::-1])
+    plt.show()
 
 
 class generator(keras.utils.Sequence):
@@ -186,59 +188,59 @@ valid_datagen = valid_generator.flow(x=x_test, y=y_test, batch_size=batch_size)
 
 # train_datagen = generator(batch_size, img_size, x_train, y_train)
 # valid_datagen = generator(batch_size, img_size, x_test, y_test)
-
-# # generator check
-# for x, y in train_datagen:
-#     image = x[0]
 #
-#     label = PIL.ImageOps.autocontrast(array_to_img(y[0]))
-#     label = img_to_array(label)
+# # # generator check
+# # for x, y in train_datagen:
+# #     image = x[0]
+# #
+# #     label = PIL.ImageOps.autocontrast(array_to_img(y[0]))
+# #     label = img_to_array(label)
+# #
+# #     cv2.imshow('x', image)
+# #     cv2.imshow('y', label)
+# #     cv2.waitKey(1200)
+# #
+# #     poly = np.dstack((label, label, label))
+# #     poly[:, :, [0, 2]] = 0
+# #     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
+# #     plt.figure(figsize=(16, 8))
+# #     for idx, img in enumerate([image, poly, out_frame]):
+# #         plt.subplot(1, 3, idx + 1)
+# #         plt.grid(False)
+# #         plt.axis(False)
+# #         imgplot = plt.imshow(img[:, :, ::-1])
+# #     break
+# # plt.show()
 #
-#     cv2.imshow('x', image)
-#     cv2.imshow('y', label)
-#     cv2.waitKey(1200)
+# loss = 'sparse_categorical_crossentropy'
+# model.compile(optimizer = 'rmsprop',
+#               loss = loss)
 #
-#     poly = np.dstack((label, label, label))
-#     poly[:, :, [0, 2]] = 0
-#     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-#     plt.figure(figsize=(16, 8))
-#     for idx, img in enumerate([image, poly, out_frame]):
-#         plt.subplot(1, 3, idx + 1)
-#         plt.grid(False)
-#         plt.axis(False)
-#         imgplot = plt.imshow(img[:, :, ::-1])
-#     break
-# plt.show()
-
-loss = 'sparse_categorical_crossentropy'
-model.compile(optimizer = 'rmsprop',
-              loss = loss)
-
-csv_logger = callbacks.CSVLogger(logs_path, append=True, separator='\t')
-model.fit(train_datagen,
-          epochs=epochs,
-          validation_data=valid_datagen,
-          callbacks=csv_logger
-          )
-
-logs = open(logs_path, 'a')
-logs.write(f'\nepochs = {epochs}\n')
-logs.write(f'batch_size = {batch_size}\n')
-logs.write(f'input_shape = {img_size}\n')
-logs.write(f'loss = {loss}\n')
-logs.close()
-
-model.save(model_path)
-predictions = model.predict(valid_datagen)
-
-def display_mask(i):
-    mask = np.argmax(predictions[i], axis=-1)
-    mask = np.expand_dims(mask, axis=-1)
-    image = PIL.ImageOps.autocontrast(array_to_img(mask))
-    # image.show()
-    img = img_to_array(image)
-    cv2.imshow('predictions', img)
-    cv2.waitKey(500)
-
-for i in range(2):
-    display_mask(i)
+# csv_logger = callbacks.CSVLogger(logs_path, append=True, separator='\t')
+# model.fit(train_datagen,
+#           epochs=epochs,
+#           validation_data=valid_datagen,
+#           callbacks=csv_logger
+#           )
+#
+# logs = open(logs_path, 'a')
+# logs.write(f'\nepochs = {epochs}\n')
+# logs.write(f'batch_size = {batch_size}\n')
+# logs.write(f'input_shape = {img_size}\n')
+# logs.write(f'loss = {loss}\n')
+# logs.close()
+#
+# model.save(model_path)
+# predictions = model.predict(valid_datagen)
+#
+# def display_mask(i):
+#     mask = np.argmax(predictions[i], axis=-1)
+#     mask = np.expand_dims(mask, axis=-1)
+#     image = PIL.ImageOps.autocontrast(array_to_img(mask))
+#     # image.show()
+#     img = img_to_array(image)
+#     cv2.imshow('predictions', img)
+#     cv2.waitKey(500)
+#
+# for i in range(2):
+#     display_mask(i)
