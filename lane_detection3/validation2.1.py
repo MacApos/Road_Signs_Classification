@@ -33,7 +33,7 @@ test_list = list(paths.list_images(test_path))
 model_path = find_file(validation_path, 'h5')
 model = keras.models.load_model(model_path)
 
-batch_size = 100
+batch_size = 32
 s_width = 160
 s_height = 80
 img_size = (s_height, s_width)
@@ -73,7 +73,7 @@ predictions = model.predict(train_datagen)
 
 for i in range(len(test_list)):
     points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
-
+    print(points_arr)
     mask = np.zeros((height, width))
     nonzero = []
     for arr in points_arr:

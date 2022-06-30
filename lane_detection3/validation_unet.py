@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 from imutils import paths
 import PIL
-from PIL import Image, ImageOps
+from PIL import ImageOps
 from tensorflow import keras
 from lane_detection3.lane_detection import visualise
 # from keras.utils import img_to_array, array_to_img
@@ -23,7 +23,6 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
-# validation_path = [os.path.join(dir_path, folder) for folder in os.listdir(dir_path)][-1]
 test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
 

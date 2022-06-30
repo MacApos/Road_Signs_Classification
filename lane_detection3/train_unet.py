@@ -139,6 +139,11 @@ fnames = ['train_3', 'train_4']
 
 input_data = np.array(data)
 
+batch_size = 32
+epochs = 15
+img_size = data[0].shape[:-1]
+loss = 'sparse_categorical_crossentropy'
+
 for idx, type in enumerate(labels_type):
     output_path = os.path.join(dir_path, f'{fnames[idx]}')
     if not os.path.exists(output_path):
@@ -152,10 +157,6 @@ for idx, type in enumerate(labels_type):
 
     input_labels = np.array(type)
 
-    batch_size = 32
-    epochs = 15
-    img_size = data[0].shape[:-1]
-    print(img_size)
     data, labels = shuffle(input_data, input_labels)
     x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
@@ -220,7 +221,7 @@ for idx, type in enumerate(labels_type):
     #     break
     # plt.show()
 
-    loss = 'sparse_categorical_crossentropy'
+
     model.compile(optimizer = 'rmsprop',
                   loss = loss)
 

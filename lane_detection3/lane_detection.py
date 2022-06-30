@@ -377,7 +377,7 @@ def params():
     width = 1280
     height = width/2
     video1 = {'name': 'video1',
-              'src': np.float32([[290, 410*4/3], [550, 285*4/3]]),
+              'src': np.float32([[290, 410*4/3], [550, 285*4/3]]), # [[:, (410-20)*640/460], [:, (285-20)*640/460]]
               'thresh': 0.65,
               'limit': 2548}
 
@@ -525,7 +525,8 @@ def detect_lines(path):
             curves = np.concatenate((left_curve, right_curve))
             t_curves = np.concatenate((t_left_curve, t_right_curve))
 
-            start = min(min(t_lefty), min(t_righty))
+            start = int(s_height * 0.6)
+            # start = min(min(t_lefty), min(t_righty))
             # stop = scale_factor * src[0][1]
             stop = max(max(t_lefty), max(t_righty))
             frame = cv2.resize(image, (s_width, s_height))
@@ -543,6 +544,8 @@ def detect_lines(path):
                                            (0, 255, 0), -1)
                 visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
+
+            im_show(visualization)
 
             if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
                 cv2.imwrite(save_frame1, out_frame1)

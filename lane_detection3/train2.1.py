@@ -119,72 +119,73 @@ valid_generator = ImageDataGenerator()
 train_datagen = train_generator.flow(x_train, y_train, batch_size=batch_size)
 valid_datagen = valid_generator.flow(x_test, y_test, batch_size=batch_size)
 
-# # generator check
-# for i, (x, y) in enumerate(train_datagen):
-#     left_points = np.array(y[0][:3] * width).astype(int)
-#     right_points = np.array(y[0][3:] * width).astype(int)
+# generator check
+for i, (x, y) in enumerate(train_datagen):
+    print(y[0])
+    left_points = np.array(y[0][:3] * width).astype(int)
+    right_points = np.array(y[0][3:] * width).astype(int)
+
+    index = np.where(np.all(labels == y[0], axis=1))[0][0]
+
+    left_curve = coefficients[index][:3]
+    right_curve = coefficients[index][3:]
+
+    # warp = visualise(x[0], left_curve, right_curve, start, show_lines=True)
+
+    for j, y_ in enumerate(y_range):
+        cv2.circle(x[0], (left_points[j][0], y_), 2, (0, 255, 0), -1)
+        cv2.circle(x[0], (right_points[j][0], y_), 2, (0, 255, 0), -1)
+
+    im_show(x[0])
 #
-#     index = np.where(np.all(labels == y[0], axis=1))[0][0]
+# keras.backend.clear_session()
 #
-#     left_curve = coefficients[index][:3]
-#     right_curve = coefficients[index][3:]
+# model = Sequential()
+# model.add(BatchNormalization(input_shape=input_shape))
+# model.add(Conv2D(filters=128, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+# model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+# model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+# model.add(Flatten())
+# model.add(Dense(units=512   , activation='relu'))
+# model.add(Dense(units=6))
+# model.summary()
 #
-#     # warp = visualise(x[0], left_curve, right_curve, start, show_lines=True)
+# model.compile(loss=loss,
+#               optimizer=adam_v2.Adam(learning_rate=learning_rate),
+#               metrics=['accuracy'])
 #
-#     for j, y_ in enumerate(y_range):
-#         cv2.circle(x[0], (left_points[j][0], y_), 2, (0, 255, 0), -1)
-#         cv2.circle(x[0], (right_points[j][0], y_), 2, (0, 255, 0), -1)
+# dt = datetime.now().strftime('%d.%m_%H.%M')
 #
-#     im_show(x[0])
-
-keras.backend.clear_session()
-
-model = Sequential()
-model.add(BatchNormalization(input_shape=input_shape))
-model.add(Conv2D(filters=128, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dense(units=512   , activation='relu'))
-model.add(Dense(units=6))
-model.summary()
-
-model.compile(loss=loss,
-              optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              metrics=['accuracy'])
-
-dt = datetime.now().strftime('%d.%m_%H.%M')
-
-csv_logger = CSVLogger(logs_path, append=True, separator=';')
-
-history = model.fit(x=train_datagen,
-                    epochs=epochs,
-                    validation_data=valid_datagen,
-                    callbacks=csv_logger)
-
-logs = open(logs_path, 'a')
-logs.write(f'\nepochs = {epochs}\n')
-logs.write(f'batch_size = {batch_size}\n')
-logs.write(f'input_shape = {input_shape}\n')
-logs.write(f'loss = {loss}\n')
-logs.close()
-
-model.save(model_path)
-plot_hist(history, filename=output_path)
-
-predictions = model.predict(valid_datagen)
-points_arr = np.array(predictions[0] * width).astype(int).reshape((2, -1))
-
-mask = np.zeros((height, width))
-nonzero = []
-for arr in points_arr:
-    side = np.zeros((height, width))
-    for j in zip(arr, y_range):
-        cv2.circle(side, (j), 4, (255, 0, 0), -1)
-    mask += side
-
-cv2.imshow('mask', mask)
-cv2.waitKey(0)
+# csv_logger = CSVLogger(logs_path, append=True, separator=';')
+#
+# history = model.fit(x=train_datagen,
+#                     epochs=epochs,
+#                     validation_data=valid_datagen,
+#                     callbacks=csv_logger)
+#
+# logs = open(logs_path, 'a')
+# logs.write(f'\nepochs = {epochs}\n')
+# logs.write(f'batch_size = {batch_size}\n')
+# logs.write(f'input_shape = {input_shape}\n')
+# logs.write(f'loss = {loss}\n')
+# logs.close()
+#
+# model.save(model_path)
+# plot_hist(history, filename=output_path)
+#
+# predictions = model.predict(valid_datagen)
+# points_arr = np.array(predictions[0] * width).astype(int).reshape((2, -1))
+#
+# mask = np.zeros((height, width))
+# nonzero = []
+# for arr in points_arr:
+#     side = np.zeros((height, width))
+#     for j in zip(arr, y_range):
+#         cv2.circle(side, (j), 4, (255, 0, 0), -1)
+#     mask += side
+#
+# cv2.imshow('mask', mask)
+# cv2.waitKey(0)
