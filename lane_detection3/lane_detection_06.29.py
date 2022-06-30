@@ -192,6 +192,8 @@ def find_lanes(image):
     except AttributeError:
         pass
 
+
+
     leftx1 = nonzerox[left_idx]
     lefty1 = nonzeroy[left_idx]
     rightx1 = nonzerox[right_idx]
@@ -257,16 +259,10 @@ def label_points(image, left_curve, right_curve, start = 0):
     return y, np.concatenate((fit_left, fit_right))
 
 
-def generate_points(image, left_curve, right_curve, start=0, stop=0, num=16, labels=False):
+def generate_points(image, left_curve, right_curve, start=0, num=16, labels=False):
     width = image.shape[1]
     height = image.shape[0]
-
-    if stop:
-        end = stop
-    else:
-        end = height-1
-
-    y = np.linspace(start, end, num).astype(int).reshape((-1, 1))
+    y = np.linspace(start, height - 1, num).astype(int).reshape((-1, 1))
     fit_left = left_curve[0] * y ** 2 + left_curve[1] * y + left_curve[2]
     fit_right = right_curve[0] * y ** 2 + right_curve[1] * y + right_curve[2]
 
@@ -292,17 +288,18 @@ def generate_points(image, left_curve, right_curve, start=0, stop=0, num=16, lab
     return visualise_points
 
 
-def visualise(image, left_curve, right_curve, start=0, stop=0, show_lines=True, show_points=False):
-    points_arr = generate_points(image, left_curve, right_curve, start, stop)
+def visualise(image, left_curve, right_curve, start=0, show_lines=False, show_points=False):
+    points_arr = generate_points(image, left_curve, right_curve, start)
+    colors = [(255, 0, 0), (255, 0, 0)]
 
     visualization = np.copy(image)
     for idx, arr in enumerate(points_arr):
         if show_lines:
-            cv2.polylines(visualization, [arr], isClosed=False, color=(255, 0, 0), thickness=4)
+            cv2.polylines(visualization, [arr], isClosed=False, color=colors[idx], thickness=image.shape[1] // 64)
 
         if show_points:
             for point in arr:
-                cv2.circle(visualization, tuple(point), 5, (255, 0, 0), -1)
+                cv2.circle(visualization, tuple(point), 5, colors[idx], -1)
 
     return visualization
 
@@ -343,11 +340,11 @@ def scale_and_perspective(image, left_curve, right_curve, src, dst, scale_factor
     return leftx, lefty, rightx, righty
 
 
-def visualise_perspective(image, left_curve, right_curve, start=0, stop=0, line_label=False):
+def visualise_perspective(image, left_curve, right_curve, start=0, line_label=False):
     poly = np.zeros_like(image)
     width = poly.shape[1]
 
-    points_arr = generate_points(image, left_curve, right_curve, start, stop)
+    points_arr = generate_points(image, left_curve, right_curve, start)
     colors = [0, 0, 0]
 
     if line_label:
@@ -514,10 +511,10 @@ def detect_lines(path):
             if scale_factor == 1:
                 leftx, lefty, rightx, righty = leftx0, lefty0, rightx0, righty0
             else:
-                leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0, src, dst,
-                                                                     scale_factor, perspective=False)
-            t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0, src, dst,
-                                                                         scale_factor, perspective=True)
+                leftx, lefty, rightx, righty = scale_and_perspective(image, left_curve0, right_curve0,
+                                                                     src, dst, scale_factor, perspective=False)
+            t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0,
+                                                                         src, dst, scale_factor, perspective=True)
 
             left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
             t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
@@ -526,18 +523,17 @@ def detect_lines(path):
             t_curves = np.concatenate((t_left_curve, t_right_curve))
 
             start = min(min(t_lefty), min(t_righty))
-            # stop = scale_factor * src[0][1]
-            stop = max(max(t_lefty), max(t_righty))
             frame = cv2.resize(image, (s_width, s_height))
-            poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop)
-            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop, True)
+            poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start)
+            poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, True)
+
             image = cv2.resize(image, (s_width, s_height)) / 255
             warp = cv2.resize(warp, (s_width, s_height)) / 255
 
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
-            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start)
+            visualization = visualise(np.copy(image), t_left_curve, t_right_curve, start, True)
             for k, y_ in enumerate(y_t):
                 visualization = cv2.circle(visualization, (int(t_curves_points[k] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
@@ -549,7 +545,7 @@ def detect_lines(path):
                 cv2.imwrite(save_frame2, out_frame2)
                 cv2.imwrite(save_label1, poly1)
                 cv2.imwrite(save_label2, poly2)
-                print(name, j, image_path, 'saving frames and labels')
+                print(name, j, image_path, 'saving frame and labels')
 
             else:
                 print(name, j, image_path, 'already processed')
@@ -609,4 +605,4 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)

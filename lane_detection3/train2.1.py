@@ -56,10 +56,10 @@ def plot_hist(history, filename):
     fig.update_layout(width=1400, height=1000, title='Metrics')
 
     po.plot(fig, filename=os.path.join(filename, 'report.html'), auto_open=True)
-    fig.write_image(os.path.join(filename, 'report.png'))
+    # fig.write_image(os.path.join(filename, 'report.png'))
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 dir_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'train')
 dt = datetime.now().strftime('%d.%m_%H.%M')
@@ -86,26 +86,26 @@ width = data[0].shape[1]
 
 # # load check
 from lane_detection3.lane_detection import im_show, visualise
-#
+
 start = height * 0.6
 y_range = np.linspace(start, height - 1, 3).astype(int)
-# for i, image in enumerate(data[:5]):
+# for i, image in enumerate(data[:10]):
 #     left_points = np.array(labels[i][:3] * width).astype(int)
 #     right_points = np.array(labels[i][3:] * width).astype(int)
 #
 #     left_curve = coefficients[i][:3]
 #     right_curve = coefficients[i][3:]
 #
-#     warp = visualise(image, left_curve, right_curve, start, show_lines=True)
-#     for j, y_ in enumerate(y):
-#         cv2.circle(warp, (int(left_points[j]), y_), 2, (0, 255, 0), -1)
-#         cv2.circle(warp, (int(right_points[j]), y_), 2, (0, 255, 0), -1)
+#     # warp = visualise(image, left_curve, right_curve, start, show_lines=True)
+#     for j, y_ in enumerate(y_range):
+#         cv2.circle(image, (int(left_points[j]), y_), 2, (0, 255, 0), -1)
+#         cv2.circle(image, (int(right_points[j]), y_), 2, (0, 255, 0), -1)
 #
-#     im_show(warp)
+#     im_show(image)
 
-epochs = 20
+epochs = 30
 learning_rate = 0.001
-batch_size = 100
+batch_size = 32
 input_shape = (height, width, 3)
 
 loss = 'mean_squared_error'
@@ -129,13 +129,15 @@ valid_datagen = valid_generator.flow(x_test, y_test, batch_size=batch_size)
 #     left_curve = coefficients[index][:3]
 #     right_curve = coefficients[index][3:]
 #
-#     warp = visualise(x[0], left_curve, right_curve, start, show_lines=True)
+#     # warp = visualise(x[0], left_curve, right_curve, start, show_lines=True)
 #
 #     for j, y_ in enumerate(y_range):
-#         cv2.circle(warp, (left_points[j][0], y_), 2, (0, 255, 0), -1)
-#         cv2.circle(warp, (right_points[j][0], y_), 2, (0, 255, 0), -1)
+#         cv2.circle(x[0], (left_points[j][0], y_), 2, (0, 255, 0), -1)
+#         cv2.circle(x[0], (right_points[j][0], y_), 2, (0, 255, 0), -1)
 #
-#     im_show(warp)
+#     im_show(x[0])
+
+keras.backend.clear_session()
 
 model = Sequential()
 model.add(BatchNormalization(input_shape=input_shape))
@@ -147,7 +149,7 @@ model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(units=512   , activation='relu'))
-model.add(Dense(units=6, activation='linear'))
+model.add(Dense(units=6))
 model.summary()
 
 model.compile(loss=loss,
@@ -173,3 +175,16 @@ logs.close()
 model.save(model_path)
 plot_hist(history, filename=output_path)
 
+predictions = model.predict(valid_datagen)
+points_arr = np.array(predictions[0] * width).astype(int).reshape((2, -1))
+
+mask = np.zeros((height, width))
+nonzero = []
+for arr in points_arr:
+    side = np.zeros((height, width))
+    for j in zip(arr, y_range):
+        cv2.circle(side, (j), 4, (255, 0, 0), -1)
+    mask += side
+
+cv2.imshow('mask', mask)
+cv2.waitKey(0)

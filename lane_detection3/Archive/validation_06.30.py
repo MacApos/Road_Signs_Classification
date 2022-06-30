@@ -1,8 +1,10 @@
-from lane_detection3.lane_detection import visualise
+from lane_detection3.lane_detection import im_show, fit_poly, visualise, generate_points
+from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 from tensorflow import keras
 from imutils import paths
 import numpy as np
+import pickle
 import cv2
 import re
 import os
@@ -24,6 +26,9 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 
 dir_path = os.path.join(path, 'output')
 validation_path = os.path.join(dir_path, 'train_1')
+# dir_list = os.listdir(dir_path)
+# dir_list.sort(key=natural_keys)
+# validation_path = [os.path.join(dir_path, folder) for folder in dir_list if folder.startswith('init')][-1]
 
 test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
@@ -67,25 +72,21 @@ class generator(keras.utils.Sequence):
         return x
 
 
-def choose_perspective(fname):
-    validation_path = os.path.join(dir_path, fname)
-    model_path = find_file(validation_path, 'h5')
-    model = keras.models.load_model(model_path)
+train_datagen = generator(batch_size, img_size, test_list)
+predictions = model.predict(train_datagen)
 
-    train_datagen = generator(batch_size, img_size, test_list)
-    predictions = model.predict(train_datagen)
-    return predictions
-
-
-def predict(i):
-    global start, stop
+for i in range(len(test_list)):
     points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
-    nonzero = []
+    print(points_arr)
 
-    mask = np.zeros((height, width))
+    coefficients = []
+    points_nonzero = []
+    lines_nonzero = []
+
     for arr in points_arr:
         side = np.zeros((s_height, s_width))
-        # points = np.copy(side)
+        points = np.copy(side)
+        coefficients.append(np.polyfit(y_range, arr, 2))
         # for j in zip(arr, y_range):
         #     cv2.circle(points, (j), 4, (255, 0, 0), -1)
 
@@ -93,47 +94,40 @@ def predict(i):
         con = np.concatenate((a1, a2), axis=1)
         lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=5)
 
-        resized = cv2.resize(lines, (width, height))
+        im_show(lines)
 
-        if fname == 'train_1':
-            image = cv2.resize(lines, (width, width//2))
+        for nonzero, image in zip([points_nonzero, lines_nonzero], [points, lines]):
+            image = cv2.resize(image, (width, width//2))
             warp = cv2.warpPerspective(image, M_inv, (width, width//2), flags=cv2.INTER_LINEAR)
             resized = cv2.resize(warp, (width, height))
 
-        mask += resized
+            nonzerox = resized.nonzero()[1]
+            nonzeroy = resized.nonzero()[0]
+            nonzero.append(nonzerox)
+            nonzero.append(nonzeroy)
 
-        nonzerox = resized.nonzero()[1]
-        nonzeroy = resized.nonzero()[0]
-        nonzero.append(nonzerox)
-        nonzero.append(nonzeroy)
+    output = []
 
-    try:
-        start = min(nonzero[0])
-        stop = max(nonzero[0])
-    except ValueError:
-        print('no prediciton')
+    for nonzero in points_nonzero, lines_nonzero:
+        leftx, lefty, rightx, righty = nonzero
+        start = min(min(lefty), min(righty))
+        left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
+        zeros = np.zeros((height, width))
+        visualization = visualise(zeros, left_curve, right_curve, start, show_lines=True)
+        cv2.imshow('visualization', visualization)
+        cv2.waitKey(0)
+        output.append(visualization)
 
-    leftx, lefty, rightx, righty = nonzero
-    left_curve = np.polyfit(lefty, leftx, 2)
-    right_curve = np.polyfit(righty, rightx, 2)
+    zeros = np.zeros((height, width))
+    visualization = visualise(np.zeros((height, width)), coefficients[0], coefficients[1], start, show_lines=True)
+    output.insert(0, visualization)
 
-    return left_curve, right_curve, mask
-
-
-def display_prediction(i):
-    test_image = cv2.imread(test_list[i])
-    test_image = test_image / 255
-    zeros = np.zeros_like(mask)
-    poly = np.dstack((zeros, mask, zeros))
-
-    # prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
-    out_img = visualise(test_image, left_curve, right_curve, 0.6*height, 0.85*height)
-    cv2.imshow('prediction', out_img)
-    cv2.waitKey(0)
-
-
-fname = 'train_1'
-predictions = choose_perspective(fname)
-for i in range(len(test_list)):
-    left_curve, right_curve, mask = predict(i)
-    display_prediction(i)
+    plt.figure(figsize=(16, 8))
+    titles = ['coefficents', 'points', 'lines']
+    for idx, img in enumerate(output):
+        plt.subplot(1, len(output), idx+1)
+        plt.title(titles[idx])
+        plt.grid(False)
+        plt.axis(False)
+        plt.imshow(img)
+    plt.show()

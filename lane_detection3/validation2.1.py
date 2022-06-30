@@ -20,8 +20,8 @@ def find_file(path, ext):
             return os.path.join(path, file)
 
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
@@ -42,7 +42,8 @@ width = original_image.shape[1]
 height = original_image.shape[0]
 print(width, height)
 input_size = cv2.imread(test_list[0]).shape[:-1]
-y_range = np.linspace(s_height * 0.6, s_height - 1, 3).astype(int)
+
+y_range = np.linspace(s_height * 0.65, s_height * 0.85, 3).astype(int)
 
 
 class generator(keras.utils.Sequence):
@@ -73,13 +74,19 @@ predictions = model.predict(train_datagen)
 for i in range(len(test_list)):
     points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
 
+    mask = np.zeros((height, width))
     nonzero = []
     for arr in points_arr:
         side = np.zeros((s_height, s_width))
         for j in zip(arr, y_range):
-            cv2.circle(side, (j), 4, (255, 0, 0), -1)
+            cv2.circle(np.copy(side), (j), 4, (255, 0, 0), -1)
 
-        side = cv2.resize(side, (width, height))
+        a1, a2 = [j.reshape((-1, 1)) for j in (arr, y_range)]
+        con = np.concatenate((a1, a2), axis=1)
+        lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=5)
+        side = cv2.resize(lines, (width, height))
+        mask += side
+
         nonzerox = side.nonzero()[1]
         nonzeroy = side.nonzero()[0]
         nonzero.append(nonzerox)
@@ -89,7 +96,16 @@ for i in range(len(test_list)):
     left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
 
     start = min(min(lefty), min(righty))
-    zeros = np.zeros((height, width, 3))
-    visualization = visualise(zeros, left_curve, right_curve, start, show_lines=True)
-    im_show(visualization)
+    stop = max(max(lefty), max(righty))
 
+    test_image = cv2.imread(test_list[i])
+    test_image = test_image / 255
+    zeros = np.zeros_like(mask)
+    poly = np.dstack((zeros, mask, zeros))
+
+    print(poly.shape, test_image.shape)
+
+    # prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
+    out_img = visualise(test_image, left_curve, right_curve, 0.6*height, 1*height)
+    cv2.imshow('prediction', out_img)
+    cv2.waitKey(0)

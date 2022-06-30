@@ -6,8 +6,8 @@ import shutil
 import numpy as np
 from imutils import paths
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 videos_path = os.path.join(path, 'Videos')
 train_path = os.path.join(path, 'train')
@@ -49,9 +49,6 @@ video4 = {"name": "Video4.mp4",
           "batch1": (2125*fps, 2600*fps)}
 
 video_list = [video1]
-
-mtx = pickle.load(open('Pickles/mtx.p', 'rb'))
-dist = pickle.load(open('Pickles/dist.p', 'rb'))
 
 i = 0
 for video in video_list:

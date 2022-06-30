@@ -56,8 +56,8 @@ def plot_hist(history, filename):
     po.plot(fig, filename=os.path.join(filename, 'report.html'), auto_open=True)
     fig.write_image(os.path.join(filename, 'report.png'))
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 dir_path = os.path.join(path, 'output')
 data_path = os.path.join(path, 'train')
 dt = datetime.now().strftime('%d.%m_%H.%M')
@@ -81,7 +81,7 @@ labels = np.array(labels)
 height = data[0].shape[0]
 width = data[0].shape[1]
 
-from lane_detection3.lane_detection import im_show, visualise
+# from lane_detection3.lane_detection import im_show, visualise
 # # load check
 #
 # y = np.linspace(0, height, 3).astype(int)
@@ -99,9 +99,9 @@ from lane_detection3.lane_detection import im_show, visualise
 #
 #     im_show(warp)
 
-epochs = 40
+epochs = 30
 learning_rate = 0.001
-batch_size = 100
+batch_size = 32
 input_shape = (height, width, 3)
 
 loss = 'mean_squared_error'
@@ -115,61 +115,71 @@ valid_generator = ImageDataGenerator()
 train_datagen = train_generator.flow(x_train, y_train, batch_size=batch_size)
 valid_datagen = valid_generator.flow(x_test, y_test, batch_size=batch_size)
 
-# generator check
-y_range = np.linspace(0, height - 1, 3).astype(int)
-print(y_range)
-for i, (x, y) in enumerate(train_datagen):
-    print(np.max(x[0]))
-    im_show(x[0])
-    left_points = np.array(y[0][:3] * width).astype(int)
-    right_points = np.array(y[0][3:] * width).astype(int)
+# # generator check
+# y_range = np.linspace(0, height - 1, 3).astype(int)
+# print(y_range)
+# for i, (x, y) in enumerate(train_datagen):
+#     print(np.max(x[0]))
+#     im_show(x[0])
+#     left_points = np.array(y[0][:3] * width).astype(int)
+#     right_points = np.array(y[0][3:] * width).astype(int)
+#
+#     index = np.where(np.all(labels == y[0], axis=1))[0][0]
+#
+#     left_curve = coefficients[index][:3]
+#     right_curve = coefficients[index][3:]
+#
+#     warp = visualise(x[0], left_curve, right_curve, show_lines=True)
+#
+#     for j, y_ in enumerate(y_range):
+#         cv2.circle(warp, (left_points[j][0], y_), 2, (0, 255, 0), -1)
+#         cv2.circle(warp, (right_points[j][0], y_), 2, (0, 255, 0), -1)
+#
+#     im_show(warp)
 
-    index = np.where(np.all(labels == y[0], axis=1))[0][0]
+keras.backend.clear_session()
 
-    left_curve = coefficients[index][:3]
-    right_curve = coefficients[index][3:]
+# conv_base = tf.keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=input_shape)
+# conv_base.trainable = True
+#
+# for layer in conv_base.layers[:-5]:
+#     layer.trainable = False
+#
+# for layer in conv_base.layers:
+#     print(f'layer_name: {layer.name:13} trainable {layer.trainable}')
+#
+model = Sequential()
+# model.add(conv_base)
+model.add(BatchNormalization(input_shape=input_shape))
+model.add(Conv2D(filters=128, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(filters=44, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(units=512, activation='relu'))
+model.add(Dense(units=6))
+model.summary()
 
-    warp = visualise(x[0], left_curve, right_curve, show_lines=True)
+model.compile(loss=loss,
+              optimizer=rmsprop_v2.RMSProp(learning_rate=learning_rate),
+              metrics=['accuracy'])
 
-    for j, y_ in enumerate(y_range):
-        cv2.circle(warp, (left_points[j][0], y_), 2, (0, 255, 0), -1)
-        cv2.circle(warp, (right_points[j][0], y_), 2, (0, 255, 0), -1)
+csv_logger = CSVLogger(logs_path, append=True, separator=';')
 
-    im_show(warp)
-#
-# model = Sequential()
-# model.add(BatchNormalization(input_shape=input_shape))
-# model.add(Conv2D(filters=128, kernel_size=(3, 3), input_shape=input_shape, activation='relu'))
-# model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
-# model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-# model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(Flatten())
-# model.add(Dense(units=512, activation='relu'))
-# model.add(Dense(units=6, activation='linear'))
-# model.summary()
-#
-# model.compile(loss=loss,
-#               optimizer=adam_v2.Adam(learning_rate=learning_rate),
-#               metrics=['accuracy'])
-#
-# dt = datetime.now().strftime('%d.%m_%H.%M')
-#
-# csv_logger = CSVLogger(logs_path, append=True, separator=';')
-#
-# history = model.fit(x=train_datagen,
-#                     epochs=epochs,
-#                     validation_data=valid_datagen,
-#                     callbacks=csv_logger)
-#
-# logs = open(logs_path, 'a')
-# logs.write(f'\nepochs = {epochs}\n')
-# logs.write(f'batch_size = {batch_size}\n')
-# logs.write(f'input_shape = {input_shape}\n')
-# logs.write(f'loss = {loss}\n')
-# logs.close()
-#
-# model.save(model_path)
-# plot_hist(history, filename=output_path)
+history = model.fit(x=train_datagen,
+                    epochs=epochs,
+                    validation_data=valid_datagen,
+                    callbacks=csv_logger)
+
+logs = open(logs_path, 'a')
+logs.write(f'\nepochs = {epochs}\n')
+logs.write(f'batch_size = {batch_size}\n')
+logs.write(f'input_shape = {input_shape}\n')
+logs.write(f'loss = {loss}\n')
+logs.close()
+
+model.save(model_path)
+plot_hist(history, filename=output_path)
 
