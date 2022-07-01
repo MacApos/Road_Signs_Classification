@@ -57,8 +57,8 @@ def plot_hist(history, filename):
     fig.write_image(os.path.join(filename, 'report.png'))
 
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 dir_path = os.path.join(path, 'output')
 if not os.path.exists(dir_path):
     os.mkdir(dir_path)
@@ -100,7 +100,6 @@ for idx in range(2):
     data = None
     data = np.array(data_type[idx])
     labels = np.array(labels_type[idx])
-
     coefficients = coefficients_type[idx]
     start = boundaries[idx]
 

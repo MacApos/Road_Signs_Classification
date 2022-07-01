@@ -545,8 +545,6 @@ def detect_lines(path):
                 visualization = cv2.circle(visualization, (int(t_curves_points[k + 3] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
 
-            im_show(visualization)
-
             if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
                 cv2.imwrite(save_frame1, out_frame1)
                 cv2.imwrite(save_frame2, out_frame2)
@@ -606,8 +604,8 @@ width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spr
 visualise_perspective, usunąć instrukcje if/elif z find_lanes - jak lista dla jednej linii będzie pusta to i tak można
 ją dodać do globalnej listy, a counter będzie się dodawał niezależnie od tego w find_single_lane.'''
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
