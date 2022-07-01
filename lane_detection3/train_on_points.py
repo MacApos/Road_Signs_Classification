@@ -1,6 +1,7 @@
 import keras
 from sklearn.model_selection import train_test_split
 from plotly.subplots import make_subplots
+from sklearn.metrics import r2_score
 from sklearn.utils import shuffle
 from datetime import datetime
 import plotly.graph_objects as go
@@ -57,8 +58,8 @@ def plot_hist(history, filename):
     fig.write_image(os.path.join(filename, 'report.png'))
 
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 dir_path = os.path.join(path, 'output')
 if not os.path.exists(dir_path):
     os.mkdir(dir_path)
@@ -70,6 +71,7 @@ warp_coefficients = pickle.load(open('Pickles/160x80_warp_coefficients.p', 'rb')
 data = pickle.load(open('Pickles/160x80_data.p', 'rb'))
 labels = pickle.load(open('Pickles/160x80_labels.p', 'rb'))
 coefficients = pickle.load(open('Pickles/160x80_coefficients.p', 'rb'))
+
 
 data_type = [warp_data, data]
 labels_type = [warp_labels, labels]
@@ -100,6 +102,8 @@ for idx in range(2):
     data = None
     data = np.array(data_type[idx])
     labels = np.array(labels_type[idx])
+    print(labels.shape)
+
     coefficients = coefficients_type[idx]
     start = boundaries[idx]
 
@@ -143,12 +147,12 @@ for idx in range(2):
     model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
-    model.add(Dense(units=512   , activation='relu'))
-    model.add(Dense(units=6))
+    model.add(Dense(units=512, activation='relu'))
+    model.add(Dense(units=6, activation='linear'))
     model.summary()
 
     model.compile(loss=loss,
-                  optimizer=adam_v2.Adam(learning_rate=learning_rate),
+                  optimizer=rmsprop_v2.RMSProp(learning_rate=learning_rate),
                   metrics=['accuracy'])
 
     dt = datetime.now().strftime('%d.%m_%H.%M')
@@ -160,17 +164,31 @@ for idx in range(2):
                         validation_data=valid_datagen,
                         callbacks=csv_logger)
 
+    model.save(model_path)
+    plot_hist(history, filename=output_path)
+
+    predictions = model.predict(valid_datagen)
+    squeezed_test = np.squeeze(y_test)
+
+    print(model.metrics_names, 'RMSE of loss')
+    test_rmse = np.sqrt(model.evaluate(valid_datagen, verbose=0))[0]
+    rmse = np.sqrt(model.evaluate(x_test, y_test, verbose=0))[0]
+
+    print(f"Validation RMSE: {rmse}")
+
+    r2 = r2_score(squeezed_test, predictions)
+    print(f"Validation R^2 Score: {r2:.5f}")
+
     logs = open(logs_path, 'a')
     logs.write(f'\nepochs = {epochs}\n')
     logs.write(f'batch_size = {batch_size}\n')
     logs.write(f'input_shape = {input_shape}\n')
     logs.write(f'loss = {loss}\n')
+    logs.write(f'rmse = {rmse}\n')
+    logs.write(f'r2 = {r2}\n')
     logs.close()
 
-    model.save(model_path)
-    plot_hist(history, filename=output_path)
 
-    predictions = model.predict(valid_datagen)
     points_arr = np.array(predictions[0] * width).astype(int).reshape((2, -1))
 
     mask = np.zeros((height, width))

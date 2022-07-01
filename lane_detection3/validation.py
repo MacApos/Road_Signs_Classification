@@ -13,8 +13,8 @@ def find_file(path, ext):
             return os.path.join(path, file)
 
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
@@ -140,7 +140,7 @@ def display_prediction(i):
     cv2.waitKey(0)
 
 
-predictions = choose_perspective('train_2')
+predictions = choose_perspective('train_1')
 for index, i in enumerate(range(len(test_list))):
     left_curve, right_curve, mask = predict(i)
     display_prediction(i)
