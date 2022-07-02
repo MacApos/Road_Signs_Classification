@@ -140,7 +140,7 @@ def display_prediction(i):
     cv2.waitKey(0)
 
 
-predictions = choose_perspective('train_1')
-for index, i in enumerate(range(len(test_list))):
+predictions = choose_perspective('train_2')
+for index, i in enumerate(range(250, len(test_list))):
     left_curve, right_curve, mask = predict(i)
     display_prediction(i)
