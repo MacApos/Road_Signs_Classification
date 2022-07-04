@@ -641,3 +641,4 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 # y = make_input('Detect lines?')
 # if y=='y':
 detect_lines(path)
+
