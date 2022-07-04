@@ -116,10 +116,33 @@ def display_prediction(i):
     poly = np.dstack((zeros, mask, zeros)).astype('uint8')
     prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
     out_img = visualise(prediction, left_curve, right_curve, start, stop)
-    cv2.imshow('out_img', out_img)
-    cv2.waitKey(0)
+    # cv2.imshow('out_img', out_img)
+    # cv2.waitKey(0)
+    return prediction, out_img
 
 
-predictions = choose_labels('train_3')
-for i in range(len(test_list)):
-    display_prediction(i)
+for train in ['train_3', 'train_4']:
+    predictions = choose_labels(train)
+    for i in range(len(test_list[:1])):
+        prediction, out_img = display_prediction(i)
+        cv2.imwrite(f'Pictures/{train}_prediction_{i}.jpg', prediction)
+        cv2.imshow('out_img', out_img)
+        cv2.waitKey(0)
+
+    for i in range(10, len(test_list[:11])):
+        prediction, out_img = display_prediction(i)
+        cv2.imwrite(f'Pictures/{train}_bad_fit_{i}.jpg', out_img)
+        cv2.imshow('out_img', out_img)
+        cv2.waitKey(0)
+
+    for i in range(19, len(test_list[:20])):
+        prediction, _ = display_prediction(i)
+        cv2.imwrite(f'Pictures/{train}_line_cross_{i}.jpg', prediction)
+        cv2.imshow('out_img', prediction)
+        cv2.waitKey(0)
+
+    for i in range(21, len(test_list[:22])):
+        prediction, _ = display_prediction(i)
+        cv2.imwrite(f'Pictures/{train}_adjacent_lane_{i}.jpg', prediction)
+        cv2.imshow('out_img', prediction)
+        cv2.waitKey(0)

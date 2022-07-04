@@ -95,7 +95,7 @@ def predict(i, perspective_mask):
     y_range = np.linspace(begin, height - 1, 3).astype(int)
     nonzero = []
 
-    radius = 15
+    radius = 6
     if perspective_mask:
         radius = 30
 
@@ -116,10 +116,13 @@ def predict(i, perspective_mask):
 
         mask += side
 
+
         nonzerox = side.nonzero()[1]
         nonzeroy = side.nonzero()[0]
         nonzero.append(nonzerox)
         nonzero.append(nonzeroy)
+
+    mask = mask.astype('uint8') * 255
 
     try:
         start = min(min(nonzero[1]), min(nonzero[3]))
@@ -137,35 +140,68 @@ def predict(i, perspective_mask):
 def make_mask(image, perspective_mask=False):
     global mask
     left_curve, right_curve, mask = predict(i, perspective_mask)
-    image = image / 255
+    zeros = np.zeros_like(mask)
+
     poly = np.dstack((zeros, mask, zeros))
-    prediction = cv2.addWeighted(image, 1, poly, 0.5, 0)
-    out_img = visualise(prediction, left_curve, right_curve, start, stop)
+
+    out_img = cv2.addWeighted(image, 1, poly, 0.5, 0)
+    # out_img = visualise(out_img, left_curve, right_curve, start, stop)
 
     return out_img
 
 
 def display_prediction(i):
-    global zeros
-
-    zeros = np.zeros((height, width))
-
     if warp:
-        t_test_image = cv2.imread(test_list[i])
-        test_image = warp_perspective(t_test_image, M)
-        t_out_img = make_mask(t_test_image, True)
-        cv2.imshow('t_out_img', t_out_img)
-        cv2.waitKey(0)
+        test_image = cv2.imread(test_list[i])
+        out_img = make_mask(test_image, True)
+        t_test_image = warp_perspective(test_image, M)
+        t_out_img = make_mask(t_test_image)
+
+        return [out_img, t_out_img]
 
     else:
         test_image = cv2.imread(test_list[i])
+        out_img = make_mask(test_image)
 
-    out_img = make_mask(test_image)
+        return [out_img]
 
-    cv2.imshow('out_img', out_img)
-    cv2.waitKey(0)
+    # cv2.imwrite(f'Pictures/{train}_out_img.jpg', out_img)
+    # cv2.imshow('out_img', out_img)
+    # cv2.waitKey(0)
 
 
-predictions = choose_perspective('train_1')
-for index, i in enumerate(range(0, len(test_list))):
-    display_prediction(i)
+
+for train in ('train_1', 'train_2'):
+    predictions = choose_perspective(train)
+    for i in range(len(test_list[:1])):
+        print(i)
+        out = display_prediction(i)
+        if len(out) > 1:
+            cv2.imwrite(f'Pictures/{train}_out_img.jpg', out[0])
+            cv2.imwrite(f'Pictures/{train}_t_out_img.jpg', out[1])
+            cv2.imshow('out_img', out[0])
+            cv2.waitKey(0)
+            cv2.imshow('t_out_img', out[1])
+            cv2.waitKey(0)
+        else:
+            cv2.imwrite(f'Pictures/{train}_t_out_img.jpg', out[0])
+            cv2.imshow('out_img', out[0])
+            cv2.waitKey(0)
+
+
+    for i in range(19, len(test_list[:20])):
+        display_prediction(i)
+        out = display_prediction(i)
+        if len(out) > 1:
+            cv2.imwrite(f'Pictures/{train}_line_cross.jpg', out[0])
+            cv2.imwrite(f'Pictures/{train}_t_line_cross.jpg', out[1])
+            cv2.imshow('out_img', out[0])
+            cv2.waitKey(0)
+            cv2.imshow('out_img', out[0])
+            cv2.waitKey(0)
+            cv2.imshow('t_out_img', out[1])
+            cv2.waitKey(0)
+        else:
+            cv2.imwrite(f'Pictures/{train}_line_cross.jpg', out[0])
+            cv2.imshow('out_img', out[0])
+            cv2.waitKey(0)
