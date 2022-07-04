@@ -86,7 +86,7 @@ epochs = 30
 learning_rate = 0.001
 batch_size = 32
 input_shape = (height, width, 3)
-loss = 'mean_squared_error'
+loss = 'mse'
 
 for idx in range(2):
     output_path = os.path.join(dir_path, f'{fnames[idx]}')
@@ -156,7 +156,7 @@ for idx in range(2):
     model.summary()
 
     model.compile(loss=loss,
-                  optimizer=adam_v2.Adam(learning_rate=learning_rate),
+                  optimizer=rmsprop_v2.RMSprop(learning_rate=learning_rate),
                   metrics=['accuracy'])
 
     dt = datetime.now().strftime('%d.%m_%H.%M')
