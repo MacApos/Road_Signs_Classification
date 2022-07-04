@@ -53,16 +53,6 @@ class generator(keras.utils.Sequence):
         return x
 
 
-def choose_labels(fname):
-    validation_path = os.path.join(dir_path, fname)
-    model_path = find_file(validation_path, 'h5')
-    model = keras.models.load_model(model_path)
-
-    train_datagen = generator(batch_size, img_size, test_list)
-    predictions = model.predict(train_datagen)
-    return predictions
-
-
 def predict(i):
     global start, stop
     mask = np.argmax(predictions[i], axis=-1)
@@ -73,7 +63,6 @@ def predict(i):
     mask = cv2.blur(img, (5, 5))
 
     nonzero = np.nonzero(mask)
-
     try:
         start = min(nonzero[0])
         stop = max(nonzero[0])
@@ -95,22 +84,38 @@ def predict(i):
     left_curve = np.polyfit(y, leftx, 2)
     right_curve = np.polyfit(y, rightx, 2)
 
-    # points = np.zeros_like(mask)
+    # zeros = np.zeros_like(mask)
+    # poly = np.dstack((zeros, mask, zeros)).astype('uint8')
+    # test_image = cv2.imread(test_list[i])
+    # prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
+    #
+    # cv2.circle(poly, (poly.shape[1]//2, start), 4, (255, 0, 0), -1)
+    # cv2.circle(poly, (poly.shape[1]//2, stop), 4, (255, 0, 0), -1)
+    #
     # for j in zip([leftx, rightx], [y, y]):
     #     a1, a2 = [k.reshape((-1, 1)) for k in j]
     #     con = np.concatenate((a1, a2), axis=1)
     #     for c in con:
-    #         points = cv2.circle(points, c, 4, 1, -1)
-    # cv2.imshow('points', points)
-    # cv2.waitKey(0)
-
-    # return left_curve, right_curve, mask, points
+    #         cv2.circle(poly, c, 4, (0, 0, 255), -1)
+    #
+    # out_img = visualise(prediction, left_curve, right_curve, start, stop)
+    # cv2.imshow('out_img', out_img)
+    # cv2.waitKey(100)
 
     return left_curve, right_curve, mask
 
 
+def choose_labels(fname):
+    validation_path = os.path.join(dir_path, fname)
+    model_path = find_file(validation_path, 'h5')
+    model = keras.models.load_model(model_path)
+
+    train_datagen = generator(batch_size, img_size, test_list)
+    predictions = model.predict(train_datagen)
+    return predictions
+
+
 def display_prediction(i):
-    left_curve, right_curve, mask = predict(i)
     test_image = cv2.imread(test_list[i])
     zeros = np.zeros_like(mask)
     poly = np.dstack((zeros, mask, zeros)).astype('uint8')
@@ -120,6 +125,7 @@ def display_prediction(i):
     cv2.waitKey(0)
 
 
-predictions = choose_labels('train_3')
+predictions = choose_labels('train_4')
 for i in range(len(test_list)):
+    left_curve, right_curve, mask = predict(i)
     display_prediction(i)

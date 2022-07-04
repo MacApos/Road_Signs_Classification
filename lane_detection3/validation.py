@@ -18,8 +18,6 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
-validation_path = os.path.join(dir_path, 'train_1')
-
 test_path = os.path.join(path, 'test')
 test_list = list(paths.list_images(test_path))
 
@@ -90,7 +88,7 @@ def warp_perspective(image, M):
     return out_img
 
 
-def predict(i, warp_perspective):
+def predict(i, perspective_mask):
     global start, stop
 
     points_arr = np.array(predictions[i] * width).astype(int).reshape((2, -1))
@@ -98,7 +96,7 @@ def predict(i, warp_perspective):
     nonzero = []
 
     radius = 15
-    if warp_perspective:
+    if perspective_mask:
         radius = 30
 
     mask = np.zeros((height, width))
@@ -113,10 +111,8 @@ def predict(i, warp_perspective):
 
         # resized = cv2.resize(lines, (width, height))
 
-        if warp_perspective:
-            side = cv2.resize(side, (width, width//2))
-            warped = cv2.warpPerspective(side, M_inv, (width, width//2), flags=cv2.INTER_LINEAR)
-            side = cv2.resize(warped, (width, height))
+        if perspective_mask:
+            side = warp_perspective(side, M_inv)
 
         mask += side
 
@@ -138,9 +134,9 @@ def predict(i, warp_perspective):
     return left_curve, right_curve, mask
 
 
-def make_mask(image, warp_perspective=False):
+def make_mask(image, perspective_mask=False):
     global mask
-    left_curve, right_curve, mask = predict(i, warp_perspective)
+    left_curve, right_curve, mask = predict(i, perspective_mask)
     image = image / 255
     poly = np.dstack((zeros, mask, zeros))
     prediction = cv2.addWeighted(image, 1, poly, 0.5, 0)
