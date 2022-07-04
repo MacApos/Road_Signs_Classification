@@ -81,7 +81,6 @@ def prepare(image, src, dst):
     # plt.show()
     box = draw_lines(undistorted, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
-    # im_show(box)
     warp = warp_perspective(undistorted, M)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
@@ -349,11 +348,11 @@ def visualise_perspective(image, left_curve, right_curve, start=0, stop=0, line_
     width = poly.shape[1]
 
     points_arr = generate_points(image, left_curve, right_curve, start, stop)
-    colors = [0, 0, 0]
+    colors = [0, 255, 0]
 
     if line_label:
-        channel = 0
-        colors[channel] = 255
+        # channel = 0
+        # colors[channel] = 255
         for arr in points_arr:
             l_offset = np.copy(arr)
             r_offset = np.copy(arr)
@@ -363,24 +362,25 @@ def visualise_perspective(image, left_curve, right_curve, start=0, stop=0, line_
             poly = cv2.fillPoly(poly, [points], colors)
 
     else:
-        channel = 1
-        colors[channel] = 255
+        # channel = 1
+        # colors[channel] = 255
         points = np.vstack((points_arr[0], points_arr[1]))
         poly = cv2.fillPoly(poly, [points], colors)
 
     out_frame = cv2.addWeighted(image, 1, poly, 0.5, 0)
-    poly = poly[:, :, channel]
+    # poly = poly[:, :, channel]
+    poly = poly[:, :, 1]
 
     return poly, out_frame
 
 
 def params():
-    video1 = {'name': 'video1',
-              'src': np.float32([[290, 410*4/3], [550, 285*4/3]]), # [[:, (410-20)*640/460], [:, (285-20)*640/460]]
+    video1 = {'name': 'video1(2)',
+              'src': np.float32([[290, 390], [550, 265]]),
               'thresh': 0.65,
               'limit': 2548}
 
-    video2 = {'name': 'video2',
+    video2 = {'name': 'video2(2)',
               'src': np.float32([[285, 410], [550, 285]]),  # [[:, 390+20], [:, 265+20]]
               'thresh': 0.55,
               'limit': 4122}
@@ -430,7 +430,7 @@ def detect_lines(path):
     global mtx, dist
 
     root_path = os.path.dirname(__file__)
-    data_path = os.path.join(path, 'train')
+    data_path = os.path.join(path, 'test')
     frames_path1 = os.path.join(path, 'frames1')
     frames_path2 = os.path.join(path, 'frames2')
     labels_path1 = os.path.join(path, 'labels1')
@@ -440,20 +440,20 @@ def detect_lines(path):
     data_list = list(paths.list_images(data_path))
     image = cv2.imread(data_list[0])
     width = image.shape[1]
-    height = width // 2
-    scale_factor = 1 / 8
+    height = image.shape[0]
+    scale_factor = 1 / 1
     s_width = int(width * scale_factor)
     s_height = int(height * scale_factor)
 
-    x = make_input('Delete previous data?')
+    # x = make_input('Delete previous data?')
 
-    for folder_path in frames_path1, frames_path2, labels_path1, labels_path2:
-        if os.path.exists(folder_path) and x == 'y':
-        # if os.path.exists(folder_path):
-            shutil.rmtree(folder_path)
-
-        if not os.path.exists(folder_path):
-            os.mkdir(folder_path)
+    # for folder_path in frames_path1, frames_path2, labels_path1, labels_path2:
+    #     if os.path.exists(folder_path) and x == 'y':
+    #     # if os.path.exists(folder_path):
+    #         shutil.rmtree(folder_path)
+    #
+    #     if not os.path.exists(folder_path):
+    #         os.mkdir(folder_path)
 
     video_list, dst = params()
 
@@ -488,7 +488,8 @@ def detect_lines(path):
         np.save(M_path, M)
         np.save(M_inv_path, M_inv)
 
-        for image_path in data_list[i: i+limit]:
+        idx = 245
+        for image_path in data_list[idx:idx+1]:
             save_frame1 = frames_path1 + fr'\{os.path.basename(image_path)}'
             save_frame2 = frames_path2 + fr'\{os.path.basename(image_path)}'
             save_label1 = labels_path1 + fr'\{os.path.basename(image_path)}'
@@ -500,7 +501,7 @@ def detect_lines(path):
             label_exists2 = os.path.exists(save_label2)
 
             image = cv2.imread(image_path)
-            image = cv2.resize(image, (width, height))
+            # image = cv2.resize(image, (width, height))
             warp, img = prepare(image, src, dst)
 
             leftx0, lefty0, rightx0, righty0, out_img = find_lanes(img)
@@ -531,32 +532,58 @@ def detect_lines(path):
             frame = cv2.resize(image, (s_width, s_height))
             poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop)
             poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop, True)
-            image = cv2.resize(image, (s_width, s_height)) / 255
-            warp = cv2.resize(warp, (s_width, s_height)) / 255
+            cv2.imwrite(f'Pictures/poly1_{idx}.jpg', poly1)
+            cv2.imwrite(f'Pictures/poly2_{idx}.jpg', poly2)
+            cv2.imwrite(f'Pictures/out_frame1{idx}.jpg', out_frame1)
+            cv2.imwrite(f'Pictures/out_frame2{idx}.jpg', out_frame2)
+            im_show(out_frame1)
+            im_show(out_frame2)
+
+            # image = cv2.resize(image, (s_width, s_height)) / 255
+            # warp = cv2.resize(warp, (s_width, s_height)) / 255
 
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
             visualization = visualise(np.copy(warp), left_curve, right_curve)
-            visualization = np.copy(warp)
 
-            for k, y_ in enumerate(y):
-                visualization = cv2.circle(visualization, (int(curves_points[k] * s_width), y_[0]), 4,
-                                           (0, 255, 0), -1)
-                visualization = cv2.circle(visualization, (int(curves_points[k + 3] * s_width), y_[0]), 4,
-                                           (0, 255, 0), -1)
+            save_point = {'points': np.copy(warp),
+                          'name': '',
+                          'y': y,
+                          'curves_points': curves_points,
+                          'radius': 6}
 
-            im_show(visualization)
+            save_t_point = {'points': np.copy(image),
+                            'name': 't_',
+                            'y': y_t,
+                            'curves_points': t_curves_points,
+                            'radius': 6}
 
-            if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
-                cv2.imwrite(save_frame1, out_frame1)
-                cv2.imwrite(save_frame2, out_frame2)
-                cv2.imwrite(save_label1, poly1)
-                cv2.imwrite(save_label2, poly2)
-                print(name, j, image_path, 'saving frames and labels')
 
-            else:
-                print(name, j, image_path, 'already processed')
+            for save in save_point, save_t_point:
+                points = save['points']
+                name = save['name']
+                y = save['y']
+                curves_points = save['curves_points']
+                radius = save['radius']
+
+                for k, y_ in enumerate(y):
+                    points = cv2.circle(points, (int(curves_points[k] * s_width), y_[0]), radius, (0, 255, 0), -1)
+                    points = cv2.circle(points, (int(curves_points[k + 3] * s_width), y_[0]), radius, (0, 255, 0), -1)
+
+                im_show(points)
+                cv2.imwrite(f'Pictures/{name}points_{idx}.jpg', points)
+
+
+            # if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
+            #     cv2.imwrite(save_frame1, out_frame1)
+            #     cv2.imwrite(save_frame2, out_frame2)
+            #     cv2.imwrite(save_label1, poly1)
+            #     cv2.imwrite(save_label2, poly2)
+            #     print(name, j, image_path, 'saving frames and labels')
+            #
+            # else:
+            #     print(name, j, image_path, 'already processed')
 
             poly1 = poly1 / 255
             poly2 = poly2 / 255
@@ -591,16 +618,16 @@ def detect_lines(path):
         i += limit
     print('end')
 
-    pickle.dump(data, open(f'Pickles/{s_width}x{s_height}_data.p', 'wb'))
-    pickle.dump(warp_data, open(f'Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
-
-    pickle.dump(img_labels1, open(f'Pickles/{s_width}x{s_height}_img_labels1.p', 'wb'))
-    pickle.dump(img_labels2, open(f'Pickles/{s_width}x{s_height}_img_labels2.p', 'wb'))
-    pickle.dump(labels, open(f'Pickles/{s_width}x{s_height}_labels.p', 'wb'))
-    pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
-
-    pickle.dump(coefficients, open(f'Pickles/{s_width}x{s_height}_coefficients.p', 'wb'))
-    pickle.dump(warp_coefficients, open(f'Pickles/{s_width}x{s_height}_warp_coefficients.p', 'wb'))
+    # pickle.dump(data, open(f'Pickles/{s_width}x{s_height}_data.p', 'wb'))
+    # pickle.dump(warp_data, open(f'Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
+    #
+    # pickle.dump(img_labels1, open(f'Pickles/{s_width}x{s_height}_img_labels1.p', 'wb'))
+    # pickle.dump(img_labels2, open(f'Pickles/{s_width}x{s_height}_img_labels2.p', 'wb'))
+    # pickle.dump(labels, open(f'Pickles/{s_width}x{s_height}_labels.p', 'wb'))
+    # pickle.dump(warp_labels, open(f'Pickles/{s_width}x{s_height}_warp_labels.p', 'wb'))
+    #
+    # pickle.dump(coefficients, open(f'Pickles/{s_width}x{s_height}_coefficients.p', 'wb'))
+    # pickle.dump(warp_coefficients, open(f'Pickles/{s_width}x{s_height}_warp_coefficients.p', 'wb'))
 
 '''Do zmiany: wygenerować zdjecia treningowe w orginalnym rozmiarze (1280x460), przeskalować je na samym początku do
 width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spróbować połączyć scale_and_perspective z
@@ -613,4 +640,4 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+detect_lines(path)
