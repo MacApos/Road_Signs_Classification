@@ -125,7 +125,7 @@ def display_prediction(i):
     cv2.waitKey(0)
 
 
-predictions = choose_labels('train_3')
+predictions = choose_labels('train_4')
 for i in range(len(test_list)):
     left_curve, right_curve, mask = predict(i)
     display_prediction(i)

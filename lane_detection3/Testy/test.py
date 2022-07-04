@@ -121,14 +121,19 @@ def make_input(message):
 # fig.show()
 # fig.write_image('../Pictures/fig1.svg')
 
-a = np.ones((3, 1))
-a = np.resize(a, (a.shape[0], 10))
-print(a)
-
-b = np.ones((3,2))
-b.resize((b.shape[0], 10))
-print(b)
+# a = np.ones((3, 1))
+# a = np.resize(a, (a.shape[0], 10))
+# print(a)
+#
+# b = np.ones((3,2))
+# b.resize((b.shape[0], 10))
+# print(b)
 
 # c = np.ones((3,2))
 # d = np.c_[c, np.zeros((c.shape[0], 10))]
 # print(d)
+
+boolean = True
+warp = 850
+unwarp = 10
+print(boolean * (warp-unwarp) + unwarp)

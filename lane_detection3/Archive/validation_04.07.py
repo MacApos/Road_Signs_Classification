@@ -69,6 +69,7 @@ def choose_perspective(fname):
     begin = 0
 
     if fname == 'train_2':
+        print('train_2')
         warp = False
         begin = 0.6 * height
 
@@ -81,47 +82,39 @@ def choose_perspective(fname):
     return predictions
 
 
-def warp_perspective(image, M):
-    width = image.shape[1]
-    height = image.shape[0]
-    resized = cv2.resize(image, (width, width // 2))
-    warped = cv2.warpPerspective(resized, M, (width, width // 2), flags=cv2.INTER_LINEAR)
-    out_img = cv2.resize(warped, (width, height))
-    return out_img
-
-
-def predict(i, warp_perspective):
+def predict(i):
     global start, stop
 
     points_arr = np.array(predictions[i] * width).astype(int).reshape((2, -1))
+    s_points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
+    print(s_points_arr,
+          points_arr)
     y_range = np.linspace(begin, height - 1, 3).astype(int)
     nonzero = []
-
-    radius = 15
-    if warp_perspective:
-        radius = 30
 
     mask = np.zeros((height, width))
     for arr in points_arr:
         side = np.zeros((height, width))
-        for j in zip(arr, y_range):
-            side = cv2.circle(side, (j), radius, 1, -1)
+        # for j in zip(arr, y_range):
+        #     points = cv2.circle(side, (j), 1, (255, 0, 0), -1)
 
-        # a1, a2 = [j.reshape((-1, 1)) for j in (arr, y_range)]
-        # con = np.concatenate((a1, a2), axis=1)
-        # lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=warp*40+10)
-
+        a1, a2 = [j.reshape((-1, 1)) for j in (arr, y_range)]
+        con = np.concatenate((a1, a2), axis=1)
         # resized = cv2.resize(lines, (width, height))
 
-        if warp_perspective:
-            side = cv2.resize(side, (width, width//2))
-            warped = cv2.warpPerspective(side, M_inv, (width, width//2), flags=cv2.INTER_LINEAR)
-            side = cv2.resize(warped, (width, height))
+        if warp:
+            lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=50)
+            image = cv2.resize(lines, (width, width//2))
+            warped = cv2.warpPerspective(image, M_inv, (width, width//2), flags=cv2.INTER_LINEAR)
+            lines = cv2.resize(warped, (width, height))
 
-        mask += side
+        else:
+            lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=10)
 
-        nonzerox = side.nonzero()[1]
-        nonzeroy = side.nonzero()[0]
+        mask += lines
+
+        nonzerox = lines.nonzero()[1]
+        nonzeroy = lines.nonzero()[0]
         nonzero.append(nonzerox)
         nonzero.append(nonzeroy)
 
@@ -135,41 +128,24 @@ def predict(i, warp_perspective):
     left_curve = np.polyfit(lefty, leftx, 2)
     right_curve = np.polyfit(righty, rightx, 2)
 
+    cv2.imshow('mask', mask)
+    cv2.waitKey(0)
+
     return left_curve, right_curve, mask
 
 
-def make_mask(image, warp_perspective=False):
-    global mask
-    left_curve, right_curve, mask = predict(i, warp_perspective)
-    image = image / 255
-    poly = np.dstack((zeros, mask, zeros))
-    prediction = cv2.addWeighted(image, 1, poly, 0.5, 0)
-    out_img = visualise(prediction, left_curve, right_curve, start, stop)
-
-    return out_img
-
-
 def display_prediction(i):
-    global zeros
-
-    zeros = np.zeros((height, width))
-
-    if warp:
-        t_test_image = cv2.imread(test_list[i])
-        test_image = warp_perspective(t_test_image, M)
-        t_out_img = make_mask(t_test_image, True)
-        cv2.imshow('t_out_img', t_out_img)
-        cv2.waitKey(0)
-
-    else:
-        test_image = cv2.imread(test_list[i])
-
-    out_img = make_mask(test_image)
-
+    test_image = cv2.imread(test_list[i])
+    test_image = test_image / 255
+    zeros = np.zeros_like(mask)
+    poly = np.dstack((zeros, mask, zeros))
+    prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
+    out_img = visualise(prediction, left_curve, right_curve, start, stop)
     cv2.imshow('out_img', out_img)
     cv2.waitKey(0)
 
 
 predictions = choose_perspective('train_1')
 for index, i in enumerate(range(0, len(test_list))):
+    left_curve, right_curve, mask = predict(i)
     display_prediction(i)

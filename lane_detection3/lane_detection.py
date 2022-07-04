@@ -27,10 +27,11 @@ def to_csv(name, array):
     df.to_csv(path, sep='\t', index=False, header=False)
 
 
-def warp_perspective(image, from_, to, width, height):
-    M = cv2.getPerspectiveTransform(from_, to)
+def warp_perspective(image, M):
+    width = image.shape[1]
+    height = image.shape[0]
     warp = cv2.warpPerspective(image, M, (width, height), flags=cv2.INTER_LINEAR)
-    return warp, M
+    return warp
 
 
 def threshold(image, T):
@@ -81,7 +82,7 @@ def prepare(image, src, dst):
     box = draw_lines(undistorted, src)
     box = draw_lines(box, dst, line_color=(0, 0, 255))
     # im_show(box)
-    warp, _ = warp_perspective(undistorted, src, dst, width, height)
+    warp = warp_perspective(undistorted, M)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
     thresh = color_mask(warp, (max_val * 0.65, max_val))
@@ -427,7 +428,7 @@ def make_input(message):
 def detect_lines(path):
     global width, height
     global previous_frame
-    global M_inv
+    global M, M_inv
     global mtx, dist
 
     root_path = os.path.dirname(__file__)
@@ -604,8 +605,8 @@ width, width//2, usunąć skalowanie w visualise_perspective i detect_lines, spr
 visualise_perspective, usunąć instrukcje if/elif z find_lanes - jak lista dla jednej linii będzie pusta to i tak można
 ją dodać do globalnej listy, a counter będzie się dodawał niezależnie od tego w find_single_lane.'''
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 # y = make_input('Detect lines?')
