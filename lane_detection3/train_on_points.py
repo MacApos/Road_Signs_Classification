@@ -156,7 +156,7 @@ for idx in range(2):
     model.summary()
 
     model.compile(loss=loss,
-                  optimizer=rmsprop_v2.RMSProp(learning_rate=learning_rate),
+                  optimizer=adam_v2.Adam(learning_rate=learning_rate),
                   metrics=['accuracy'])
 
     dt = datetime.now().strftime('%d.%m_%H.%M')

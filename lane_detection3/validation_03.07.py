@@ -69,9 +69,8 @@ def choose_perspective(fname):
     begin = 0
 
     if fname == 'train_2':
-        print('train_2')
         warp = False
-        begin = 0.6 * height
+        begin = 0.6 * s_height
 
     validation_path = os.path.join(dir_path, fname)
     model_path = find_file(validation_path, 'h5')
@@ -85,38 +84,32 @@ def choose_perspective(fname):
 def predict(i):
     global start, stop
 
-    points_arr = np.array(predictions[i] * width).astype(int).reshape((2, -1))
-    s_points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
-    print(s_points_arr,
-          points_arr)
-    y_range = np.linspace(begin, height - 1, 3).astype(int)
+    points_arr = np.array(predictions[i] * s_width).astype(int).reshape((2, -1))
+    y_range = np.linspace(begin, s_height - 1, 3).astype(int)
     nonzero = []
 
     mask = np.zeros((height, width))
     for arr in points_arr:
-        side = np.zeros((height, width))
+        side = np.zeros((s_height, s_width))
         # points = np.copy(side)
         # for j in zip(arr, y_range):
         #     points = cv2.circle(points, (j), 1, (255, 0, 0), -1)
 
         a1, a2 = [j.reshape((-1, 1)) for j in (arr, y_range)]
         con = np.concatenate((a1, a2), axis=1)
+        lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=4)
 
-        # resized = cv2.resize(lines, (width, height))
+        resized = cv2.resize(lines, (width, height))
 
         if warp:
-            lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=50)
             image = cv2.resize(lines, (width, width//2))
             warped = cv2.warpPerspective(image, M_inv, (width, width//2), flags=cv2.INTER_LINEAR)
-            lines = cv2.resize(warped, (width, height))
+            resized = cv2.resize(warped, (width, height))
 
-        else:
-            lines = cv2.polylines(np.copy(side), [con], isClosed=False, color=1, thickness=10)
+        mask += resized
 
-        mask += lines
-
-        nonzerox = lines.nonzero()[1]
-        nonzeroy = lines.nonzero()[0]
+        nonzerox = resized.nonzero()[1]
+        nonzeroy = resized.nonzero()[0]
         nonzero.append(nonzerox)
         nonzero.append(nonzeroy)
 
