@@ -6,12 +6,8 @@ def objective(x, y):
     return x**2 + y**2
 
 
-def derivative(*args):
-    args_list = []
-    for x in args:
-        args_list.append(x * 2.0)
-
-    return np.asarray(args_list)
+def derivative(x, y):
+    return x*2, y*2
 
 
 def adam(bounds, n_iter, alpha, beta1, beta2, eps=1e-8):
@@ -45,15 +41,6 @@ def adam(bounds, n_iter, alpha, beta1, beta2, eps=1e-8):
 
     return x, score, solutions
 
-n_iter = 60
-beta1 = 0.8
-beta2 = 0.999
-alpha = 0.02
-eps = 1e-8
-
-bounds = [0.5, 1.0]
-xaxis = [-1, 0.25]
-yaxis = [-0.25, 1]
 
 def solution(bounds, xaxis, yaxis):
     best, score, solutions = adam(bounds, n_iter, alpha, beta1, beta2, eps=1e-8)
@@ -67,6 +54,13 @@ def solution(bounds, xaxis, yaxis):
     results = objective(x, y)
 
     return solutions, x, y, results
+
+
+n_iter = 60
+beta1 = 0.8
+beta2 = 0.999
+alpha = 0.02
+eps = 1e-8
 
 bounds = [0.5, 1.0]
 xaxis = [-1, 0.25]
