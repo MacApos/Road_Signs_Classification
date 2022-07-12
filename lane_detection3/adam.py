@@ -76,8 +76,7 @@ zaxis = objective(solutions[:, 0], solutions[:, 1])
 
 solutions_2d, x_2d, y_2d, results_2d = solution(bounds, [-1.0, 1.0], [-1.0, 1.0])
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 2, 1, projection='3d')
+ax = plt.axes(projection='3d')
 ax.plot(solutions[:, 0], solutions[:, 1], zaxis, color = 'black', alpha = 1, linewidth=2.5)
 ax.plot_surface(x, y, results, cmap = 'jet', alpha=0.5)
 params = {'mathtext.default': 'regular' }
@@ -86,10 +85,11 @@ ax.set_xlabel('$w_1$')
 ax.set_ylabel('$w_2$')
 ax.set_zlabel('L($w_1$, $w_2$)')
 
-ax = fig.add_subplot(1, 2, 2)
-ax.contourf(x_2d, y_2d, results_2d, levels=200, cmap='jet')
-ax.plot(solutions_2d[:, 0], solutions_2d[:, 1], '.-', color='w')
-ax.set_xlabel('$w_1$')
-ax.set_ylabel('$w_2$')
+plt.show()
+
+plt.contourf(x_2d, y_2d, results_2d, levels=200, cmap='jet')
+plt.plot(solutions_2d[:, 0], solutions_2d[:, 1], '.-', color='w')
+plt.xlabel('$w_1$')
+plt.ylabel('$w_2$')
 
 plt.show()
