@@ -71,19 +71,33 @@ zaxis = objective(solutions[:, 0], solutions[:, 1])
 solutions_2d, x_2d, y_2d, results_2d = solution(bounds, [-1.0, 1.0], [-1.0, 1.0])
 
 ax = plt.axes(projection='3d')
+
 ax.plot(solutions[:, 0], solutions[:, 1], zaxis, color = 'black', alpha = 1, linewidth=2.5)
 ax.plot_surface(x, y, results, cmap = 'jet', alpha=0.5)
+
 params = {'mathtext.default': 'regular' }
 plt.rcParams.update(params)
-ax.set_xlabel('$w_1$')
-ax.set_ylabel('$w_2$')
-ax.set_zlabel('L($w_1$, $w_2$)')
+
+label_size = 18
+tick_size = label_size * 2/3
+ax.xaxis.set_tick_params(labelsize=tick_size)
+ax.yaxis.set_tick_params(labelsize=tick_size)
+ax.zaxis.set_tick_params(labelsize=tick_size)
+ax.set_xlabel('$w_1$', fontsize=label_size)
+ax.set_ylabel('$w_2$', fontsize=label_size)
+ax.set_zlabel('L($w_1$, $w_2$)', fontsize=label_size)
 
 plt.show()
 
+
 plt.contourf(x_2d, y_2d, results_2d, levels=200, cmap='jet')
 plt.plot(solutions_2d[:, 0], solutions_2d[:, 1], '.-', color='w')
-plt.xlabel('$w_1$')
-plt.ylabel('$w_2$')
+
+label_size = 36
+tick_size = label_size * 2/3
+plt.xticks(fontsize=tick_size)
+plt.yticks(fontsize=tick_size)
+plt.xlabel('$w_1$', fontsize=label_size)
+plt.ylabel('$w_2$', fontsize=label_size)
 
 plt.show()

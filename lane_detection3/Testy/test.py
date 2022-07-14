@@ -132,15 +132,19 @@ def make_input(message):
 # c = np.ones((3,2))
 # d = np.c_[c, np.zeros((c.shape[0], 10))]
 # print(d)
-from matplotlib import pyplot as plt
-
-xaxis = np.linspace(0, 5, 200)
-yaxis = np.linspace(0, 5, 200)
-x, y = np.meshgrid(xaxis, yaxis)
-
-z = np.sin(x)*np.cos(y)
-dz = np.cos(x)*(-np.sin(y))
-
-ax = plt.axes(projection='3d')
-ax.plot_surface(x, y, z, cmap = 'jet', alpha=0.5)
-plt.show()
+# from matplotlib import pyplot as plt
+#
+# xaxis = np.linspace(0, 5, 200)
+# yaxis = np.linspace(0, 5, 200)
+# x, y = np.meshgrid(xaxis, yaxis)
+#
+# z = np.sin(x)*np.cos(y)
+# dz = np.cos(x)*(-np.sin(y))
+#
+# ax = plt.axes(projection='3d')
+# ax.plot_surface(x, y, z, cmap = 'jet', alpha=0.5)
+# plt.show()
+import cv2
+image = cv2.imread(cv2.samples.findFile('box.png'))
+cv2.imshow('image', image)
+cv2.waitKey(0)
