@@ -59,15 +59,7 @@ classes = {1: 'Speed limit (20km/h)',
            42: 'End of no passing',
            43: 'End no passing veh > 3.5 tons'}
 
-customtkinter.set_appearance_mode('system')
-customtkinter.set_default_color_theme('blue')
 
-root = customtkinter.CTk()
-root.geometry('800x600')
-root.title('Traffic Sign Classification')
-
-sign_image = customtkinter.CTkLabel(root)
-label = customtkinter.CTkLabel(root, text_font=('arial', 15))
 
 
 def classify(file_path):
@@ -84,9 +76,10 @@ def classify(file_path):
 
 
 def show_classify_button(file_path):
-    classify_b = customtkinter.CTkButton(root, text='Classify Image', command=lambda: classify(file_path))
+    classify_b = customtkinter.CTkButton(root, text='Classify image', command=lambda: classify(file_path),
+                                         width=button_height, height=button_height, text_font=('arial', 15))
     classify_b.configure(fg_color='white')
-    classify_b.place(relx=0.5, rely=0.5)
+    classify_b.pack()
 
 
 def upload_images():
@@ -102,15 +95,25 @@ def upload_images():
     except:
         pass
 
+customtkinter.set_appearance_mode('system')
+customtkinter.set_default_color_theme('blue')
 
-upload = customtkinter.CTkButton(root, text='Upload an image', command=upload_images)
-upload.configure(fg_color='black')
-upload.pack(side=BOTTOM, pady=50)
+root = customtkinter.CTk()
+root.geometry('800x600')
+root.title('Traffic Sign Classification')
 
-sign_image.pack(side=BOTTOM, expand=True)
-label.pack(side=BOTTOM, expand=True)
+button_height = 50
+button_width = 100
 
 heading = customtkinter.CTkLabel(root, text='Traffic Sign Image', text_font=('arial', 20))
+sign_image = customtkinter.CTkLabel(root)
+label = customtkinter.CTkLabel(root, text_font=('arial', 15))
 heading.pack()
+sign_image.pack()
+label.pack()
+upload = customtkinter.CTkButton(root, text='Upload an image', command=upload_images, width=button_width,
+                                 height=button_height, text_font=('arial', 15))
+upload.configure(fg_color='black')
+upload.pack()
 
 root.mainloop()

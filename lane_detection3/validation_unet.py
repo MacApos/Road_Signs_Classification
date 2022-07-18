@@ -185,7 +185,7 @@ for i in range(19, len(test_list[:60])):
 
     cv2.putText(out_img, text, (org_width, org_height), font, font_scale, color, thickness, cv2.LINE_AA)
 
-    if width < 200:
+    if width < mean_width / 3:
         text = 'Line cross'
         diameter = 20
         space = 10
