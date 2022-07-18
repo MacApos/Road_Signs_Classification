@@ -144,7 +144,56 @@ def make_input(message):
 # ax = plt.axes(projection='3d')
 # ax.plot_surface(x, y, z, cmap = 'jet', alpha=0.5)
 # plt.show()
-import cv2
-image = cv2.imread(cv2.samples.findFile('box.png'))
-cv2.imshow('image', image)
-cv2.waitKey(0)
+import random
+# import matplotlib.pyplot as plt
+# from sklearn.datasets import make_regression
+# from sklearn.linear_model import LinearRegression
+#
+# X, y, coefficients = make_regression(
+#     n_samples=50,
+#     n_features=1,
+#     n_informative=1,
+#     n_targets=1,
+#     noise=5,
+#     coef=True,
+#     random_state=1
+# )
+#
+# print(X, y, coefficients, X.shape)
+#
+# plt.scatter(X, y)
+# plt.xlabel("x")
+# plt.ylabel("y")
+# plt.show()
+
+# x = np.sort(np.array([random.uniform(-50, 50) for i in range(50)]))
+#
+# #Let y = 0.3x + 0.4x^2. The polyfit needs to discover the parameters 0.4 and 0.3.
+#
+# #Add some noise to the data. More the noise, more the
+# #error from true parameters 0.4 and 0.3. You can try this yourself.
+# noise_std_dev = 15.0
+# print("Std Dev of noise in Data = ", noise_std_dev)
+#
+# y = np.array([random.gauss(0.4*i*i + 0.3*i, noise_std_dev) for i in x])
+#
+# #Let's try to fit a degree 2 polynomial
+# z = np.polyfit(x,y,2)
+# print("Parameters determined by polyfit = ", z)
+#
+# #The predicted values based on the linear regression.
+# zy = np.array([z[0]*pow(i, 2) + z[1]*pow(i,1) + z[2]*pow(i,0)  for i in x])
+#
+# #Let's visualize the results
+# xp = np.linspace(-60, 60, 100)
+#Plot the original points and the curve
+
+var = None
+if var:
+    print('None value')
+
+def mutable_arg(arg_list=None):
+    if np.all(arg_list):
+        print(arg_list)
+
+mutable_arg()

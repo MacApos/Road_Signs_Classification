@@ -106,43 +106,72 @@ def predict(i):
 
     # return left_curve, right_curve, mask, points
 
-    return left_curve, right_curve, mask
+    return left_curve, right_curve, mask, stop
 
 
 def display_prediction(i):
-    left_curve, right_curve, mask = predict(i)
+
     test_image = cv2.imread(test_list[i])
     zeros = np.zeros_like(mask)
     poly = np.dstack((zeros, mask, zeros)).astype('uint8')
     prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
     out_img = visualise(prediction, left_curve, right_curve, start, stop)
-    # cv2.imshow('out_img', out_img)
-    # cv2.waitKey(0)
+
     return prediction, out_img
 
 
-for train in ['train_3', 'train_4']:
-    predictions = choose_labels(train)
-    for i in range(len(test_list[:1])):
-        prediction, out_img = display_prediction(i)
-        cv2.imwrite(f'Pictures/{train}_prediction_{i}.jpg', prediction)
-        cv2.imshow('out_img', out_img)
-        cv2.waitKey(0)
+def draw_circle(curve=None, color=(255, 0, 0)):
+    if isinstance(curve, np.ndarray):
+        circle = curve[0] * stop ** 2 + curve[1] * stop + curve[2]
 
-    for i in range(10, len(test_list[:11])):
-        prediction, out_img = display_prediction(i)
-        cv2.imwrite(f'Pictures/{train}_bad_fit_{i}.jpg', out_img)
-        cv2.imshow('out_img', out_img)
-        cv2.waitKey(0)
+    else:
+        circle = curve
 
-    for i in range(19, len(test_list[:20])):
-        prediction, _ = display_prediction(i)
-        cv2.imwrite(f'Pictures/{train}_line_cross_{i}.jpg', prediction)
-        cv2.imshow('out_img', prediction)
-        cv2.waitKey(0)
+    cv2.circle(out_img, (int(circle), stop), 5, color, -1)
+    return circle
 
-    for i in range(21, len(test_list[:22])):
-        prediction, _ = display_prediction(i)
-        cv2.imwrite(f'Pictures/{train}_adjacent_lane_{i}.jpg', prediction)
-        cv2.imshow('out_img', prediction)
-        cv2.waitKey(0)
+
+# for train in ['train_3', 'train_4']:
+#     predictions = choose_labels(train)
+#     for i in range(len(test_list[:1])):
+#         prediction, out_img = display_prediction(i)
+#         cv2.imwrite(f'Pictures/{train}_prediction_{i}.jpg', prediction)
+#         cv2.imshow('out_img', out_img)
+#         cv2.waitKey(0)
+#
+#     for i in range(10, len(test_list[:11])):
+#         prediction, out_img = display_prediction(i)
+#         cv2.imwrite(f'Pictures/{train}_bad_fit_{i}.jpg', out_img)
+#         cv2.imshow('out_img', out_img)
+#         cv2.waitKey(0)
+#
+#     for i in range(19, len(test_list[:20])):
+#         prediction, _ = display_prediction(i)
+#         cv2.imwrite(f'Pictures/{train}_line_cross_{i}.jpg', prediction)
+#         cv2.imshow('out_img', prediction)
+#         cv2.waitKey(0)
+#
+#     for i in range(21, len(test_list[:22])):
+#         prediction, _ = display_prediction(i)
+#         cv2.imwrite(f'Pictures/{train}_adjacent_lane_{i}.jpg', prediction)
+#         cv2.imshow('out_img', prediction)
+#         cv2.waitKey(0)
+
+i = 10
+for i in range(len(test_list)):
+    predictions = choose_labels('train_3')
+    left_curve, right_curve, mask, stop = predict(i)
+
+    prediction, out_img = display_prediction(i)
+    left_curve = draw_circle(left_curve)
+    right_curve = draw_circle(right_curve)
+    center = out_img.shape[1] // 2
+    middle  = left_curve + (right_curve - left_curve) // 2
+    offset = middle - center
+
+    draw_circle(middle, (0, 0, 255))
+    draw_circle(center, (0, 255, 0))
+    print(offset)
+
+    cv2.imshow('out_img', out_img)
+    cv2.waitKey(250)
