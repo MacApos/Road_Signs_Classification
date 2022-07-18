@@ -130,7 +130,7 @@ model.add(Dense(units=classes, activation='softmax'))
 model.summary()
 
 model.compile(optimizer=adam_v2.Adam(learning_rate=learning_rate),
-              loss='binary_crossentropy',
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
 history = model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_test, y_test))
 

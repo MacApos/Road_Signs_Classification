@@ -77,9 +77,10 @@ def classify(file_path):
 
 def show_classify_button(file_path):
     classify_b = customtkinter.CTkButton(root, text='Classify image', command=lambda: classify(file_path),
-                                         width=button_height, height=button_height, text_font=('arial', 15))
-    classify_b.configure(fg_color='white')
-    classify_b.pack()
+                                         width=button_width, height=button_height, text_font=('arial', 15))
+    classify_b.configure(fg_color='royal blue')
+    classify_b.place(anchor='center', relx=0.5, rely=0.9)
+
 
 
 def upload_images():
@@ -96,24 +97,26 @@ def upload_images():
         pass
 
 customtkinter.set_appearance_mode('system')
-customtkinter.set_default_color_theme('blue')
+customtkinter.set_default_color_theme('dark-blue')
 
 root = customtkinter.CTk()
 root.geometry('800x600')
 root.title('Traffic Sign Classification')
 
 button_height = 50
-button_width = 100
+button_width = 175
 
 heading = customtkinter.CTkLabel(root, text='Traffic Sign Image', text_font=('arial', 20))
-sign_image = customtkinter.CTkLabel(root)
+sign_image = customtkinter.CTkLabel(root, text_font=('arial', 15), text_color='gray10')
 label = customtkinter.CTkLabel(root, text_font=('arial', 15))
-heading.pack()
-sign_image.pack()
-label.pack()
+
+heading.pack(pady=10)
+sign_image.pack(pady=20)
+label.pack(pady=30)
+
 upload = customtkinter.CTkButton(root, text='Upload an image', command=upload_images, width=button_width,
                                  height=button_height, text_font=('arial', 15))
-upload.configure(fg_color='black')
-upload.pack()
+upload.configure(fg_color='gray27')
+upload.place(anchor='center', relx=0.5, rely=0.8)
 
 root.mainloop()
