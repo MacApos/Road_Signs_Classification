@@ -1,15 +1,13 @@
-from keras.models import load_model
-from PIL import ImageTk
-import PIL.Image
-from tkinter import filedialog
-import customtkinter
-from tkinter import *
 import tkinter as tk
+from tkinter import *
+from tkinter import filedialog
+
+from PIL import ImageTk, Image
 import numpy as np
-import os.path
 import cv2
+import os
 
-
+from keras.models import load_model
 path = r'C:\Users\Maciej\PycharmProjects\Road_Signs_Classification\traffic_sign_detection\archive\Output'
 model_path = [os.path.join(path, file) for file in os.listdir(path) if file.endswith('hdf5')][0]
 
@@ -59,15 +57,13 @@ classes = {1: 'Speed limit (20km/h)',
            42: 'End of no passing',
            43: 'End no passing veh > 3.5 tons'}
 
-customtkinter.set_appearance_mode('system')
-customtkinter.set_default_color_theme('blue')
-
-root = customtkinter.CTk()
+root = tk.Tk()
 root.geometry('800x600')
 root.title('Traffic Sign Classification')
+root.configure(background='gray')
 
-sign_image = customtkinter.CTkLabel(root)
-label = customtkinter.CTkLabel(root, text_font=('arial', 15))
+label = Label(root, background='blue', font=('arial', 15, 'bold'))
+sign_image = Label(root)
 
 
 def classify(file_path):
@@ -80,37 +76,38 @@ def classify(file_path):
     idx = np.argmax(predictions, axis=-1)
     predictions = round(predictions[idx] * 100, 2)
     sign = classes[idx+1]
-    label.configure(text=f'Label: {sign}\nProbability: {predictions}%')
+    label.configure(foreground='#011638', text=f'Label: {sign}\nProbability: {predictions}%')
 
 
 def show_classify_button(file_path):
-    classify_b = customtkinter.CTkButton(root, text='Classify Image', command=lambda: classify(file_path))
-    classify_b.configure(fg_color='white')
-    classify_b.place(relx=0.5, rely=0.5)
+    classify_b = Button(root, text='Classify Image', command=lambda: classify(file_path), padx=10, pady=5)
+    classify_b.configure(background='#364156', foreground='white', font=('arial', 10, 'bold'))
+    classify_b.place(relx=0.79, rely=0.46)
 
 
 def upload_images():
     try:
         file_path = filedialog.askopenfilename()
-        uploaded = PIL.Image.open(file_path)
-        uploaded = uploaded.resize((250, 250))
-        img = ImageTk.PhotoImage(uploaded)
-        sign_image.configure(image=img)
-        sign_image.image = img
+        uploaded = Image.open(file_path)
+        # uploaded.thumbnail(((root.winfo_width()/2.25), (root.winfo_height()/2.25)))
+        im = ImageTk.PhotoImage(uploaded)
+        sign_image.configure(image=im)
+        sign_image.image = im
         label.configure(text='')
         show_classify_button(file_path)
     except:
         pass
 
 
-upload = customtkinter.CTkButton(root, text='Upload an image', command=upload_images)
-upload.configure(fg_color='black')
+upload = Button(root, text='Upload an image', command=upload_images)
+upload.configure(background='white', foreground='black', font=('arial', 15, 'bold'))
 upload.pack(side=BOTTOM, pady=50)
 
 sign_image.pack(side=BOTTOM, expand=True)
 label.pack(side=BOTTOM, expand=True)
 
-heading = customtkinter.CTkLabel(root, text='Traffic Sign Image', text_font=('arial', 20))
+heading = Label(root, text='Traffic Sign Image', pady=20, font=('arial', 20, 'bold'))
+heading.configure(background='gray', foreground='#364156')
 heading.pack()
 
 root.mainloop()

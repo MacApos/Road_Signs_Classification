@@ -157,21 +157,46 @@ def draw_circle(curve=None, color=(255, 0, 0)):
 #         cv2.imshow('out_img', prediction)
 #         cv2.waitKey(0)
 
-i = 10
-for i in range(len(test_list)):
+i = 19
+
+for i in range(19, len(test_list[:60])):
     predictions = choose_labels('train_3')
     left_curve, right_curve, mask, stop = predict(i)
 
     prediction, out_img = display_prediction(i)
-    left_curve = draw_circle(left_curve)
-    right_curve = draw_circle(right_curve)
-    center = out_img.shape[1] // 2
-    middle  = left_curve + (right_curve - left_curve) // 2
-    offset = middle - center
+    left_stop = draw_circle(left_curve)
+    right_stop = draw_circle(right_curve)
+    width = right_stop - left_stop
+    mean_width = 485
+    m_per_px = 3.7 / 485
 
+    center = out_img.shape[1] // 2
+    middle  = left_stop + width // 2
+    offset = (middle - center) * m_per_px
+
+    text = 'Offset: {:.2f} m'.format(offset)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    color = (0, 0, 0)
+    thickness = 2
+    (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
+    org_width = center - text_width // 2
+    org_height = 50 + text_height // 2
+
+    cv2.putText(out_img, text, (org_width, org_height), font, font_scale, color, thickness, cv2.LINE_AA)
+
+    if width < 200:
+        text = 'Line cross'
+        diameter = 20
+        space = 10
+        (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
+        org_width = center - (text_width+diameter+space) // 2
+        cv2.circle(out_img, (org_width, org_height + int(text_height*1.5)), diameter//2, (0, 0, 255), -1)
+        cv2.putText(out_img, text, (org_width + 15, org_height + text_height*2), font, font_scale, color, thickness,
+                    cv2.LINE_AA)
+
+    print(offset)
     draw_circle(middle, (0, 0, 255))
     draw_circle(center, (0, 255, 0))
-    print(offset)
 
-    cv2.imshow('out_img', out_img)
-    cv2.waitKey(250)
+    cv2.imwrite(f'Pictures/lane_cross/line_cross_{i}.jpg', out_img)

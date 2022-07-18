@@ -80,7 +80,7 @@ def prepare(image, src, dst):
     #     plt.imshow(img[:,:,::-1])
     # plt.show()
     box = draw_lines(undistorted, src)
-    box = draw_lines(box, dst, line_color=(0, 0, 255))
+    # box = draw_lines(box, dst, line_color=(0, 0, 255))
     warp = warp_perspective(undistorted, M)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
@@ -467,6 +467,7 @@ def detect_lines(path):
     warp_coefficients = []
     unet_labels = []
     previous_frame = []
+    lane_width = []
 
     i = 0
     j = 0
@@ -489,7 +490,7 @@ def detect_lines(path):
         np.save(M_inv_path, M_inv)
 
         idx = 245
-        for image_path in data_list[idx:idx+1]:
+        for image_path in data_list[i:i+limit]:
             save_frame1 = frames_path1 + fr'\{os.path.basename(image_path)}'
             save_frame2 = frames_path2 + fr'\{os.path.basename(image_path)}'
             save_label1 = labels_path1 + fr'\{os.path.basename(image_path)}'
@@ -519,6 +520,7 @@ def detect_lines(path):
             t_leftx, t_lefty, t_rightx, t_righty = scale_and_perspective(image, left_curve0, right_curve0, src, dst,
                                                                          scale_factor, perspective=True)
 
+            lane_width.append(t_rightx[-1] - t_leftx[-1])
             left_curve, right_curve = fit_poly(leftx, lefty, rightx, righty)
             t_left_curve, t_right_curve = fit_poly(t_leftx, t_lefty, t_rightx, t_righty)
 
@@ -532,12 +534,10 @@ def detect_lines(path):
             frame = cv2.resize(image, (s_width, s_height))
             poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop)
             poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop, True)
-            cv2.imwrite(f'Pictures/poly1_{idx}.jpg', poly1)
-            cv2.imwrite(f'Pictures/poly2_{idx}.jpg', poly2)
-            cv2.imwrite(f'Pictures/out_frame1{idx}.jpg', out_frame1)
-            cv2.imwrite(f'Pictures/out_frame2{idx}.jpg', out_frame2)
-            im_show(out_frame1)
-            im_show(out_frame2)
+            # cv2.imwrite(f'Pictures/poly1_{idx}.jpg', poly1)
+            # cv2.imwrite(f'Pictures/poly2_{idx}.jpg', poly2)
+            # cv2.imwrite(f'Pictures/out_frame1{idx}.jpg', out_frame1)
+            # cv2.imwrite(f'Pictures/out_frame2{idx}.jpg', out_frame2)
 
             # image = cv2.resize(image, (s_width, s_height)) / 255
             # warp = cv2.resize(warp, (s_width, s_height)) / 255
@@ -559,7 +559,6 @@ def detect_lines(path):
                             'curves_points': t_curves_points,
                             'radius': 6}
 
-
             for save in save_point, save_t_point:
                 points = save['points']
                 name = save['name']
@@ -571,8 +570,7 @@ def detect_lines(path):
                     points = cv2.circle(points, (int(curves_points[k] * s_width), y_[0]), radius, (0, 255, 0), -1)
                     points = cv2.circle(points, (int(curves_points[k + 3] * s_width), y_[0]), radius, (0, 255, 0), -1)
 
-                im_show(points)
-                cv2.imwrite(f'Pictures/{name}points_{idx}.jpg', points)
+                # cv2.imwrite(f'Pictures/{name}points_{idx}.jpg', points)
 
 
             # if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
@@ -584,6 +582,7 @@ def detect_lines(path):
             #
             # else:
             #     print(name, j, image_path, 'already processed')
+            print(j, image_path, 'proccesing')
 
             poly1 = poly1 / 255
             poly2 = poly2 / 255
@@ -596,27 +595,30 @@ def detect_lines(path):
             # test = img_to_array(test)
             # im_show(test)
 
-            poly1 = poly1.astype('float32')
-            poly2 = poly2.astype('float32')
-            image = image.astype('float32')
-            warp = warp.astype('float32')
-
-            data.append(image)
-            warp_data.append(warp)
-
-            img_labels1.append(poly1)
-            img_labels2.append(poly2)
-
-            labels.append(t_curves_points)
-            warp_labels.append(curves_points)
-
-            coefficients.append(t_curves)
-            warp_coefficients.append(curves)
+            # poly1 = poly1.astype('float32')
+            # poly2 = poly2.astype('float32')
+            # image = image.astype('float32')
+            # warp = warp.astype('float32')
+            #
+            # data.append(image)
+            # warp_data.append(warp)
+            #
+            # img_labels1.append(poly1)
+            # img_labels2.append(poly2)
+            #
+            # labels.append(t_curves_points)
+            # warp_labels.append(curves_points)
+            #
+            # coefficients.append(t_curves)
+            # warp_coefficients.append(curves)
 
             j += 1
 
         i += limit
     print('end')
+
+    mean_width = np.mean(np.array(lane_width))
+    print(mean_width)
 
     # pickle.dump(data, open(f'Pickles/{s_width}x{s_height}_data.p', 'wb'))
     # pickle.dump(warp_data, open(f'Pickles/{s_width}x{s_height}_warp_data.p', 'wb'))
