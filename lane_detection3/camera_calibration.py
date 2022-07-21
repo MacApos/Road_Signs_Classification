@@ -15,8 +15,8 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # Przygotowanie współrzędnych 3D, z=0 – (0,0,0), (2,0,0), (2,0,0), ... (6,5,0)
 # Wymiary szachownicy – 10x7
 grid = (7, 6)
-objp = np.zeros((grid[0]*grid[1], 3), np.float32)
-objp[:, :2] = np.mgrid[0:grid[1], 0:grid[0]].T.reshape(-1, 2)
+objp = np.zeros((grid[1]*grid[0], 3), np.float32)
+objp[:, :2] = np.mgrid[0:grid[0], 0:grid[1]].T.reshape(-1, 2)
 
 # Punkty na obiekcie w 3D
 objpoints = []
@@ -24,8 +24,8 @@ objpoints = []
 # Punkty na zdjęciu w 2D
 imgpoints = []
 
-for fname in [images[10]]:
-
+i = 0
+for fname in images:
     img = cv2.imread(fname)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -39,10 +39,16 @@ for fname in [images[10]]:
         corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
 
         cv2.drawChessboardCorners(img, grid, corners2, retval)
-        cv2.imshow('img', img)
-        cv2.waitKey(0)
 
-img = cv2.imread(images[0])
+        if i == 8:
+            cv2.imwrite('Pictures/camer_points.jpg', img)
+            print(fname, i)
+            cv2.imshow('camera_points', img)
+            cv2.waitKey(500)
+
+        i += 1
+
+img = cv2.imread('camera_cal/left12.jpg')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
@@ -53,20 +59,26 @@ newcameramatrix, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h
 dst = cv2.undistort(img, mtx, dist, None, mtx)
 x, y, w, h = roi
 dst = dst[y:y+h, x:x+w]
-cv2.imshow('dst', img)
-cv2.waitKey(0)
+
+cv2.imwrite('Pictures/no_distortion.jpg', img)
+# cv2.imshow('img', img)
+# cv2.waitKey(0)
+
+cv2.imwrite('Pictures/distortion.jpg', dst)
+# cv2.imshow('dst', dst)
+# cv2.waitKey(0)
 
 # 2
 # mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramatrix, (w, h), 5)
 # dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 # dst = dst[y:y+h, x:x+w]
 
-# plt.subplot(1,2,1)
-# plt.imshow(img)
-#
-# plt.subplot(1,2,2)
-# plt.imshow(dst)
-# plt.show()
+plt.subplot(1,2,1)
+plt.imshow(img)
+
+plt.subplot(1,2,2)
+plt.imshow(dst)
+plt.show()
 
 # pickle.dump(mtx, open(r'Pickles\mtx.p', 'wb'))
 # pickle.dump(dist, open(r'Pickles\dist.p', 'wb'))
