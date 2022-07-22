@@ -18,8 +18,8 @@ def find_file(path, ext):
             return os.path.join(path, file)
 
 
-path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
@@ -57,6 +57,7 @@ def choose_labels(fname):
     validation_path = os.path.join(dir_path, fname)
     model_path = find_file(validation_path, 'h5')
     model = keras.models.load_model(model_path)
+    print(model_path)
 
     train_datagen = generator(batch_size, img_size, test_list)
     predictions = model.predict(train_datagen)
@@ -110,7 +111,6 @@ def predict(i):
 
 
 def display_prediction(i):
-
     test_image = cv2.imread(test_list[i])
     zeros = np.zeros_like(mask)
     poly = np.dstack((zeros, mask, zeros)).astype('uint8')
@@ -159,18 +159,20 @@ def draw_circle(curve=None, color=(255, 0, 0)):
 
 i = 19
 
-for i in range(19, len(test_list[:60])):
-    predictions = choose_labels('train_3')
-    left_curve, right_curve, mask, stop = predict(i)
+predictions = choose_labels('train_3')
+mean_width = 485
+m_per_px = 3.7 / 485
+image = cv2.imread(test_list[0])
+center = image.shape[1] // 2
 
+for i in range(19, len(test_list[:60])):
+    left_curve, right_curve, mask, stop = predict(i)
     prediction, out_img = display_prediction(i)
+
     left_stop = draw_circle(left_curve)
     right_stop = draw_circle(right_curve)
     width = right_stop - left_stop
-    mean_width = 485
-    m_per_px = 3.7 / 485
 
-    center = out_img.shape[1] // 2
     middle  = left_stop + width // 2
     offset = (middle - center) * m_per_px
 
@@ -198,5 +200,5 @@ for i in range(19, len(test_list[:60])):
     print(offset)
     draw_circle(middle, (0, 0, 255))
     draw_circle(center, (0, 255, 0))
-
-    cv2.imwrite(f'Pictures/lane_cross/line_cross_{i}.jpg', out_img)
+    #
+    # cv2.imwrite(f'Pictures/lane_cross/line_cross_{i}.jpg', out_img)
