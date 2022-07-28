@@ -74,6 +74,8 @@ def choose_perspective(fname):
     model_path = find_file(validation_path, 'h5')
     model = keras.models.load_model(model_path)
 
+    print(model_path)
+
     train_datagen = generator(batch_size, img_size, test_list, warp)
     predictions = model.predict(train_datagen)
     return predictions
@@ -170,38 +172,49 @@ def display_prediction(i):
     # cv2.waitKey(0)
 
 
-
-for train in ('train_1', 'train_2'):
+for train in ['train_1', 'train_2']:
     predictions = choose_perspective(train)
-    for i in range(len(test_list[:1])):
-        print(i)
-        out = display_prediction(i)
-        if len(out) > 1:
-            cv2.imwrite(f'Pictures/{train}_out_img.jpg', out[0])
-            cv2.imwrite(f'Pictures/{train}_t_out_img.jpg', out[1])
-            cv2.imshow('out_img', out[0])
-            cv2.waitKey(0)
-            cv2.imshow('t_out_img', out[1])
-            cv2.waitKey(0)
-        else:
-            cv2.imwrite(f'Pictures/{train}_t_out_img.jpg', out[0])
-            cv2.imshow('out_img', out[0])
-            cv2.waitKey(0)
+    # for i in range(len(test_list[:1])):
+    #     print(i)
+    #     out = display_prediction(i)
+    #     if len(out) > 1:
+    #         cv2.imwrite(f'Pictures/{train}_out_img.jpg', out[0])
+    #         cv2.imwrite(f'Pictures/{train}_t_out_img.jpg', out[1])
+    #         cv2.imshow('out_img', out[0])
+    #         cv2.waitKey(0)
+    #         cv2.imshow('t_out_img', out[1])
+    #         cv2.waitKey(0)
+    #     else:
+    #         cv2.imwrite(f'Pictures/{train}_t_out_img.jpg', out[0])
+    #         cv2.imshow('out_img', out[0])
+    #         cv2.waitKey(0)
+    #
+    #
+    # for i in range(19, len(test_list[:20])):
+    #     display_prediction(i)
+    #     out = display_prediction(i)
+    #     if len(out) > 1:
+    #         cv2.imwrite(f'Pictures/{train}_line_cross.jpg', out[0])
+    #         cv2.imwrite(f'Pictures/{train}_t_line_cross.jpg', out[1])
+    #         cv2.imshow('out_img', out[0])
+    #         cv2.waitKey(0)
+    #         cv2.imshow('out_img', out[0])
+    #         cv2.waitKey(0)
+    #         cv2.imshow('t_out_img', out[1])
+    #         cv2.waitKey(0)
+    #     else:
+    #         cv2.imwrite(f'Pictures/{train}_line_cross.jpg', out[0])
+    #         cv2.imshow('out_img', out[0])
+    #         cv2.waitKey(0)
 
-
-    for i in range(19, len(test_list[:20])):
+    for i in range(len(test_list[:20])):
         display_prediction(i)
         out = display_prediction(i)
         if len(out) > 1:
-            cv2.imwrite(f'Pictures/{train}_line_cross.jpg', out[0])
-            cv2.imwrite(f'Pictures/{train}_t_line_cross.jpg', out[1])
-            cv2.imshow('out_img', out[0])
-            cv2.waitKey(0)
-            cv2.imshow('out_img', out[0])
-            cv2.waitKey(0)
+            # cv2.imshow('out_img', out[0])
+            # cv2.waitKey(0)
             cv2.imshow('t_out_img', out[1])
             cv2.waitKey(0)
         else:
-            cv2.imwrite(f'Pictures/{train}_line_cross.jpg', out[0])
             cv2.imshow('out_img', out[0])
             cv2.waitKey(0)

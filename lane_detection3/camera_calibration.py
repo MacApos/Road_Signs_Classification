@@ -12,9 +12,11 @@ images = glob.glob(path)
 # Kryteria algorytmu – wymagana zmiana parametrów między iteracjami, maks. liczba iteracji
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-# Przygotowanie współrzędnych 3D, z=0 – (0,0,0), (2,0,0), (2,0,0), ... (6,5,0)
-# Wymiary szachownicy – 10x7
+# Wymiary szachownicy – 7x6
 grid = (7, 6)
+# grid = (9, 6)
+
+# Przygotowanie współrzędnych 3D, z=0 – (0,0,0), (2,0,0), (2,0,0), ... (6,5,0)
 objp = np.zeros((grid[1]*grid[0], 3), np.float32)
 objp[:, :2] = np.mgrid[0:grid[0], 0:grid[1]].T.reshape(-1, 2)
 
@@ -37,6 +39,7 @@ for fname in images:
         imgpoints.append(corners)
 
         corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+        # corners2 = cv2.cornerSubPix(gray, corners, (15, 15), (-1, -1), criteria)
 
         cv2.drawChessboardCorners(img, grid, corners2, retval)
 

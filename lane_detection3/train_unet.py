@@ -160,29 +160,29 @@ for idx, type in enumerate(labels_type):
     data, labels = shuffle(input_data, input_labels)
     x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2)
 
-    # # load check
-    # cv2.imshow('img', data[0])
-    #
-    # label = np.expand_dims(labels[0], 2)
-    # label = PIL.ImageOps.autocontrast(array_to_img(label))
-    # label = img_to_array(label)
-    # cv2.imshow('label', label)
-    # cv2.waitKey(1200)
-    # cv2.destroyAllWindows()
+    # load check
+    cv2.imshow('img', data[0])
 
-    # for img, img_label in zip(x_train[:1], y_train[:1]):
-    #     poly = np.zeros_like(img).astype('float32')
-    #     poly[:, :, 1] = img_label[:, :, 0]
-    #     out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
-    #     cv2.imshow('img', out_frame)
-    #     cv2.waitKey(0)
-    #     plt.figure(figsize=(16, 8))
-    #     for idx, img in enumerate([img, poly, out_frame]):
-    #         plt.subplot(1, 3, idx+1)
-    #         plt.grid(False)
-    #         plt.axis(False)
-    #         imgplot = plt.imshow(img[:,:,::-1])
-    #     plt.show()
+    label = np.expand_dims(labels[0], 2)
+    label = PIL.ImageOps.autocontrast(array_to_img(label))
+    label = img_to_array(label)
+    cv2.imshow('label', label)
+    cv2.waitKey(1200)
+    cv2.destroyAllWindows()
+
+    for img, img_label in zip(x_train[:1], y_train[:1]):
+        poly = np.zeros_like(img).astype('float32')
+        poly[:, :, 1] = img_label
+        out_frame = cv2.addWeighted(img, 1, poly, 0.5, 0)
+        cv2.imshow('img', out_frame)
+        cv2.waitKey(0)
+        plt.figure(figsize=(16, 8))
+        for idx, img in enumerate([img, poly, out_frame]):
+            plt.subplot(1, 3, idx+1)
+            plt.grid(False)
+            plt.axis(False)
+            imgplot = plt.imshow(img[:,:,::-1])
+        plt.show()
 
     keras.backend.clear_session()
 

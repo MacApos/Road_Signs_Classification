@@ -7,7 +7,7 @@ from imutils import paths
 import PIL
 from PIL import ImageOps
 from tensorflow import keras
-from lane_detection3.lane_detection import visualise
+from lane_detection import visualise
 # from keras.utils import img_to_array, array_to_img
 from keras.preprocessing.image import img_to_array, array_to_img
 
@@ -18,8 +18,8 @@ def find_file(path, ext):
             return os.path.join(path, file)
 
 
-# path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
-path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
+path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
+# path = r'C:\Nowy folder\10\Praca\Datasets\Video_data'
 # path = r'F:\krzysztof\Maciej_Apostol\StopienII\Video_data'
 
 dir_path = os.path.join(path, 'output')
@@ -51,6 +51,7 @@ class generator(keras.utils.Sequence):
             x[j] = img
 
         return x
+
 
 
 def choose_labels(fname):
@@ -115,7 +116,7 @@ def display_prediction(i):
     zeros = np.zeros_like(mask)
     poly = np.dstack((zeros, mask, zeros)).astype('uint8')
     prediction = cv2.addWeighted(test_image, 1, poly, 0.5, 0)
-    out_img = visualise(prediction, left_curve, right_curve, start, stop)
+    out_img = visualise(test_image, left_curve, right_curve, start, stop)
 
     return prediction, out_img
 
@@ -126,38 +127,22 @@ def draw_circle(curve=None, color=(255, 0, 0)):
 
     else:
         circle = curve
+        cv2.circle(out_img, (int(circle), stop), 5, color, -1)
 
-    cv2.circle(out_img, (int(circle), stop), 5, color, -1)
     return circle
 
 
 # for train in ['train_3', 'train_4']:
 #     predictions = choose_labels(train)
-#     for i in range(len(test_list[:1])):
+#     indices = [0, 10, 19, 21]
+#     filename = ['prediction', 'bad_fit', 'line_cross', 'adjacent_lane']
+#
+#     for idx, i in enumerate(indices):
+#         left_curve, right_curve, mask, stop = predict(i)
 #         prediction, out_img = display_prediction(i)
-#         cv2.imwrite(f'Pictures/{train}_prediction_{i}.jpg', prediction)
+#         cv2.imwrite(f'Pictures/validation/{train}_{filename[idx]}_{i}.jpg', prediction)
 #         cv2.imshow('out_img', out_img)
 #         cv2.waitKey(0)
-#
-#     for i in range(10, len(test_list[:11])):
-#         prediction, out_img = display_prediction(i)
-#         cv2.imwrite(f'Pictures/{train}_bad_fit_{i}.jpg', out_img)
-#         cv2.imshow('out_img', out_img)
-#         cv2.waitKey(0)
-#
-#     for i in range(19, len(test_list[:20])):
-#         prediction, _ = display_prediction(i)
-#         cv2.imwrite(f'Pictures/{train}_line_cross_{i}.jpg', prediction)
-#         cv2.imshow('out_img', prediction)
-#         cv2.waitKey(0)
-#
-#     for i in range(21, len(test_list[:22])):
-#         prediction, _ = display_prediction(i)
-#         cv2.imwrite(f'Pictures/{train}_adjacent_lane_{i}.jpg', prediction)
-#         cv2.imshow('out_img', prediction)
-#         cv2.waitKey(0)
-
-i = 19
 
 predictions = choose_labels('train_3')
 mean_width = 485
@@ -165,40 +150,57 @@ m_per_px = 3.7 / 485
 image = cv2.imread(test_list[0])
 center = image.shape[1] // 2
 
-for i in range(19, len(test_list[:60])):
+offset_text = 'Offset: 0.00 m'
+cross_text = 'Line cross'
+font = cv2.FONT_HERSHEY_SIMPLEX
+font_scale = 1
+color = (0, 0, 0)
+thickness = 2
+(offset_width, offset_height), _ = cv2.getTextSize(offset_text, font, font_scale, thickness)
+offset_x = center - offset_width // 2
+offset_y = 50 + offset_height // 2
+
+(cross_width, cross_height), _ = cv2.getTextSize(cross_text, font, font_scale, thickness)
+radius = 10
+space = 5
+circle_x = center - (cross_width + radius*2 + space)// 2
+circle_y = offset_y + int(offset_height * 1.5)
+
+cross_x = circle_x + radius + space
+cross_y = offset_y + int(offset_height * 2)
+
+j = 0
+for i in range(len(test_list)):
     left_curve, right_curve, mask, stop = predict(i)
     prediction, out_img = display_prediction(i)
 
     left_stop = draw_circle(left_curve)
     right_stop = draw_circle(right_curve)
+
     width = right_stop - left_stop
 
     middle  = left_stop + width // 2
     offset = (middle - center) * m_per_px
 
-    text = 'Offset: {:.2f} m'.format(offset)
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1
-    color = (0, 0, 0)
-    thickness = 2
-    (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
-    org_width = center - text_width // 2
-    org_height = 50 + text_height // 2
-
-    cv2.putText(out_img, text, (org_width, org_height), font, font_scale, color, thickness, cv2.LINE_AA)
-
-    if width < mean_width / 3:
-        text = 'Line cross'
-        diameter = 20
-        space = 10
-        (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
-        org_width = center - (text_width+diameter+space) // 2
-        cv2.circle(out_img, (org_width, org_height + int(text_height*1.5)), diameter//2, (0, 0, 255), -1)
-        cv2.putText(out_img, text, (org_width + 15, org_height + text_height*2), font, font_scale, color, thickness,
-                    cv2.LINE_AA)
-
     print(offset)
     draw_circle(middle, (0, 0, 255))
     draw_circle(center, (0, 255, 0))
-    #
-    # cv2.imwrite(f'Pictures/lane_cross/line_cross_{i}.jpg', out_img)
+
+    offset_text = 'Offset: {:.2f} m'.format(offset)
+    cv2.putText(out_img, offset_text, (offset_x, offset_y), font, font_scale, color, thickness, cv2.LINE_AA)
+
+    if i == 15:
+        cv2.imwrite(f'Pictures/validation/offset_{i}.jpg', out_img)
+
+    if width < mean_width / 3:
+        j += 1
+        if j == 2:
+            cv2.circle(out_img, (circle_x, circle_y), radius, (0, 0, 255), -1)
+            cv2.putText(out_img, cross_text, (cross_x, cross_y), font, font_scale, color, thickness, cv2.LINE_AA)
+            cv2.imwrite(f'Pictures/validation/line_cross_{i}.jpg', out_img)
+            break
+
+    # cv2.imshow(f'out_img_{i}', out_img)
+    # cv2.waitKey(0)
+
+

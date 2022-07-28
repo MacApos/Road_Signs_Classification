@@ -188,18 +188,28 @@ import random
 # xp = np.linspace(-60, 60, 100)
 #Plot the original points and the curve
 
-image = np.zeros((640, 1280, 3))+255
+video = {'name': 'video1',
+         'src': np.float32([[290, 410 * 4 / 3], [550, 285 * 4 / 3]]),
+         'thresh': 0.65,
+         'limit': 2548}
 
-text = 'OpenCV'
-font = cv2.FONT_HERSHEY_SIMPLEX
-fontScale = 2
-color = (0, 0, 0)
-thickness = 3
-(text_width, text_height), _ = cv2.getTextSize(text, font, fontScale, thickness)
-org = ((image.shape[1] - text_width)//2, (image.shape[0] + text_height)//2)
-
-image = cv2.putText(image, text, org, font, fontScale, color, thickness, cv2.LINE_AA)
+name = video['name']
 
 
-cv2.imshow('image', image)
-cv2.waitKey(0)
+
+
+# image = np.zeros((640, 1280, 3))+255
+#
+# text = 'OpenCV'
+# font = cv2.FONT_HERSHEY_SIMPLEX
+# fontScale = 2
+# color = (0, 0, 0)
+# thickness = 3
+# (text_width, text_height), _ = cv2.getTextSize(text, font, fontScale, thickness)
+# org = ((image.shape[1] - text_width)//2, (image.shape[0] + text_height)//2)
+#
+# image = cv2.putText(image, text, org, font, fontScale, color, thickness, cv2.LINE_AA)
+#
+#
+# cv2.imshow('image', image)
+# cv2.waitKey(0)

@@ -62,7 +62,7 @@ def draw_lines(image, arr, point_color=(255, 0, 0), line_color=(0, 255, 0)):
 
 
 def to_jpg(name, image):
-    path = 'Pictures/' + name + '.jpg'
+    path = 'Pictures/lane_detection/' + name + '.jpg'
     cv2.imwrite(path, image)
 
 
@@ -80,7 +80,11 @@ def prepare(image, src, dst):
     #     plt.imshow(img[:,:,::-1])
     # plt.show()
     box = draw_lines(undistorted, src)
-    # box = draw_lines(box, dst, line_color=(0, 0, 255))
+    box = draw_lines(box, dst, line_color=(0, 0, 255))
+    im_show(box)
+    if image_basename == '00021.jpg':
+        to_jpg('box', box)
+
     warp = warp_perspective(undistorted, M)
     gray = gray_img(warp)
     max_val = max(np.amax(gray, axis=1)).astype(int)
@@ -428,9 +432,10 @@ def detect_lines(path):
     global previous_frame
     global M, M_inv
     global mtx, dist
+    global image_basename
 
     root_path = os.path.dirname(__file__)
-    data_path = os.path.join(path, 'test')
+    data_path = os.path.join(path, 'train')
     frames_path1 = os.path.join(path, 'frames1')
     frames_path2 = os.path.join(path, 'frames2')
     labels_path1 = os.path.join(path, 'labels1')
@@ -489,8 +494,10 @@ def detect_lines(path):
         np.save(M_path, M)
         np.save(M_inv_path, M_inv)
 
-        idx = 245
-        for image_path in data_list[i:i+limit]:
+        idx = 21
+        # idx = 245
+        for image_path in data_list[idx:idx+1]:
+            image_basename = os.path.basename(image_path)
             save_frame1 = frames_path1 + fr'\{os.path.basename(image_path)}'
             save_frame2 = frames_path2 + fr'\{os.path.basename(image_path)}'
             save_label1 = labels_path1 + fr'\{os.path.basename(image_path)}'
@@ -502,10 +509,15 @@ def detect_lines(path):
             label_exists2 = os.path.exists(save_label2)
 
             image = cv2.imread(image_path)
+            im_show(image)
             # image = cv2.resize(image, (width, height))
             warp, img = prepare(image, src, dst)
 
             leftx0, lefty0, rightx0, righty0, out_img = find_lanes(img)
+
+            to_jpg('warp', warp)
+            to_jpg('thresh', img)
+            to_jpg('out_img', out_img)
 
             previous_frame = []
             previous_frame.append([leftx0, lefty0, rightx0, righty0])
@@ -534,10 +546,15 @@ def detect_lines(path):
             frame = cv2.resize(image, (s_width, s_height))
             poly1, out_frame1 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop)
             poly2, out_frame2 = visualise_perspective(frame, t_left_curve, t_right_curve, start, stop, True)
-            # cv2.imwrite(f'Pictures/poly1_{idx}.jpg', poly1)
-            # cv2.imwrite(f'Pictures/poly2_{idx}.jpg', poly2)
-            # cv2.imwrite(f'Pictures/out_frame1{idx}.jpg', out_frame1)
-            # cv2.imwrite(f'Pictures/out_frame2{idx}.jpg', out_frame2)
+            visualization = visualise(np.dstack((img, img, img)), left_curve, right_curve)
+            to_jpg('out_frame1', out_frame1)
+            to_jpg('out_frame2', out_frame2)
+            to_jpg('visualization', visualization)
+
+            # cv2.imwrite(f'Pictures/validation/poly1_{idx}.jpg', poly1)
+            # cv2.imwrite(f'Pictures/validation/poly2_{idx}.jpg', poly2)
+            # cv2.imwrite(f'Pictures/validation/out_frame1{idx}.jpg', out_frame1)
+            # cv2.imwrite(f'Pictures/validation/out_frame2{idx}.jpg', out_frame2)
 
             # image = cv2.resize(image, (s_width, s_height)) / 255
             # warp = cv2.resize(warp, (s_width, s_height)) / 255
@@ -545,7 +562,7 @@ def detect_lines(path):
             y, curves_points = generate_points(warp, left_curve, right_curve, num=3, labels=True)
             y_t, t_curves_points = generate_points(image, t_left_curve, t_right_curve, start, num=3, labels=True)
 
-            visualization = visualise(np.copy(warp), left_curve, right_curve)
+
 
             save_point = {'points': np.copy(warp),
                           'name': '',
@@ -570,7 +587,9 @@ def detect_lines(path):
                     points = cv2.circle(points, (int(curves_points[k] * s_width), y_[0]), radius, (0, 255, 0), -1)
                     points = cv2.circle(points, (int(curves_points[k + 3] * s_width), y_[0]), radius, (0, 255, 0), -1)
 
-                # cv2.imwrite(f'Pictures/{name}points_{idx}.jpg', points)
+                to_jpg('points', points)
+
+                # cv2.imwrite(f'Pictures/validation/{name}points_{idx}.jpg', points)
 
 
             # if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:

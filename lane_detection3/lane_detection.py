@@ -546,7 +546,6 @@ def detect_lines(path):
                 visualization = cv2.circle(visualization, (int(curves_points[k + 3] * s_width), y_[0]), 4,
                                            (0, 255, 0), -1)
 
-            im_show(visualization)
 
             if not frame_exists1 and not frame_exists2 and not label_exists1 and not label_exists2:
                 cv2.imwrite(save_frame1, out_frame1)
@@ -613,4 +612,5 @@ path = r'F:\Nowy folder\10\Praca\Datasets\Video_data'
 
 # y = make_input('Detect lines?')
 # if y=='y':
-# detect_lines(path)
+if __name__ == "__main__":
+    detect_lines(path)
