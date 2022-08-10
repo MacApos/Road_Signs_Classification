@@ -174,32 +174,41 @@ for i in range(len(test_list)):
     left_curve, right_curve, mask, stop = predict(i)
     prediction, out_img = display_prediction(i)
 
-    left_stop = draw_circle(left_curve)
-    right_stop = draw_circle(right_curve)
+    if i >210:
+        cv2.imshow(f'out_img_{i}', prediction)
+        while True:
+            k = cv2.waitKey(0) & 0xFF
+            print(k)
+            if k == 27:
+                cv2.destroyAllWindows()
+                break
 
-    width = right_stop - left_stop
-
-    middle  = left_stop + width // 2
-    offset = (middle - center) * m_per_px
-
-    print(offset)
-    draw_circle(middle, (0, 0, 255))
-    draw_circle(center, (0, 255, 0))
-
-    offset_text = 'Offset: {:.2f} m'.format(offset)
-    cv2.putText(out_img, offset_text, (offset_x, offset_y), font, font_scale, color, thickness, cv2.LINE_AA)
-
-    if i == 15:
-        cv2.imwrite(f'Pictures/validation/offset_{i}.jpg', out_img)
-
-    if width < mean_width / 3:
-        j += 1
-        if j == 2:
-            cv2.circle(out_img, (circle_x, circle_y), radius, (0, 0, 255), -1)
-            cv2.putText(out_img, cross_text, (cross_x, cross_y), font, font_scale, color, thickness, cv2.LINE_AA)
-            cv2.imwrite(f'Pictures/validation/line_cross_{i}.jpg', out_img)
-            break
-
+    # left_stop = draw_circle(left_curve)
+    # right_stop = draw_circle(right_curve)
+    #
+    # width = right_stop - left_stop
+    #
+    # middle  = left_stop + width // 2
+    # offset = (middle - center) * m_per_px
+    #
+    # print(offset)
+    # draw_circle(middle, (0, 0, 255))
+    # draw_circle(center, (0, 255, 0))
+    #
+    # offset_text = 'Offset: {:.2f} m'.format(offset)
+    # cv2.putText(out_img, offset_text, (offset_x, offset_y), font, font_scale, color, thickness, cv2.LINE_AA)
+    #
+    # if i == 15:
+    #     cv2.imwrite(f'Pictures/validation/offset_{i}.jpg', out_img)
+    #
+    # if width < mean_width / 3:
+    #     j += 1
+    #     if j == 2:
+    #         cv2.circle(out_img, (circle_x, circle_y), radius, (0, 0, 255), -1)
+    #         cv2.putText(out_img, cross_text, (cross_x, cross_y), font, font_scale, color, thickness, cv2.LINE_AA)
+    #         cv2.imwrite(f'Pictures/validation/line_cross_{i}.jpg', out_img)
+    #         break
+    #
     # cv2.imshow(f'out_img_{i}', out_img)
     # cv2.waitKey(0)
 
